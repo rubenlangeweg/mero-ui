@@ -48,8 +48,9 @@
   });
   document.addEventListener('htmx:beforeSwap', event => {
     const target = event.detail.target;
-    if (target.matches?.(mountSelector) && (target.contains(document.activeElement) || target.hasAttribute('data-mero-load-superseded'))) {
+    if (target.matches?.(mountSelector) && (target.contains(document.activeElement) || target.hasAttribute('data-mero-load-superseded') || event.detail.xhr.status >= 400)) {
       // Keep an edit or navigation made while the initial refresh was in flight.
+      // A failed refresh keeps the server-rendered fallback, which htmx 4 would replace.
       event.detail.shouldSwap = false;
       return;
     }
