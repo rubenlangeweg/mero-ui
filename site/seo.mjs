@@ -7,7 +7,7 @@ const descriptions = new Map([
   ["/start", "Install Mero UI, request your first HTML fragment with htmx and inspect the server response."],
   ["/docs/design-principles", "See how Mero UI handles keyboard focus, motion, theming and server responses in htmx interfaces."],
   ["/docs/responsive-layouts", "Resize a working company directory and see how Mero UI handles list and detail views, selection and Back in a narrow container."],
-  ["/docs/reference", "Look up the events Mero UI sends and acts on, their detail payloads and the window.MeroUI functions."],
+  ["/docs/reference", "Look up the events Mero UI sends and acts on, the window.MeroUI functions and every data-mero attribute."],
   ["/components", "Browse Mero UI components, try the working examples and copy their HTML and required assets into your server templates."],
   ["/layouts", "Explore complete htmx application layouts for a team workspace, inbox, chat, CRM, finance and settings."],
   ["/themes", "Try colors, typography and corner radii on Mero UI components and layouts, then export your theme as CSS."],
