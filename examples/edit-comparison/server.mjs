@@ -9,7 +9,7 @@ import {escapeHtml as esc} from '../../site/html.mjs';
 
 const labels = {mero:'Mero UI', daisyui:'daisyUI', heroui:'HeroUI CSS'};
 const publicFiles = {
-  '/assets/htmx.js':new URL('../../public/vendor/htmx.min.js',import.meta.url),
+  '/assets/htmx.js':new URL(process.env.MERO_HTMX==='4'?'../../public/vendor/htmx-4.min.js':'../../public/vendor/htmx.min.js',import.meta.url),
   '/assets/mero.css':new URL('../../ui/mero.css',import.meta.url),
   '/assets/mero.js':new URL('../../ui/mero.js',import.meta.url),
   '/assets/mero-forms.js':new URL('../../ui/mero-forms.js',import.meta.url),

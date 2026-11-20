@@ -57,7 +57,7 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
     if (url.pathname.startsWith("/demo/catalog/")) {
       return route.fulfill({ contentType: "text/html", body: catalogFragment(url.pathname.split("/").at(-1), url.searchParams) });
     }
-    const filename = { "/htmx.js": "public/vendor/htmx.min.js", "/mero.js": "ui/mero.js", "/mero.css": "ui/mero.css" }[url.pathname];
+    const filename = { "/htmx.js": process.env.MERO_HTMX === "4" ? "public/vendor/htmx-4.min.js" : "public/vendor/htmx.min.js", "/mero.js": "ui/mero.js", "/mero.css": "ui/mero.css" }[url.pathname];
     if (!filename) return route.fulfill({ status: 404, body: "" });
     return route.fulfill({
       contentType: filename.endsWith(".css") ? "text/css" : "text/javascript",

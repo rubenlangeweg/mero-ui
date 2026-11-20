@@ -20,7 +20,7 @@ When serving the site on a public domain, set `MERO_SITE_ORIGIN` to its full ori
 
 Install the UI assets and HTMX with `npm install @rubenlangeweg/mero-ui htmx.org@2`. Mero also runs on htmx 4: install `htmx.org@4` instead and read [Use htmx 4](#use-htmx-4). Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
 
-Serve `ui/mero.css` and `ui/mero.js` from your app. Include HTMX 2.x or 4.x for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. The local catalog includes HTMX 2.0.11 and Geist with their license notices.
+Serve `ui/mero.css` and `ui/mero.js` from your app. Include HTMX 2.x or 4.x for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. The local catalog includes HTMX 2.0.11, HTMX 4.0.2 and Geist with their license notices.
 
 ```html
 <link rel="stylesheet" href="/mero.css">
@@ -41,6 +41,8 @@ Three things differ on htmx 4:
 - **Inheritance.** The copyable markup sets `hx-target`, `hx-swap`, `hx-sync` and `hx-include` on a wrapper. htmx 4 only inherits attributes marked `:inherited`. Either add `<meta name="htmx-config" content='{"implicitInheritance":true}'>` or rename those wrapper attributes to `hx-target:inherited` and so on.
 - **Server responses.** Keep sending `HX-Trigger-After-Settle` for `mero:form-saved`. htmx 4 dropped that header and `mero.js` handles it. Read the `HX-Target` request header as `tag#id` (htmx 2 sends the bare id). An error response other than the documented 422, 409 or 413 is never swapped into a Mero component, although htmx 4 swaps error responses by default.
 - **The compatibility extension.** Do not load `htmx-2-compat` on a page with Mero scripts. It dispatches the old event names with the new detail, which the Mero handlers cannot read.
+
+Run the catalog and its tests on htmx 4 with `MERO_HTMX=4 npm start` and `MERO_HTMX=4 npm test`. CI runs both versions.
 
 ## Upgrade from 0.2
 

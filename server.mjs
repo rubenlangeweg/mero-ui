@@ -76,12 +76,15 @@ async function formBody(request) {
   return new URLSearchParams(Buffer.concat(chunks).toString("utf8"));
 }
 
+// MERO_HTMX=4 serves htmx 4 at the same path, so every page and test can run on either version.
+const htmxAsset = path => path === "vendor/htmx.min.js" && process.env.MERO_HTMX === "4" ? "vendor/htmx-4.min.js" : path;
+
 const fragmentVary = "HX-Request, HX-Target, HX-History-Restore-Request";
 const layoutVary = fragmentVary + ", Sec-Fetch-Dest, X-Mero-Embed";
 
 // An HTMX request for one region gets that fragment. A history restore gets the full page.
 function wantsFragment(request, target) {
-  return request.headers["hx-request"] === "true" && request.headers["hx-target"] === target &&
+  return request.headers["hx-request"] === "true" && request.headers["hx-target"]?.split("#").pop() === target &&
     request.headers["hx-history-restore-request"] !== "true";
 }
 
@@ -277,7 +280,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
   async function staticAsset({ response, pathname }) {
     const type = types[extname(pathname)];
     if (!type) return false;
-    const assetPath = pathname.slice(1);
+    const assetPath = htmxAsset(pathname.slice(1));
     const directory = libraryAsset.test(assetPath) ? "./ui/" : "./public/";
     const asset = await readFile(new URL(directory + assetPath, import.meta.url)).catch((error) => {
       if (error.code !== "ENOENT") throw error;

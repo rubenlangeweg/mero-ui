@@ -24,14 +24,15 @@
     const url = new URL(request.path, location.href);
     const screen = url.searchParams.get('view');
     if (url.pathname !== '/layouts/dashboard' || !Object.hasOwn(views, screen)) return;
-    const choice = request.elt.dataset.studioDisplayChoice;
-    if (views[screen].includes(choice) && request.elt.hasAttribute('aria-current')) {
-      request.elt.removeAttribute('hx-push-url');
-      request.elt.setAttribute('hx-replace-url', 'true');
-    }
     if (views[screen].includes(url.searchParams.get('display'))) return;
     url.searchParams.set('display', preferredView(screen, workspace.querySelector('.studio-main')));
     request.path = url.pathname + url.search;
+  });
+
+  // Choosing the current view again must not add a Back step.
+  document.addEventListener('htmx:beforeHistoryUpdate', event => {
+    const link = event.detail.requestConfig?.elt;
+    if (link?.hasAttribute('data-studio-display-choice') && link.hasAttribute('aria-current')) event.detail.history.type = 'replace';
   });
 
   document.addEventListener('htmx:afterSwap', event => {
@@ -71,7 +72,8 @@
     host.append(source);
     // Typing or clicking before a slow initial response arrives takes priority.
     const listeners = new AbortController();
-    const cancel = () => htmx.trigger(workspace, 'htmx:abort');
+    // htmx 4 listens on the requesting element and htmx 2 on the hx-sync element above it.
+    const cancel = () => { for (const elt of [source, workspace]) htmx.trigger(elt, 'htmx:abort'); };
     for (const name of ['pointerdown', 'keydown', 'input']) {
       workspace.addEventListener(name, cancel, { capture: true, once: true, signal: listeners.signal });
     }
