@@ -120,6 +120,8 @@
   const pinnedLogs = new WeakSet();
   document.addEventListener('htmx:beforeSwap', event => {
     const target = event.detail.target;
+    // htmx 4 would swap an error response into the conversation or report.
+    if (event.detail.xhr.status >= 400 && event.detail.requestConfig?.elt?.closest?.('[data-mero-compose], .mero-chat-inbox, .mero-markdown-editor, .mero-report-period')) event.detail.shouldSwap = false;
     if (!event.detail.shouldSwap || !target?.matches('.mero-chat-history')) return;
     if (target.scrollHeight - target.clientHeight - target.scrollTop <= 4) pinnedLogs.add(target);
     else pinnedLogs.delete(target);
