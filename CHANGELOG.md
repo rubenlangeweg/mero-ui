@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Import the server helpers as `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown`. Paths under `ui/` still work.
-- The docs list the `mero:*` events and the `window.MeroUI` functions under [Events and JavaScript](https://mero-ui.rubenlangeweg.com/docs/reference).
+- The docs list the `mero:*` events and the `window.MeroUI` functions and every `data-mero-*` attribute under [Reference](https://mero-ui.rubenlangeweg.com/docs/reference).
 
 ## 0.3.0 · 20 November 2026
 

@@ -140,7 +140,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
   }
 
   function reference({ page }) {
-    return page({ title: "Events and JavaScript", nav: "start", assets: ["design-principles.css", "catalog-navigation.js"],
+    return page({ title: "Reference", nav: "start", assets: ["design-principles.css", "catalog-navigation.js"],
       body: catalogLayout({ groups, active: "reference", content: referencePage() }) });
   }
 

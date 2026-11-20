@@ -18,3 +18,12 @@ test("the reference documents every Mero event and MeroUI function in the shippe
 test("the reference links to components that exist", () => {
   for (const [, id] of page.matchAll(/href="\/components\/([a-z-]+)"/g)) assert.ok(components.has(id), id);
 });
+
+test("the reference documents every data-mero attribute in the shipped scripts and styles", () => {
+  const sources = scripts + readdirSync("ui").filter(name => name.endsWith(".css")).map(name => readFileSync("ui/" + name, "utf8")).join("\n");
+  const names = new Set(sources.match(/data-mero-[a-z-]*[a-z]/g));
+  // dataset.meroReturnFocus is data-mero-return-focus.
+  for (const [, key] of scripts.matchAll(/dataset\.(mero[A-Za-z]+)/g)) names.add("data-" + key.replace(/[A-Z]/g, letter => "-" + letter.toLowerCase()));
+  assert.ok(names.size >= 80);
+  for (const name of names) assert.ok(page.includes(`<code>${name}</code>`), name);
+});
