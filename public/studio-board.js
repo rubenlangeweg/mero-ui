@@ -41,8 +41,8 @@
     form.requestSubmit();
   });
   document.addEventListener('dragend', clearDrag);
-  document.addEventListener('htmx:beforeCleanupElement', event => {
-    if (dragged && event.detail.elt.contains(dragged)) clearDrag();
+  document.addEventListener('htmx:before:cleanup', event => {
+    if (dragged && event.target.contains(dragged)) clearDrag();
   });
   document.addEventListener('keydown', event => {
     const filter = event.target.closest?.('.stb-filter[open]');

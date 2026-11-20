@@ -32,14 +32,14 @@
   }
   syncGrids(document);
   const mountSelector = '.mero-grid-mount,.mero-agenda-mount';
-  document.addEventListener('htmx:beforeRequest', event => {
-    const source = event.detail.elt;
-    const mount = source.closest(mountSelector);
+  document.addEventListener('htmx:before:request', event => {
+    const source = event.target;
+    const mount = source.closest?.(mountSelector);
     if (mount === source) delete mount.dataset.meroLoadSuperseded;
     else if (mount) mount.dataset.meroLoadSuperseded = '';
   });
-  document.addEventListener('htmx:afterSettle', event => {
-    const root = event.detail.elt;
+  document.addEventListener('htmx:after:settle', event => {
+    const root = event.target;
     syncGrids(root, true);
     if (!root.matches?.('[data-mero-agenda][data-agenda-focus]')) return;
     const action = root.dataset.agendaFocus;
@@ -47,35 +47,34 @@
     const control = action === 'invalid' ? root.querySelector('[aria-invalid=true]') : [...root.querySelectorAll('[data-agenda-action]:not(:disabled)')].find(item => item.dataset.agendaAction === action);
     (control || root.querySelector('[data-agenda-action]:not(:disabled)'))?.focus();
   });
-  document.addEventListener('htmx:beforeSwap', event => {
-    const target = event.detail.target;
-    if (target.matches?.(mountSelector) && (target.contains(document.activeElement) || target.hasAttribute('data-mero-load-superseded') || event.detail.xhr.status >= 400)) {
+  document.addEventListener('htmx:before:swap', event => {
+    const { ctx } = event.detail;
+    const target = typeof ctx.target === 'string' ? document.querySelector(ctx.target) : ctx.target;
+    const status = ctx.response?.status;
+    if (!target) return;
+    if (target.matches?.(mountSelector) && (target.contains(document.activeElement) || target.hasAttribute('data-mero-load-superseded') || status >= 400)) {
       // Keep an edit or navigation made while the initial refresh was in flight.
       // A failed refresh keeps the server-rendered fallback, which htmx 4 would replace.
-      event.detail.shouldSwap = false;
+      event.preventDefault();
       return;
     }
-    const status = event.detail.xhr.status;
-    if (event.detail.target.matches?.('[data-mero-agenda]') && status >= 400) {
-      // htmx 4 swaps every error response. Only these carry a replacement.
-      event.detail.shouldSwap = status === 422;
-      if (status === 422) event.detail.isError = false;
+    // htmx 4 swaps every error response. Only these carry a replacement.
+    if (target.matches?.('[data-mero-agenda]')) {
+      if (status >= 400 && status !== 422) event.preventDefault();
       return;
     }
-    if (!event.detail.target.matches?.(gridSelector)) return;
-    const revision = event.detail.xhr.getResponseHeader('Inventory-Revision');
-    if (revision !== null && Number(revision) < Number(event.detail.target.dataset.inventoryRevision)) {
-      event.detail.shouldSwap = false;
-      return;
+    if (!target.matches?.(gridSelector)) return;
+    const revision = ctx.response?.headers.get('Inventory-Revision') ?? null;
+    if ((revision !== null && Number(revision) < Number(target.dataset.inventoryRevision)) || (status >= 400 && status !== 409 && status !== 422)) {
+      event.preventDefault();
     }
-    if (status === 422 || status === 409) {
-      event.detail.shouldSwap = true;
-      event.detail.isError = false;
-    } else if (status >= 400) event.detail.shouldSwap = false;
   });
-  document.addEventListener('htmx:afterRequest', event => {
-    if (!event.detail.failed) return;
+  document.addEventListener('htmx:finally:request', event => {
+    const { ctx } = event.detail;
+    const status = ctx.response?.status;
     const grid = event.target.closest?.('[data-mero-grid],[data-mero-agenda]');
+    // Cancelled requests have no response and are still "issuing"; 422, and 409 in a grid, carry a replacement.
+    if (ctx.response ? status < 400 || status === 422 || (status === 409 && grid?.matches(gridSelector)) : !String(ctx.status).startsWith('error')) return;
     const error = grid?.querySelector('[data-grid-error],[data-agenda-error]');
     if (error) {
       error.hidden = false;
@@ -142,8 +141,8 @@
     draggedCard = null;
   }
   document.addEventListener('dragend', releaseDrag);
-  document.addEventListener('htmx:beforeCleanupElement', event => {
-    if (draggedCard && event.detail.elt.contains(draggedCard)) releaseDrag();
+  document.addEventListener('htmx:before:cleanup', event => {
+    if (draggedCard && event.target.contains(draggedCard)) releaseDrag();
   });
   function positionCard(card, panel) {
     const bounds = card.querySelector('.mero-hover-trigger').getBoundingClientRect();

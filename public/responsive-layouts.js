@@ -69,21 +69,26 @@
     observer.observe(stage);
   }
 
-  document.addEventListener("htmx:configRequest", event => {
-    const link = event.detail.elt;
-    if (!link?.matches("[data-guide-record]")) return;
+  document.addEventListener("htmx:config:request", event => {
+    const link = event.target;
+    if (!link.matches?.("[data-guide-record]")) return;
     // Boosted links cache their href when processed. Preview widths can change before a visit.
-    event.detail.path = link.pathname + link.search + link.hash;
+    event.detail.ctx.request.action = link.pathname + link.search;
+    event.detail.ctx.request.anchor = link.hash.slice(1) || undefined;
     returnFocus.set(location.href, link.id);
     if (returnFocus.size > 32) returnFocus.delete(returnFocus.keys().next().value);
   });
-  document.addEventListener("htmx:historyRestore", () => {
+  function restored() {
     prepare();
     const target = document.getElementById(returnFocus.get(location.href) || location.hash.slice(1));
     if (target?.getClientRects().length) target.focus({ preventScroll: true });
+  }
+  // htmx 4 restores history inside a Navigation API transition; the browser resets focus when it ends.
+  document.addEventListener("htmx:after:swap", event => {
+    if (event.detail.ctx.request?.headers?.["HX-History-Restore-Request"]) (window.navigation?.transition?.finished ?? Promise.resolve()).then(restored, restored);
   });
-  document.addEventListener("htmx:afterSettle", event => {
-    if (event.detail.target?.id !== "guide-panes") return;
+  document.addEventListener("htmx:after:settle", event => {
+    if (event.detail.task.target?.id !== "guide-panes") return;
     prepare();
     const target = document.getElementById(location.hash.slice(1));
     if (target?.closest("#guide-panes")) target.focus({ preventScroll: true });

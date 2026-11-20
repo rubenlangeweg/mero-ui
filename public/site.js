@@ -75,11 +75,4 @@
     }
   });
 
-  const config = window.htmx?.config;
-  if (config) {
-    config.selfRequestsOnly = true;
-    config.allowEval = false;
-    config.allowScriptTags = false;
-  }
-
 })();

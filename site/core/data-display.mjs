@@ -50,7 +50,7 @@ export function records(query, { filters = false } = {}) {
 ${filters ? filterBar(applied, link) : ""}<div class="mero-table-wrap">
   <table class="mero-table mero-table-compact">
     <caption id="records-count">Studio products · ${rows.length} of ${products.length}</caption>
-    <thead hx-boost="true"><tr>
+    <thead hx-boost:inherited="true"><tr>
 ${Object.entries(columns).map(([name, label]) => name === column
   ? `      <th scope="col" aria-sort="${descending ? "descending" : "ascending"}"><a id="records-sort-${name}" href="${link({ sort: descending ? name : "-" + name })}">${label} <span aria-hidden="true">${descending ? "↓" : "↑"}</span></a></th>`
   : `      <th scope="col"><a id="records-sort-${name}" href="${link({ sort: name })}">${label}</a></th>`).join("\n")}
@@ -75,7 +75,7 @@ ${rows.map(row => {
     </tbody>
   </table>
 </div>`
-  return `<section class="mero-records" data-mero-records data-mero-restore-focus hx-target="this" hx-select="[data-mero-records]" hx-swap="outerHTML show:none" hx-sync="this:replace">${body}
+  return `<section class="mero-records" data-mero-records data-mero-restore-focus hx-target:inherited="this" hx-select:inherited="[data-mero-records]" hx-swap:inherited="outerHTML show:none" hx-sync:inherited="this:replace">${body}
 </section>`
 }
 
@@ -85,7 +85,7 @@ function filterBar(applied, link) {
     <li class="mero-chip mero-chip-accent">${label(field)} is ${value} <a href="${link({ [field]: null })}" aria-label="Remove filter: ${label(field)} is ${value}"><span class="mero-dismiss-mark" aria-hidden="true"></span></a></li>`).join("")
   const items = Object.entries(filterFields).flatMap(([field, [name, values]]) => values.filter(value => applied[field] !== value).map(value => `
     <a class="mero-menu-item" role="menuitem" href="${link({ [field]: value })}">${name} is ${value}</a>`)).join("")
-  return `<div class="mero-filter-bar" hx-boost="true">${chips ? `
+  return `<div class="mero-filter-bar" hx-boost:inherited="true">${chips ? `
   <ul class="mero-filter-chips mero-row" aria-label="Applied filters">${chips}
   </ul>` : ""}
   <button class="mero-button mero-button-outline mero-button-sm" type="button" id="records-filter-add" popovertarget="records-filter-menu" aria-haspopup="menu" aria-expanded="false" aria-label="Add filter" aria-describedby="records-count" data-mero-focus-fallback><span aria-hidden="true">+</span> Filter</button>

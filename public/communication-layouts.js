@@ -47,19 +47,22 @@
     const marker = frame.querySelector(`[data-comm-draft-for="${CSS.escape(id)}"]`);
     if (marker) marker.hidden = !field.value.trim();
   });
-  document.addEventListener("htmx:beforeSwap", event => {
-    const { xhr, requestConfig } = event.detail;
-    const form = requestConfig.elt;
-    if (xhr.status !== 200 || !form.matches("form[data-comm-compose]")) return;
+  document.addEventListener("htmx:before:swap", event => {
+    const { ctx } = event.detail;
+    const form = ctx.sourceElement;
+    if (ctx.response?.status !== 200 || !form?.matches?.("form[data-comm-compose]")) return;
     const key = draftKey(form.closest("[data-communication]"), form.dataset.commCompose);
-    if (readDraft(key) === requestConfig.formData.get("message")) saveDraft(key, "");
+    if (readDraft(key) === ctx.request?.body?.get("message")) saveDraft(key, "");
   });
   function restoreFrames() {
     for (const frame of document.querySelectorAll("[data-communication]")) prepare(frame, false);
   }
   restoreFrames();
-  document.addEventListener("htmx:historyRestore", restoreFrames);
-  document.addEventListener("htmx:afterSettle", event => {
-    if (event.target.matches("[data-communication]")) prepare(event.target, true);
+  // htmx 4 restores history inside a Navigation API transition; the browser resets focus when it ends.
+  document.addEventListener("htmx:after:swap", event => {
+    if (event.detail.ctx.request?.headers?.["HX-History-Restore-Request"]) (window.navigation?.transition?.finished ?? Promise.resolve()).then(restoreFrames, restoreFrames);
+  });
+  document.addEventListener("htmx:after:settle", event => {
+    if (event.target.matches?.("[data-communication]")) prepare(event.target, true);
   });
 })();

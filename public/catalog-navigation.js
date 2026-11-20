@@ -166,7 +166,7 @@
 
   if (!isCatalog(currentPath) || !window.htmx) return;
   // htmx 4 stamps its own history state on every swap, which would replace meroCatalog.
-  if (window.htmx.config.history) window.htmx.config.history = false;
+  window.htmx.config.history = false;
   if (visit.y != null && !location.hash) window.scrollTo(0, visit.y);
   history.scrollRestoration = "manual";
   persist();
@@ -249,9 +249,7 @@
         family = saved.family || "";
       }
       currentPath = url.pathname;
-      // htmx 4 takes one swap context and settles asynchronously.
-      if (window.htmx.swap.length === 1) await window.htmx.swap({ target: content, sourceElement: content, text: html, swap: "innerHTML" });
-      else window.htmx.swap(content, html, { swapStyle: "innerHTML", swapDelay: 0, settleDelay: 0 });
+      await window.htmx.swap({ target: content, sourceElement: content, text: html, swap: "innerHTML" });
       updatePageMetadata();
       document.dispatchEvent(new Event("mero:site-theme"));
       bindContent();

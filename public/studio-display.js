@@ -17,35 +17,42 @@
     return standard;
   }
 
-  document.addEventListener('htmx:configRequest', event => {
-    const request = event.detail;
-    const workspace = request.elt.closest('#studio-workspace');
-    if (!workspace || request.verb !== 'get') return;
-    const url = new URL(request.path, location.href);
+  // htmx 4 points ctx.sourceElement at the new workspace after the swap, so remember the choice here.
+  const choices = new WeakMap();
+  document.addEventListener('htmx:config:request', event => {
+    const { ctx } = event.detail;
+    const request = ctx.request;
+    const workspace = ctx.sourceElement?.closest?.('#studio-workspace');
+    if (ctx.sourceElement?.dataset?.studioDisplayChoice) choices.set(ctx, ctx.sourceElement.dataset.studioDisplayChoice);
+    if (!workspace || request.method !== 'GET') return;
+    const url = new URL(request.action, location.href);
     const screen = url.searchParams.get('view');
     if (url.pathname !== '/layouts/dashboard' || !Object.hasOwn(views, screen)) return;
     if (views[screen].includes(url.searchParams.get('display'))) return;
     url.searchParams.set('display', preferredView(screen, workspace.querySelector('.studio-main')));
-    request.path = url.pathname + url.search;
+    request.action = url.pathname + url.search;
   });
 
   // Choosing the current view again must not add a Back step.
-  document.addEventListener('htmx:beforeHistoryUpdate', event => {
-    const link = event.detail.requestConfig?.elt;
+  document.addEventListener('htmx:before:history:update', event => {
+    const link = event.detail.sourceElement;
     if (link?.hasAttribute('data-studio-display-choice') && link.hasAttribute('aria-current')) event.detail.history.type = 'replace';
   });
 
-  document.addEventListener('htmx:afterSwap', event => {
-    const choice = event.detail.requestConfig?.elt?.dataset.studioDisplayChoice;
-    if (!choice || event.detail.target?.id !== 'studio-workspace') return;
+  document.addEventListener('htmx:after:swap', event => {
+    const { ctx } = event.detail;
+    const choice = choices.get(ctx);
+    const target = typeof ctx.target === 'string' ? document.querySelector(ctx.target) : ctx.target;
+    if (!choice || target?.id !== 'studio-workspace') return;
     const screen = document.querySelector('#studio-workspace [data-studio-screen]')?.dataset.studioScreen;
     if (views[screen]?.includes(choice)) {
       try { localStorage.setItem(storageKey(screen), choice); } catch { /* Optional preference. */ }
     }
   });
-  for (const failure of ['htmx:responseError', 'htmx:sendError', 'htmx:timeout']) {
+  // htmx:error covers network errors and timeouts, not user aborts.
+  for (const failure of ['htmx:response:error', 'htmx:error']) {
     document.addEventListener(failure, event => {
-      if (event.detail.elt?.hasAttribute('data-studio-display-choice')) {
+      if (event.target.hasAttribute?.('data-studio-display-choice')) {
         window.MeroUI?.toast('Could not switch views. Try again.', { tone: 'danger' });
       }
     });
@@ -61,7 +68,7 @@
     const url = new URL(location.href);
     url.searchParams.set('display', views[screen][0]);
     history.replaceState(history.state, '', url);
-    htmx.trigger(document.body, 'htmx:replacedInHistory', { path: url.pathname + url.search });
+    htmx.trigger(document.body, 'htmx:after:history:replace', { path: url.pathname + url.search });
     if (preferredView(screen, host) === views[screen][0]) return;
     const workspace = host.closest('#studio-workspace');
     const source = document.createElement('span');
@@ -69,18 +76,23 @@
     source.dataset.studioAutoDisplay = '';
     source.setAttribute('hx-replace-url', 'true');
     source.setAttribute('hx-sync', '#studio-workspace:abort');
+    // htmx.ajax builds the HX-Target header from the source, before its target option applies.
+    source.setAttribute('hx-target', '#studio-workspace');
     host.append(source);
     // Typing or clicking before a slow initial response arrives takes priority.
     const listeners = new AbortController();
-    // htmx 4 listens on the requesting element and htmx 2 on the hx-sync element above it.
-    const cancel = () => { for (const elt of [source, workspace]) htmx.trigger(elt, 'htmx:abort'); };
+    // htmx 4 listens for htmx:abort on the requesting element.
+    const cancel = () => htmx.trigger(source, 'htmx:abort');
     for (const name of ['pointerdown', 'keydown', 'input']) {
       workspace.addEventListener(name, cancel, { capture: true, once: true, signal: listeners.signal });
     }
-    htmx.ajax('GET', host.dataset.studioDefaultUrl, { source, target: workspace, swap: 'outerHTML show:none' })
+    htmx.ajax('GET', host.dataset.studioDefaultUrl, { source, swap: 'outerHTML show:none' })
       .catch(() => { /* The initial server-rendered view remains usable. */ })
       .finally(() => { listeners.abort(); source.remove(); });
   }
   document.addEventListener('DOMContentLoaded', resolveInitialView);
-  document.addEventListener('htmx:historyRestore', resolveInitialView);
+  // htmx 4 restores history inside a Navigation API transition; the browser resets focus when it ends.
+  document.addEventListener('htmx:after:swap', event => {
+    if (event.detail.ctx.request?.headers?.['HX-History-Restore-Request']) (window.navigation?.transition?.finished ?? Promise.resolve()).then(resolveInitialView, resolveInitialView);
+  });
 })();

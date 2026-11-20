@@ -6,7 +6,7 @@ Run the example from the root of the extracted archive with Node 22 or later.
 node examples/studio-inventory/server.mjs
 ```
 
-Open [Studio Inventory](http://127.0.0.1:4183/). The download includes HTMX, Mero and the fonts. The sample server stores changes in memory. Use **Request scenarios** to slow a save, force a validation error or try a failed request. **Restore sample products** resets the sample records.
+Open [Studio Inventory](http://127.0.0.1:4183/). The download includes htmx 4, Mero and the fonts. The sample server stores changes in memory. Use **Request scenarios** to slow a save, force a validation error or try a failed request. **Restore sample products** resets the sample records.
 
 ## Use your own backend
 
@@ -16,7 +16,7 @@ Use the HTML from `site/lab.mjs` and the asset tags from the example server. Set
 | --- | --- |
 | GET the collection | Filtered results as a replacement HTML fragment. |
 | GET `/new`, `/:id/edit` or `/:id/delete` | A named native dialog with a form. |
-| POST a valid create, edit or confirmed delete | Updated results and dashboard counters as out-of-band fragments. Send `HX-Reswap: none` and `HX-Trigger-After-Settle: {"mero:form-saved":{"message":"Saved"}}`. |
+| POST a valid create, edit or confirmed delete | Updated results and dashboard counters as out-of-band fragments. Send `HX-Reswap: none` and `HX-Trigger: {"mero:form-saved":{"message":"Saved"}}`. |
 | POST invalid fields | HTTP 422 with the full form, submitted values and labelled errors. The first invalid field receives focus. |
 | POST an edit or deletion after the same record changed elsewhere | HTTP 409. Keep the newer record and the open draft. Send a plain-text `Mero-Form-Error` response header to tell the user how to recover. |
 | Request failure | The draft stays in place. The error message prompts the user to check the current record before retrying. |

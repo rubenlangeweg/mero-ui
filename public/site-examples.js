@@ -21,17 +21,22 @@
     document.querySelectorAll("[data-preview-theme]").forEach(updatePreview);
   }
   syncPreviews();
-  for (const event of ["htmx:pushedIntoHistory", "htmx:replacedInHistory", "htmx:historyRestore"]) {
+  for (const event of ["htmx:after:history:push", "htmx:after:history:replace"]) {
     document.addEventListener(event, syncPreviews);
   }
+  // htmx 4 restores history inside a Navigation API transition; the browser resets focus when it ends.
+  document.addEventListener("htmx:after:swap", event => {
+    if (event.detail.ctx.request?.headers?.["HX-History-Restore-Request"]) (window.navigation?.transition?.finished ?? Promise.resolve()).then(() => { syncPreviews(); fitLayoutChooser(); }, () => { syncPreviews(); fitLayoutChooser(); });
+  });
 
-  document.addEventListener("htmx:afterSwap", async event => {
-    const { target, xhr } = event.detail;
-    if (!target?.id || !xhr) return;
+  document.addEventListener("htmx:after:swap", async event => {
+    const { ctx } = event.detail;
+    const target = typeof ctx.target === "string" ? document.querySelector(ctx.target) : ctx.target;
+    if (!target?.id) return;
     const code = document.querySelector('[data-template-for="' + CSS.escape(target.id) + '"] pre code');
     if (!code) return;
     // Use the actual response, before the browser or HTMX adds attributes to the preview.
-    const source = document.createTextNode(xhr.responseText);
+    const source = document.createTextNode(ctx.text ?? "");
     code.replaceChildren(source);
     const { markupTokens } = await import("./markup-tokens.mjs");
     if (!code.isConnected || code.firstChild !== source) return;
@@ -55,7 +60,6 @@
   }
   fitLayoutChooser();
   layoutRail.addEventListener("change", fitLayoutChooser);
-  document.addEventListener("htmx:historyRestore", fitLayoutChooser);
   document.addEventListener("click", event => {
     const chooser = document.querySelector(".app-example-chooser[open]:not([data-inline])");
     if (chooser && !chooser.contains(event.target)) chooser.open = false;
@@ -135,44 +139,44 @@
     });
   }
 
-  document.addEventListener("htmx:beforeRequest", (event) => {
-    const { elt, xhr, requestConfig, pathInfo } = event.detail;
-    const lab = elt?.closest("[data-doc-lab]");
+  document.addEventListener("htmx:before:request", (event) => {
+    const { ctx } = event.detail;
+    const lab = ctx.sourceElement?.closest?.("[data-doc-lab]");
     if (!lab?.querySelector("[data-exchange-body]")) return;
-    const method = requestConfig.verb.toUpperCase();
-    const url = new URL(pathInfo.finalRequestPath, location.href);
+    const method = ctx.request.method;
+    // htmx 4 has already moved GET and DELETE fields into the URL and cleared the body.
+    const url = new URL(ctx.request.action, location.href);
     const path = url.pathname + url.search;
     const request = [`${method} ${path}`];
-    if (!requestConfig.useUrlParams) {
-      for (const [name, value] of requestConfig.formData || []) {
-        if (request.length === 1) request.push("", "Submitted fields");
-        const field = typeof value === "string" ? value : `${value.name} (${value.size} bytes)`;
-        request.push(`${name} = ${field}`);
-      }
+    for (const [name, value] of ctx.request.body || []) {
+      if (request.length === 1) request.push("", "Submitted fields");
+      const field = typeof value === "string" ? value : `${value.name} (${value.size} bytes)`;
+      request.push(`${name} = ${field}`);
     }
     const exchange = { lab, method, path, text: request.join("\n"), status: "Request pending", started: performance.now() };
-    exchanges.set(xhr, exchange);
+    exchanges.set(ctx, exchange);
     const trace = traces.get(lab.dataset.traceId);
     if (trace) addToTrace(trace, exchange);
     showExchange(exchange);
   });
-  document.addEventListener("htmx:afterRequest", (event) => {
-    const { xhr } = event.detail;
-    const exchange = exchanges.get(xhr);
+  document.addEventListener("htmx:finally:request", (event) => {
+    const { ctx } = event.detail;
+    const exchange = exchanges.get(ctx);
     if (!exchange) return;
-    exchanges.delete(xhr);
+    exchanges.delete(ctx);
     const { lab, result } = exchange;
     if (!result && selected.get(lab) !== exchange) return;
-    const status = xhr.status ? `HTTP ${xhr.status}` : "No response";
-    const headers = [...xhr.getAllResponseHeaders().trim().split(/\r?\n/)].filter((line) =>
+    const code = ctx.response?.status ?? 0;
+    const status = code ? `HTTP ${code}` : "No response";
+    const headers = [...ctx.response?.headers ?? []].map(([name, value]) => `${name}: ${value}`).filter((line) =>
       /^(hx-|content-type:)/i.test(line),
     );
     const elapsed = Math.round(performance.now() - exchange.started);
     exchange.status = `${status} · ${elapsed} ms`;
-    exchange.text += ["", "", status, ...headers, "", xhr.responseText || "(empty response)"].join("\n");
+    exchange.text += ["", "", status, ...headers, "", ctx.text || "(empty response)"].join("\n");
     if (result) {
-      result.textContent = xhr.status ? String(xhr.status) : "No response";
-      result.dataset.outcome = xhr.status >= 200 && xhr.status < 400 ? "success" : "error";
+      result.textContent = code ? String(code) : "No response";
+      result.dataset.outcome = code >= 200 && code < 400 ? "success" : "error";
     }
     if (selected.get(lab) === exchange) showExchange(exchange);
   });

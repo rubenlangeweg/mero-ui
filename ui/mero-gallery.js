@@ -82,7 +82,7 @@
           this.go(this.index ?? 0, false);
         }
       });
-      this.addEventListener("htmx:afterSettle", () => this.syncTrack(), options);
+      this.addEventListener("htmx:after:settle", () => this.syncTrack(), options);
       this.syncTrack();
     }
     syncTrack() {

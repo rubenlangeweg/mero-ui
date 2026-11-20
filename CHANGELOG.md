@@ -1,8 +1,20 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 · 20 November 2026
 
+- **Breaking:** Mero targets htmx 4 only. htmx 2 is no longer supported, and `mero.js` no longer relays htmx 4 events under htmx 2 names.
 - The Data Grid sorts from its column headers, filters by status with chips and a "+ Filter" menu, and moves Edit and Delete into a row Actions menu.
+
+To upgrade:
+
+1. Load htmx 4 (`htmx.org@4`) instead of htmx 2.
+2. Send `HX-Trigger` instead of `HX-Trigger-After-Settle` for `mero:form-saved`. htmx 4 fires it after the swap settles. Add a `target` selector when the swap replaces the submitting form. A server that still sends `HX-Trigger-After-Settle` no longer closes the dialog.
+3. Recopy templates that set `hx-*` attributes on a wrapper. They now use `hx-target:inherited` and similar names, which need htmx 4's default inheritance: remove `implicitInheritance` from your htmx config, because with it set htmx 4 ignores `:inherited` on ancestors. Only if you keep your 0.4 templates, set `implicitInheritance` instead. Do not mix the two.
+4. Rename `hx-disabled-elt` to `hx-disable`.
+5. Move your own listeners for htmx 2 events, such as `htmx:afterRequest` with `detail.xhr`, to htmx 4 events and `event.detail.ctx`.
+6. Read the `HX-Target` request header as `tag#id`.
+
+`hx-params` keeps working: `mero.js` applies it to the request fields.
 
 ## 0.4.0 · 20 November 2026
 

@@ -547,7 +547,7 @@
   document.addEventListener("scroll", event => {
     if (activeMenu && !activeMenu.menu.contains(event.target)) closeMenu();
   }, { capture:true, passive:true });
-  document.addEventListener("htmx:beforeCleanupElement", event => {
+  document.addEventListener("htmx:before:cleanup", event => {
     if (activeMenu && event.target.contains(activeMenu.menu)) closeMenu(false);
     const state = snapSplits.get(event.target);
     if (!state) return;
@@ -555,38 +555,35 @@
     state.observer.disconnect();
     snapSplits.delete(event.target);
   });
-  document.addEventListener("htmx:beforeRequest", event => {
-    const form = event.detail.elt.closest("[data-mero-ws-upload]");
-    if (form) uploadFiles.set(event.detail.xhr, form.elements.photo.files[0]);
+  document.addEventListener("htmx:before:request", event => {
+    const form = event.target.closest?.("[data-mero-ws-upload]");
+    if (form) uploadFiles.set(event.detail.ctx, form.elements.photo.files[0]);
   });
-  function staleUpload(form, xhr) {
-    return form.matches("[data-mero-ws-upload]") && uploadFiles.has(xhr) && form.elements.photo.files[0] !== uploadFiles.get(xhr);
+  function staleUpload(form, ctx) {
+    return form.matches("[data-mero-ws-upload]") && uploadFiles.has(ctx) && form.elements.photo.files[0] !== uploadFiles.get(ctx);
   }
-  document.addEventListener("htmx:beforeSwap", event => {
-    const form = event.detail.requestConfig?.elt?.closest("form");
+  document.addEventListener("htmx:before:swap", event => {
+    const { ctx } = event.detail;
+    const form = ctx.sourceElement?.closest?.("form");
+    const status = ctx.response?.status;
     // A filter has no error replacement. htmx 4 would swap the error into its results.
-    if (form?.matches(".mero-ws-filter") && event.detail.xhr.status >= 400) event.detail.shouldSwap = false;
+    if (form?.matches(".mero-ws-filter") && status >= 400) event.preventDefault();
     if (!form?.matches("[data-mero-ws-upload],[data-mero-ws-editor],[data-mero-ws-wizard],.mero-ws-cell")) return;
-    if (staleUpload(form,event.detail.xhr)) {
-      event.detail.shouldSwap = false;
-      event.detail.isError = false;
-      return;
-    }
-    if ([413,422].includes(event.detail.xhr.status)) {
-      event.detail.shouldSwap = true;
-      event.detail.isError = false;
-    // htmx 4 swaps every error response. Only the two above carry a replacement.
-    } else if (event.detail.xhr.status >= 400) event.detail.shouldSwap = false;
+    // htmx 4 swaps every error response. Only 413 and 422 carry a replacement.
+    if (staleUpload(form, ctx) || (status >= 400 && ![413,422].includes(status))) event.preventDefault();
   });
-  document.addEventListener("htmx:afterRequest", event => {
-    const form = event.detail.requestConfig?.elt?.closest("form");
+  document.addEventListener("htmx:finally:request", event => {
+    const { ctx } = event.detail;
+    const form = event.target.closest?.("form");
     if (!form?.matches("[data-mero-ws-upload],[data-mero-ws-editor],[data-mero-ws-wizard],.mero-ws-cell,.mero-ws-filter")) return;
-    if (staleUpload(form,event.detail.xhr)) return;
-    if (event.detail.failed && ![413,422].includes(event.detail.xhr.status)) {
+    // A cancelled request has no response and is still "issuing".
+    if (staleUpload(form, ctx) || (!ctx.response && !String(ctx.status).startsWith("error"))) return;
+    const status = ctx.response?.status;
+    if (!ctx.response || (status >= 400 && ![413,422].includes(status))) {
       form.querySelector("output").textContent = "Request failed. Check the connection and try again.";
     }
   });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => init(document), { once:true });
   else init(document);
-  document.addEventListener("htmx:load", event => init(event.detail.elt));
+  document.addEventListener("htmx:after:process", event => init(event.target));
 })();

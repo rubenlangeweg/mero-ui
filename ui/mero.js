@@ -5,7 +5,6 @@
   const dialogFocus = new WeakMap();
   const autoOpened = new WeakSet();
   const menuFocusLast = new WeakSet();
-  const requestOpeners = new WeakMap();
   const swappedFocus = new WeakMap();
   const remoteQueries = new WeakMap();
   const currentQueries = new WeakMap();
@@ -623,164 +622,31 @@
     if (event.detail?.message) toast(event.detail.message, event.detail);
   });
 
-  // htmx 4 renamed its events and replaced the XHR in their detail with a fetch
-  // context. Each one is relayed here under its htmx 2 name and shape, so the
-  // handlers in every Mero script run unchanged on both versions.
-  // shortcut: handlers stay written for htmx 2, invert this when htmx 2 support ends.
-  const legacyRequests = new WeakMap();
-  const swapRequests = new WeakMap();
+  // hx-params is Mero's own attribute: htmx 4 dropped it, and the collection markup uses it
+  // to keep drafts out of a request. closest() inherits it without implicitInheritance.
+  // config:request is the last point where the body is still a FormData, even for GET.
+  document.addEventListener("htmx:config:request", event => {
+    const body = event.detail.ctx.request.body;
+    const params = event.target.closest?.("[hx-params]")?.getAttribute("hx-params");
+    if (!params || params === "*" || !body) return;
+    const not = params.startsWith("not ");
+    const names = params === "none" ? [] : params.replace(/^not /, "").split(",").map(name => name.trim());
+    for (const key of new Set(body.keys())) if (names.includes(key) === not) body.delete(key);
+  });
 
-  function legacyRequest(ctx) {
-    let info = legacyRequests.get(ctx);
-    if (!info) {
-      // A direct htmx.swap() call has no request.
-      const request = ctx.request ?? { method: "GET", action: "" };
-      const headers = () => ctx.response?.headers;
-      info = {
-        xhr: {
-          get status() { return ctx.response?.status ?? 0; },
-          get responseText() { return ctx.text ?? ""; },
-          getResponseHeader: name => headers()?.get(name) ?? null,
-          getAllResponseHeaders: () => [...headers() ?? []].map(pair => pair.join(": ")).join("\r\n"),
-        },
-        requestConfig: {
-          // htmx 4 points ctx.sourceElement at the new content after an outerHTML swap.
-          elt: ctx.sourceElement,
-          verb: request.method.toLowerCase(),
-          headers: request.headers,
-          get useUrlParams() { return /GET|DELETE/.test(request.method); },
-          get path() { return request.action; },
-          set path(value) { request.action = value; },
-          get formData() { return request.body; },
-          get parameters() {
-            const values = request.body ?? new URL(request.action, location.href).searchParams;
-            return new Proxy({}, {
-              get: (_, name) => typeof name === "string" ? values.get(name) ?? undefined : undefined,
-              set: (_, name, value) => (values.set(name, value), true),
-            });
-          },
-        },
-      };
-      legacyRequests.set(ctx, info);
-    }
-    const target = typeof ctx.target === "string" ? document.querySelector(ctx.target) : ctx.target;
-    return { ...info, target, pathInfo: { requestPath: info.requestConfig.path, finalRequestPath: info.requestConfig.path } };
-  }
+  const swapTarget = ctx => typeof ctx.target === "string" ? document.querySelector(ctx.target) : ctx.target;
+  const taskRequests = new WeakMap();
 
-  function relay(event, name, target, detail = {}) {
-    const on = target?.isConnected ? target : document;
-    detail.elt ??= on;
-    const legacy = new CustomEvent(name, { detail, bubbles: true, cancelable: true });
-    if (!on.dispatchEvent(legacy)) event.preventDefault();
-  }
-
-  function triggerHeader(ctx, name, source) {
-    const value = ctx.response?.headers.get(name);
-    if (!value) return;
-    let events;
-    try { events = value.startsWith("{") ? JSON.parse(value) : Object.fromEntries(value.split(",").map(item => [item.trim(), {}])); } catch { return; }
-    for (const [type, data] of Object.entries(events)) {
-      const detail = data && typeof data === "object" ? data : { value: data };
-      const on = (typeof detail.target === "string" && document.querySelector(detail.target)) || (source.isConnected ? source : document.body);
-      on.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, cancelable: true }));
-    }
-  }
-
-  const legacyEvents = {
-    "htmx:config:request": event => {
-      const { ctx } = event.detail;
-      const config = legacyRequest(ctx).requestConfig;
-      // htmx 4 removed hx-params, which the collection markup uses to keep drafts out of a request.
-      const params = config.elt.closest?.("[hx-params]")?.getAttribute("hx-params");
-      if (params && params !== "*" && ctx.request.body) {
-        const not = params.startsWith("not ");
-        const names = params === "none" ? [] : params.replace(/^not /, "").split(",").map(name => name.trim());
-        for (const key of new Set(ctx.request.body.keys())) if (names.includes(key) === not) ctx.request.body.delete(key);
-      }
-      relay(event, "htmx:configRequest", config.elt, config);
-    },
-    "htmx:before:request": event => {
-      const detail = legacyRequest(event.detail.ctx);
-      relay(event, "htmx:beforeRequest", detail.requestConfig.elt, detail);
-      // htmx 4 sends right after before:request, so beforeSend follows when nothing cancelled it.
-      if (!event.defaultPrevented) relay(event, "htmx:beforeSend", detail.requestConfig.elt, detail);
-    },
-    "htmx:before:swap": event => {
-      const { ctx, tasks } = event.detail;
-      for (const task of tasks) swapRequests.set(task, ctx);
-      const detail = { ...legacyRequest(ctx), shouldSwap: true, isError: ctx.response?.status >= 400, serverResponse: ctx.text };
-      relay(event, "htmx:beforeSwap", detail.target, detail);
-      // As in htmx 2, a handler that accepts an error response also clears its failure.
-      legacyRequests.get(ctx).failed = detail.isError;
-      if (!detail.shouldSwap) event.preventDefault();
-    },
-    // htmx 4 settles each task before after:swap. htmx 2 settles afterwards, so hold these back.
-    "htmx:after:settle": event => {
-      const ctx = swapRequests.get(event.detail.task);
-      const settle = () => relay(event, "htmx:afterSettle", event.detail.task.target ?? document, ctx ? legacyRequest(ctx) : {});
-      const info = ctx && legacyRequests.get(ctx);
-      if (info) (info.settles ??= []).push(settle);
-      else settle();
-    },
-    "htmx:finally:swap": event => {
-      const { ctx } = event.detail;
-      const info = legacyRequests.get(ctx);
-      if (!info) return;
-      const source = info.requestConfig.elt;
-      // htmx 4 dropped these two headers. Mero keeps one server contract for both
-      // versions, and like htmx 2 only honours them once a swap was accepted.
-      if (info.swapped) triggerHeader(ctx, "HX-Trigger-After-Swap", source);
-      for (const settle of info.settles?.splice(0) ?? []) settle();
-      if (info.swapped) triggerHeader(ctx, "HX-Trigger-After-Settle", source);
-    },
-    "htmx:after:swap": event => {
-      const { ctx } = event.detail;
-      const detail = legacyRequest(ctx);
-      legacyRequests.get(ctx).swapped = true;
-      relay(event, "htmx:afterSwap", event.target, detail);
-      if (!ctx.request?.headers?.["HX-History-Restore-Request"]) return;
-      // htmx 4 restores inside a Navigation API transition. The browser resets focus
-      // and scroll when that ends, so a restore handler has to run afterwards.
-      const restored = () => relay(event, "htmx:historyRestore", document);
-      (window.navigation?.transition?.finished ?? Promise.resolve()).then(restored, restored);
-    },
-    "htmx:response:error": event => {
-      const detail = legacyRequest(event.detail.ctx);
-      relay(event, "htmx:responseError", detail.requestConfig.elt, detail);
-    },
-    "htmx:finally:request": event => {
-      const { ctx } = event.detail;
-      // htmx 4 also reports requests that a before:request listener cancelled.
-      if (!ctx.response && !String(ctx.status).startsWith("error")) return;
-      const detail = legacyRequest(ctx);
-      const source = detail.requestConfig.elt;
-      const failed = !ctx.response || (legacyRequests.get(ctx).failed ?? ctx.response.status >= 400);
-      const successful = !failed;
-      relay(event, "htmx:afterRequest", source, { ...detail, successful, failed });
-      // As in htmx 2, the cause of a missing response follows afterRequest.
-      const signal = ctx.request.signal;
-      if (!ctx.response) relay(event, signal?.reason === "timeout" ? "htmx:timeout" : signal?.aborted ? "htmx:sendAbort" : "htmx:sendError", source, { ...detail });
-    },
-    "htmx:before:cleanup": event => relay(event, "htmx:beforeCleanupElement", event.target),
-    "htmx:after:process": event => relay(event, "htmx:load", event.target),
-    "htmx:before:history:update": event => relay(event, "htmx:beforeHistoryUpdate", document,
-      Object.assign(event.detail, { requestConfig: { elt: event.detail.sourceElement } })),
-    "htmx:after:history:push": event => relay(event, "htmx:pushedIntoHistory", document, event.detail),
-    "htmx:after:history:replace": event => relay(event, "htmx:replacedInHistory", document, event.detail),
-  };
-  for (const [name, handler] of Object.entries(legacyEvents)) document.addEventListener(name, handler);
-
-  document.addEventListener("htmx:beforeRequest", event => {
-    const { xhr, elt } = event.detail;
-    if (!xhr || !elt) return;
-    requestOpeners.set(xhr, elt);
-    if (elt.matches?.('[data-mero-combo-remote] [role="combobox"]')) {
+  document.addEventListener("htmx:before:request", event => {
+    const { ctx } = event.detail;
+    const elt = ctx.sourceElement;
+    if (elt?.matches?.('[data-mero-combo-remote] [role="combobox"]')) {
       if (elt.hasAttribute("data-mero-combo-dismissed")) {
         event.preventDefault();
         return;
       }
       const query = { input: elt, value: elt.value };
-      remoteQueries.set(xhr, query);
+      remoteQueries.set(ctx, query);
       currentQueries.set(elt, query);
       elt.setAttribute("data-mero-combo-pending", "");
       elt.setAttribute("aria-busy", "true");
@@ -789,21 +655,23 @@
     }
   });
 
-  document.addEventListener("htmx:beforeSwap", event => {
-    const query = remoteQueries.get(event.detail.xhr);
+  document.addEventListener("htmx:before:swap", event => {
+    const { ctx, tasks } = event.detail;
+    for (const task of tasks) taskRequests.set(task, ctx);
+    const query = remoteQueries.get(ctx);
     // htmx 4 would swap an error page into the list of suggestions.
-    if (query && (!isCurrentQuery(query) || event.detail.xhr.status >= 400)) event.detail.shouldSwap = false;
+    if (query && (!isCurrentQuery(query) || ctx.response?.status >= 400)) event.preventDefault();
     const active = document.activeElement;
     const scope = active?.closest("[data-mero-scope]");
-    if (scope && active.id && scopeAliases.has(scope) && event.detail.shouldSwap && event.detail.target?.contains(active)) {
-      swappedFocus.set(event.detail.xhr, { scope, id: active.id });
+    if (scope && active.id && scopeAliases.has(scope) && !event.defaultPrevented && swapTarget(ctx)?.contains(active)) {
+      for (const task of tasks) swappedFocus.set(task, { scope, id: active.id });
     }
   });
 
-  document.addEventListener("htmx:afterRequest", event => {
-    const query = remoteQueries.get(event.detail.xhr);
-    // Network errors carry neither flag, so only an explicit success counts.
-    if (!query || !isCurrentQuery(query) || event.detail.successful) return;
+  document.addEventListener("htmx:finally:request", event => {
+    const { ctx } = event.detail;
+    const query = remoteQueries.get(ctx);
+    if (!query || !isCurrentQuery(query) || (ctx.response && ctx.response.status < 400)) return;
     query.input.removeAttribute("data-mero-combo-pending");
     query.input.removeAttribute("aria-busy");
     query.input.setAttribute("data-mero-combo-error", "");
@@ -811,18 +679,20 @@
     comboStatus(query.input, "Could not load suggestions. Edit the search to try again.", true);
   });
 
-  document.addEventListener("htmx:afterSettle", event => {
-    const { xhr, elt } = event.detail;
-    init(elt ?? event.target, requestOpeners.get(xhr), remoteQueries.get(xhr));
+  document.addEventListener("htmx:after:settle", event => {
+    const { task } = event.detail;
+    // task.sourceElement stays the original opener; ctx.sourceElement moves to new content after an outerHTML swap.
+    const opener = task.sourceElement;
+    init(event.target, opener, remoteQueries.get(taskRequests.get(task)));
     // HTMX restores focus before repeated fragment IDs receive their scoped names.
-    const saved = swappedFocus.get(xhr);
+    const saved = swappedFocus.get(task);
     if (saved && document.activeElement === document.body) {
       const replacement = element(saved.id);
       if (replacement && saved.scope.contains(replacement)) replacement.focus({ preventScroll: true });
     }
     // The detached opener still answers closest() through its old subtree.
     const region = event.target.closest?.("[data-mero-restore-focus]");
-    if (region && document.activeElement === document.body && requestOpeners.get(xhr)?.closest?.("[data-mero-restore-focus]")) {
+    if (region && document.activeElement === document.body && opener?.closest?.("[data-mero-restore-focus]")) {
       region.querySelector("[data-mero-focus-fallback]")?.focus({ preventScroll: true });
     }
   });
@@ -839,9 +709,15 @@
   addEventListener("pageshow", event => {
     restoreFocus(event.persisted || performance.getEntriesByType("navigation")[0]?.type === "back_forward");
   });
-  document.addEventListener("htmx:historyRestore", () => restoreFocus());
+  // htmx 4 restores inside a Navigation API transition. The browser resets focus
+  // and scroll when that ends, so the restore has to run afterwards.
+  document.addEventListener("htmx:after:swap", event => {
+    if (!event.detail.ctx.request?.headers?.["HX-History-Restore-Request"]) return;
+    const done = () => restoreFocus();
+    (window.navigation?.transition?.finished ?? Promise.resolve()).then(done, done);
+  });
 
-  document.addEventListener("htmx:beforeCleanupElement", event => {
+  document.addEventListener("htmx:before:cleanup", event => {
     visibleTooltips.delete(event.target);
   });
 

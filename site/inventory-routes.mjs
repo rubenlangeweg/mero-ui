@@ -119,6 +119,6 @@ export async function handleInventoryRequest(request, response, url, store, { ba
     (params.has("studioShowcase") ? renderRelated(changedId ?? product.id) : "");
   return send(response, fragments, 200, {
     ...version(), "HX-Reswap": "none",
-    "HX-Trigger-After-Settle": JSON.stringify({ "mero:form-saved": { message } }),
+    "HX-Trigger": JSON.stringify({ "mero:form-saved": { message } }),
   });
 }

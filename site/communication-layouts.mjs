@@ -81,7 +81,7 @@ function draftMarker(id) {
   return ` <span class="comm-draft" data-comm-draft-for="${id}" hidden>Draft</span> `;
 }
 function frame(screen, title, address, detail, content, options, draftScope) {
-  return `<section class="comm-frame" data-communication="${screen}" data-draft-scope="${draftScope}" data-mobile-view="${detail ? "detail" : "list"}" data-comm-focus="${esc(options.focus)}" hx-target="closest [data-communication]" hx-swap="outerHTML settle:0ms" hx-sync="closest [data-communication]:drop" hx-history="false">
+  return `<section class="comm-frame" data-communication="${screen}" data-draft-scope="${draftScope}" data-mobile-view="${detail ? "detail" : "list"}" data-comm-focus="${esc(options.focus)}" hx-target:inherited="closest [data-communication]" hx-swap:inherited="outerHTML settle:0ms" hx-sync:inherited="closest [data-communication]:drop">
     <header class="comm-mast"><div class="comm-title">${icon(screen)}<h1>${title}</h1></div><span class="comm-identity">${address}</span></header>
     ${content}${options.notice ? `<p role="status" class="comm-notice">${esc(options.notice)}</p>` : ""}
   </section>`;

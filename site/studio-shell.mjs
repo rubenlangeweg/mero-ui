@@ -24,7 +24,7 @@ function icon(id) {
 
 export function renderStudioShell(view, content, studio, { params = new URLSearchParams(), brand = "Studio" } = {}) {
   const counts = { companies: studio.companies.length, board: studio.tasks.length };
-  return `<div id="studio-workspace" class="mero-app studio-workspace" hx-history="false" data-studio-view="${esc(view)}">
+  return `<div id="studio-workspace" class="mero-app studio-workspace" data-studio-view="${esc(view)}">
     <aside class="mero-app-nav studio-nav">
       <a class="studio-identity" ${studioLink("overview", {}, params)}>
         <span class="studio-identity-mark">${icon("studio")}</span><span>${esc(brand)}<small>Team workspace</small></span>

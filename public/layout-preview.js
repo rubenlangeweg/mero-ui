@@ -11,12 +11,12 @@
     return url.pathname + url.search + url.hash;
   }
 
-  document.addEventListener("htmx:beforeHistoryUpdate", event => {
+  document.addEventListener("htmx:before:history:update", event => {
     const entry = event.detail.history;
     entry.path = previewPath(entry.path);
   });
-  document.addEventListener("htmx:load", event => {
-    for (const link of event.detail.elt.querySelectorAll('a[href^="/layouts/"]')) {
+  document.addEventListener("htmx:after:process", event => {
+    for (const link of event.target.querySelectorAll('a[href^="/layouts/"]')) {
       link.setAttribute("href", previewPath(link.href));
     }
   });

@@ -118,18 +118,22 @@
   });
   const drafts = new WeakMap();
   const pinnedLogs = new WeakSet();
-  document.addEventListener('htmx:beforeSwap', event => {
-    const target = event.detail.target;
+  const swapTarget = ctx => typeof ctx.target === 'string' ? document.querySelector(ctx.target) : ctx.target;
+  // htmx 4 also reports requests a before:request listener cancelled: no response, still "issuing".
+  const cancelled = ctx => !ctx.response && !String(ctx.status).startsWith('error');
+  document.addEventListener('htmx:before:swap', event => {
+    const { ctx } = event.detail;
+    const target = swapTarget(ctx);
     // htmx 4 would swap an error response into the conversation or report.
-    if (event.detail.xhr.status >= 400 && event.detail.requestConfig?.elt?.closest?.('[data-mero-compose], .mero-chat-inbox, .mero-markdown-editor, .mero-report-period')) event.detail.shouldSwap = false;
-    if (!event.detail.shouldSwap || !target?.matches('.mero-chat-history')) return;
+    if (ctx.response?.status >= 400 && ctx.sourceElement?.closest?.('[data-mero-compose], .mero-chat-inbox, .mero-markdown-editor, .mero-report-period')) event.preventDefault();
+    if (event.defaultPrevented || !target?.matches?.('.mero-chat-history')) return;
     if (target.scrollHeight - target.clientHeight - target.scrollTop <= 4) pinnedLogs.add(target);
     else pinnedLogs.delete(target);
   });
-  document.addEventListener('htmx:afterSwap', event => {
-    const target = event.detail.target;
+  document.addEventListener('htmx:after:swap', event => {
+    const target = swapTarget(event.detail.ctx);
     if (pinnedLogs.delete(target)) target.scrollTop = target.scrollHeight;
-    if (!target?.matches('.mero-chat-thread')) return;
+    if (!target?.matches?.('.mero-chat-thread')) return;
     const current = target.querySelector('[data-mero-current-topic]')?.dataset.meroCurrentTopic;
     const inbox = target.closest('.mero-chat-inbox');
     if (!inbox || !current) return;
@@ -144,38 +148,40 @@
       event.target.form.querySelector('[data-mero-chat-status]').textContent = '';
     }
   });
-  document.addEventListener('htmx:beforeRequest', event => {
-    const form = event.detail.elt.closest?.('[data-mero-compose]');
+  document.addEventListener('htmx:before:request', event => {
+    const form = event.target.closest?.('[data-mero-compose]');
     if (!form) return;
-    drafts.set(event.detail.xhr, form.elements.message.value);
+    drafts.set(event.detail.ctx, form.elements.message.value);
     form.setAttribute('aria-busy','true');
     form.querySelector('button[type=submit]').disabled = true;
     form.querySelector('[data-mero-chat-status]').textContent = 'Preparing reply…';
   });
-  document.addEventListener('htmx:afterRequest', event => {
-    const form = event.detail.elt.closest?.('[data-mero-compose]');
-    if (!form) return;
+  document.addEventListener('htmx:finally:request', event => {
+    const { ctx } = event.detail;
+    const form = event.target.closest?.('[data-mero-compose]');
+    if (!form || cancelled(ctx)) return;
     form.removeAttribute('aria-busy');
     form.querySelector('button[type=submit]').disabled = false;
     const input = form.elements.message;
     const status = form.querySelector('[data-mero-chat-status]');
-    if (event.detail.successful) {
-      if (input.value === drafts.get(event.detail.xhr)) input.value = '';
+    if (ctx.response?.status < 400) {
+      if (input.value === drafts.get(ctx)) input.value = '';
       input.removeAttribute('aria-invalid');
       status.textContent = '';
       if (document.activeElement === document.body || form.contains(document.activeElement)) input.focus({preventScroll:true});
-    } else if (event.detail.xhr.status === 422 && input.value === drafts.get(event.detail.xhr)) {
+    } else if (ctx.response?.status === 422 && input.value === drafts.get(ctx)) {
       status.textContent = 'Enter a question between 1 and 1,000 characters.';
       input.setAttribute('aria-invalid','true');
       if (document.activeElement === document.body || form.contains(document.activeElement)) input.focus({preventScroll:true});
     } else status.textContent = 'Could not send. Try again.';
-    drafts.delete(event.detail.xhr);
+    drafts.delete(ctx);
   });
-  document.addEventListener('htmx:afterRequest', event => {
-    const panel = event.detail.elt.closest?.('.mero-chat-inbox, .mero-markdown-editor, .mero-report-period');
+  document.addEventListener('htmx:finally:request', event => {
+    const { ctx } = event.detail;
+    const panel = event.target.closest?.('.mero-chat-inbox, .mero-markdown-editor, .mero-report-period');
     const status = panel?.querySelector('[data-mero-report-status]');
-    if (!status) return;
-    if (event.detail.successful) status.textContent = panel.matches('.mero-markdown-editor') ? 'Preview updated.' : '';
-    else if (event.detail.failed) status.textContent = 'Could not load the update. Try again.';
+    if (!status || cancelled(ctx)) return;
+    if (ctx.response?.status < 400) status.textContent = panel.matches('.mero-markdown-editor') ? 'Preview updated.' : '';
+    else status.textContent = 'Could not load the update. Try again.';
   });
 })();

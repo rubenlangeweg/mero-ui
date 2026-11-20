@@ -49,3 +49,16 @@ test("chart and Markdown helpers are downloadable server modules separate from t
   }
   assert.doesNotMatch(componentPage(components.get("button"), new URLSearchParams()), /Optional server helper/);
 });
+
+test("pages run on plain htmx 4: no implicit inheritance, one vendored htmx 4 build, native trigger contract", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const { shell } = await import("../site/shell.mjs");
+  const { referencePage } = await import("../site/reference.mjs");
+  for (const html of [shell({ body: "" }), standalonePage(components.get("button"), new URLSearchParams())]) {
+    assert.match(html, /name="htmx-config"/);
+    assert.doesNotMatch(html, /implicitInheritance/);
+  }
+  assert.match(await readFile("public/vendor/htmx.min.js", "utf8"), /htmx:config:request/);
+  await assert.rejects(access("public/vendor/htmx-4.min.js"));
+  assert.doesNotMatch(referencePage(), /HX-Trigger-After/);
+});
