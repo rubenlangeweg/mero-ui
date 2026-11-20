@@ -6,7 +6,7 @@
 
 ## Starting position before release 0.2
 
-The catalog has 72 examples across 15 groups. Four individual examples issue HTMX requests directly. The richest example already sits outside that catalog. Inventory handles search, filters, create, edit, confirmed delete, and server validation. The dashboard also updates its counters after a save. Today its copy button gives you a shell with two hardcoded counters. The inventory stylesheet is absent from the packaged assets. Closing that gap delivers more value than adding another component. [Catalog](../site/components.mjs) · [Inventory](../site/lab.mjs) · [Dashboard preview and copy](../server.mjs) · [Package contents](../package.json)
+The catalog has 72 examples across 15 groups. Four individual examples issue HTMX requests directly. The richest example already sits outside that catalog. Inventory handles search, filters, create, edit, confirmed delete, and server validation. The dashboard also updates its counters after a save. Today its copy button gives you a shell with two hardcoded counters. The inventory stylesheet is absent from the packaged assets. Closing that gap delivers more value than adding another component. [Catalog](../site/core-components.mjs) · [Inventory](../site/lab.mjs) · [Dashboard preview and copy](../server.mjs) · [Package contents](../package.json)
 
 The graphite workspace, lamp photography and overlapping panels give Mero a recognizable look. The three finishes select a radio, but the lamp image stays ivory and the lamp itself is missing from the inventory. That is the clearest opportunity to make the homepage feel like a product. [Studio showcase](../site/pro-stage.mjs) · [Inventory records](../site/lab.mjs)
 

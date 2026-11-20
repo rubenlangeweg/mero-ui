@@ -1,4 +1,4 @@
-import { groups as core } from "./components.mjs";
+import { groups as core } from "./core-components.mjs";
 import { groups as galleries } from "./gallery-components.mjs";
 import { groups as collections } from "./collection-components.mjs";
 import { groups as workspace } from "./workspace-components.mjs";

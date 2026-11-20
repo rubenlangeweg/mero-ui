@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import test from "node:test";
-import { catalogFragment, groups } from "../site/components.mjs";
+import { catalogFragment, groups } from "../site/core-components.mjs";
 import { createInventoryExample } from "../examples/studio-inventory/server.mjs";
 
 // Optional browser dependency for contributors. MERO_PLAYWRIGHT_MODULE can

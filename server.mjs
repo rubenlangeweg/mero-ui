@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { pathToFileURL } from "node:url";
-import { catalogFragment } from "./site/components.mjs";
+import { catalogFragment } from "./site/core-components.mjs";
 import { groups, components, moduleAssets } from "./site/catalog.mjs";
 import { catalogIndex, componentPage, exampleAssets, standalonePage } from "./site/catalog-pages.mjs";
 import { selectVariant } from "./site/examples.mjs";
