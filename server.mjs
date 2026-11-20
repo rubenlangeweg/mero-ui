@@ -31,6 +31,7 @@ import {
 } from "./site/studio.mjs";
 import { studioUrl } from "./site/studio-links.mjs";
 import { startGuide } from "./site/start-guide.mjs";
+import { referencePage } from "./site/reference.mjs";
 
 export const sourceArchiveEntries = [
   "LICENSE", ".gitignore", "README.md", "package.json", "package-lock.json", "server.mjs", "site", "ui", "public", "examples",
@@ -44,7 +45,7 @@ const workbenchAssets = [...formAssets, "mero-inventory.css", "mero-inventory.js
 const inventoryAssets = [...workbenchAssets, "mero-layouts.css"];
 const layoutPages = new Map(layouts.map(layout => [layout.id, layout]));
 const discoveryPaths = [
-  "/", "/start", "/docs/design-principles", "/docs/responsive-layouts", "/components", "/layouts", "/themes", "/playground",
+  "/", "/start", "/docs/design-principles", "/docs/responsive-layouts", "/docs/reference", "/components", "/layouts", "/themes", "/playground",
   ...infoPages.keys(), ...Array.from(components.keys(), id => "/components/" + id),
   ...layouts.map(layout => "/layouts/" + layout.id),
 ];
@@ -136,6 +137,11 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
   function designPrinciples({ page }) {
     return page({ title: "Design principles", nav: "start", assets: ["design-principles.css", "catalog-navigation.js"],
       body: catalogLayout({ groups, active: "design-principles", content: designPrinciplesPage() }) });
+  }
+
+  function reference({ page }) {
+    return page({ title: "Events and JavaScript", nav: "start", assets: ["design-principles.css", "catalog-navigation.js"],
+      body: catalogLayout({ groups, active: "reference", content: referencePage() }) });
   }
 
   function responsiveLayouts({ request, response, searchParams, page }) {
@@ -300,6 +306,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     ["GET", "/start", startPage],
     ["GET", "/docs/design-principles", designPrinciples],
     ["GET", "/docs/responsive-layouts", responsiveLayouts],
+    ["GET", "/docs/reference", reference],
     ["GET", "/playground", playground],
     ["GET", "/themes", themes],
     ["GET", "/layouts", layoutIndex],
