@@ -12,9 +12,16 @@
     "build": "node scripts/build-assets.mjs && cf build",
     "deploy": "npm run build && cf deploy --prebuilt"
   },
+  "exports": {
+    "./charts": "./ui/insight-charts.mjs",
+    "./markdown": "./ui/insight-markdown.mjs",
+    "./ui/*": "./ui/*",
+    "./package.json": "./package.json"
+  },
   "files": [
     "ui",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=22"

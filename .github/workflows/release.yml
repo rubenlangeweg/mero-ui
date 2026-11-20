@@ -1,0 +1,45 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+  packages: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+      - name: Check the tag matches package.json
+        run: test "$GITHUB_REF_NAME" = "v$(node -p 'require("./package.json").version')"
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+      - run: npm pack
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          tarball="rubenlangeweg-mero-ui-$version.tgz"
+          {
+            echo "Install the UI assets directly from this release:"
+            echo
+            echo '```sh'
+            echo "npm install https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/$tarball"
+            echo '```'
+            echo
+            # The changelog section for this version, without its heading.
+            awk -v v="$version" '/^## /{on = index($0, "## " v " ") == 1; next} on' CHANGELOG.md
+          } > notes.md
+          gh release create "$GITHUB_REF_NAME" "$tarball" --title "Mero UI $GITHUB_REF_NAME" --notes-file notes.md
+      # Last, so a registry failure still leaves the release and its tarball.
+      - name: Publish to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: npm publish "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz"

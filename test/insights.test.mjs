@@ -83,3 +83,8 @@ test('each plot has one keyboard entry, including a pie with leading zero rows',
   assert.match(empty,/<th scope="row">None<\/th>/);
   assert.doesNotMatch(empty,/data-mero-plot-readout/);
 });
+
+test('the package exports the server helpers by name', async () => {
+  assert.equal((await import('@rubenlangeweg/mero-ui/charts')).renderChart, renderChart);
+  assert.equal((await import('@rubenlangeweg/mero-ui/markdown')).renderMarkdown, renderMarkdown);
+});
