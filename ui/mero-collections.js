@@ -15,9 +15,10 @@
   function focusGrid(grid) {
     const key = grid.dataset.meroGridFocus;
     if (!key) return;
-    const selectors = { field: '.mero-collection-editor input:not([type=hidden])', cancel: '[data-grid-cancel]', invalid:'[aria-invalid="true"]', add:'[data-grid-add]', search:'input[name=q]' };
-    const rowAction = /^(edit|delete)-(\d+)$/.exec(key);
-    const selector = Object.hasOwn(selectors, key) ? selectors[key] : (rowAction ? `[data-grid-${rowAction[1]}="${rowAction[2]}"]` : '');
+    const selectors = { field: '.mero-collection-editor input:not([type=hidden])', cancel: '[data-grid-cancel]', invalid:'[aria-invalid="true"]', add:'[data-grid-add]', search:'input[name=q]', filter:'[data-grid-filter]', 'sort-name':'[data-grid-sort=name]', 'sort-status':'[data-grid-sort=status]' };
+    // edit-ID and delete-ID return to the row's Actions menu button.
+    const row = /^(?:edit|delete)-(\d+)$/.exec(key);
+    const selector = Object.hasOwn(selectors, key) ? selectors[key] : (row ? `[data-grid-actions="${row[1]}"]` : '');
     if (!selector) return;
     delete grid.dataset.meroGridFocus;
     (grid.querySelector(selector) || grid.querySelector('[data-grid-add]'))?.focus();

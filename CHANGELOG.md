@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The Data Grid sorts from its column headers, filters by status with chips and a "+ Filter" menu, and moves Edit and Delete into a row Actions menu.
+
 ## 0.4.0 · 20 November 2026
 
 - **Menu Button:** a `role="menu"` popover now supports arrow keys, Home, End, typeahead, Escape and Tab, and focus returns to its button.

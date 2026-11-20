@@ -51,22 +51,35 @@ export function renderCollectionGrid(store, params = new URLSearchParams(), stat
   const rows = store.products.filter(product => (!filter || product.status === filter) && `${product.name} ${product.sku}`.toLowerCase().includes(searchText));
   rows.sort((a,b) => sort === 'status' ? a.status.localeCompare(b.status) || a.name.localeCompare(b.name) : sort === 'name-desc' ? b.name.localeCompare(a.name) : a.name.localeCompare(b.name));
   const selected = new Set(params.getAll('row'));
-  return `<section class="mero-collection" data-mero-grid data-inventory-revision="${store.revision}" hx-target="closest [data-mero-grid]" hx-swap="outerHTML" hx-sync="closest [data-mero-grid]:drop" hx-include="closest [data-mero-grid]" hx-params="${gridQueryParams}"${state.focus ? ` data-mero-grid-focus="${escape(state.focus)}"` : ''}>
+  // No-JS href stays on the host page; hx-get carries the same view to the fragment, never row drafts.
+  const viewLink = (changes, focus, attributes, label) => {
+    const next = new URLSearchParams(Object.entries({q:query, filter, sort, ...changes}).filter(([, value]) => value));
+    const href = escape('?'+next);
+    next.set('returnFocus', focus);
+    return `<a href="${href}" hx-get="${escape(`${gridPath}?${next}`)}" hx-params="none"${attributes}>${label}</a>`;
+  };
+  const sortHeader = (key, label, ascending, descending) => {
+    const order = sort === ascending ? 'ascending' : sort === descending ? 'descending' : '';
+    const arrow = order ? ` <span aria-hidden="true">${order === 'ascending' ? '↑' : '↓'}</span>` : '';
+    return `<th scope="col"${order ? ` aria-sort="${order}"` : ''}>${viewLink({sort: order === 'ascending' && descending ? descending : ascending}, `sort-${key}`, ` data-grid-sort="${key}"`, label+arrow)}</th>`;
+  };
+  const filterChip = filter ? `<ul class="mero-filter-chips mero-row" aria-label="Applied filters"><li class="mero-chip mero-chip-accent">Status is ${filter} ${viewLink({filter:''}, 'filter', ` aria-label="Remove filter: Status is ${filter}"`, '<span class="mero-dismiss-mark" aria-hidden="true"></span>')}</li></ul>` : '';
+  return `<section class="mero-collection" data-mero-grid data-mero-scope data-inventory-revision="${store.revision}" hx-target="closest [data-mero-grid]" hx-swap="outerHTML" hx-sync="closest [data-mero-grid]:drop" hx-include="closest [data-mero-grid]" hx-params="${gridQueryParams}"${state.focus ? ` data-mero-grid-focus="${escape(state.focus)}"` : ''}>
     <input type="hidden" name="revision" value="${store.revision}">
     <div class="mero-collection-head"><div><h2>Studio inventory</h2><p>Product catalog</p></div><button type="button" class="mero-button mero-button-primary mero-button-sm" data-grid-add hx-get="${gridPath}/new">Add product</button></div>
     <form class="mero-collection-filters" role="search" hx-get="${gridPath}" hx-vals='{"returnFocus":"search"}'>
       <input class="mero-input" type="search" name="q" value="${escape(query)}" maxlength="120" placeholder="Search products…" aria-label="Search products">
-      <select class="mero-select" name="filter" aria-label="Filter by status"><option value="">All statuses</option>${options(statuses,filter)}</select>
-      <select class="mero-select" name="sort" aria-label="Sort products">${[['name','Name A–Z'],['name-desc','Name Z–A'],['status','Status']].map(([value,label]) => `<option value="${value}"${value === sort ? ' selected' : ''}>${label}</option>`).join('')}</select>
+      <input type="hidden" name="filter" value="${filter}"><input type="hidden" name="sort" value="${sort}">
       <button type="submit" class="mero-button mero-button-outline mero-button-sm">Apply</button>
     </form>
+    <div class="mero-filter-bar">${filterChip}<button class="mero-button mero-button-outline mero-button-sm" type="button" popovertarget="grid-filter-menu" aria-haspopup="menu" aria-expanded="false" aria-label="Add filter" data-grid-filter><span aria-hidden="true">+</span> Filter</button><div class="mero-popover mero-menu" id="grid-filter-menu" popover role="menu" aria-label="Add filter">${statuses.filter(status => status !== filter).map(status => viewLink({filter:status}, 'filter', ' class="mero-menu-item" role="menuitem"', `Status is ${status}`)).join('')}</div>${filter ? viewLink({filter:''}, 'filter', ' class="mero-link"', 'Clear all filters') : ''}</div>
     <p class="mero-collection-message" role="status" data-grid-message>${escape(state.message ?? '')}</p>
     <p class="mero-collection-error" role="alert" data-grid-error${state.error ? '' : ' hidden'}>${escape(state.error ?? '')}</p>
     ${state.edit ? editForm(state.edit, state.errors ?? {}) : ''}
     ${state.remove ? `<form class="mero-collection-editor" hx-post="${gridPath}/delete" hx-params="revision,q,filter,sort,row,id"><h3>Delete ${escape(state.remove.name)}?</h3><p>This removes the product from your inventory.</p><input type="hidden" name="id" value="${state.remove.id}"><div class="mero-collection-actions"><button type="button" data-grid-cancel class="mero-button mero-button-outline mero-button-sm" hx-get="${gridPath}" hx-params="${gridQueryParams}" hx-vals='{"returnFocus":"delete-${state.remove.id}"}'>Cancel</button><button class="mero-button mero-button-danger mero-button-sm" type="submit">Delete product</button></div></form>` : ''}
     <form class="mero-collection-body" hx-post="${gridPath}/bulk" hx-params="revision,q,filter,sort,row,next">
-      <div class="mero-collection-scroll"><table class="mero-table mero-collection-table"><caption class="mero-collection-sr">Studio products</caption><thead><tr><th scope="col"><label class="mero-collection-pick"><input type="checkbox" class="mero-checkbox" data-grid-all aria-label="Select all visible products"${rows.length ? '' : ' disabled'}></label></th><th scope="col">Product</th><th scope="col">Status</th><th scope="col"><span class="mero-collection-sr">Actions</span></th></tr></thead>
-      <tbody>${rows.map(product => `<tr><td><label class="mero-collection-pick"><input class="mero-checkbox" type="checkbox" name="row" value="${product.id}" aria-label="Select ${escape(product.name)}"${selected.has(String(product.id)) ? ' checked' : ''}></label></td><th scope="row"><strong>${escape(product.name)}</strong><small>${escape(product.sku)} · ${escape(product.category)}</small><span class="mero-small-status">${productStatus(product.status)}</span></th><td>${productStatus(product.status)}</td><td><div class="mero-collection-row-actions"><button type="button" class="mero-button mero-button-ghost mero-button-sm" data-grid-edit="${product.id}" hx-params="${gridQueryParams}" hx-get="${gridPath}/${product.id}/edit" aria-label="Edit ${escape(product.name)}">Edit</button><button type="button" class="mero-button mero-button-ghost mero-button-sm" data-grid-delete="${product.id}" hx-params="${gridQueryParams}" hx-get="${gridPath}/${product.id}/confirm" aria-label="Delete ${escape(product.name)}">Delete</button></div></td></tr>`).join('') || `<tr><td colspan="4">${emptyState('No matching products','Change the search or status filter.')}</td></tr>`}</tbody></table></div>
+      <div class="mero-collection-scroll"><table class="mero-table mero-collection-table"><caption class="mero-collection-sr">Studio products</caption><thead><tr><th scope="col"><label class="mero-collection-pick"><input type="checkbox" class="mero-checkbox" data-grid-all aria-label="Select all visible products"${rows.length ? '' : ' disabled'}></label></th>${sortHeader('name','Product','name','name-desc')}${sortHeader('status','Status','status')}<th scope="col"><span class="mero-collection-sr">Actions</span></th></tr></thead>
+      <tbody>${rows.map(product => `<tr><td><label class="mero-collection-pick"><input class="mero-checkbox" type="checkbox" name="row" value="${product.id}" aria-label="Select ${escape(product.name)}"${selected.has(String(product.id)) ? ' checked' : ''}></label></td><th scope="row"><strong>${escape(product.name)}</strong><small>${escape(product.sku)} · ${escape(product.category)}</small><span class="mero-small-status">${productStatus(product.status)}</span></th><td>${productStatus(product.status)}</td><td><button type="button" class="mero-button mero-button-ghost mero-button-sm" popovertarget="grid-row-${product.id}-menu" aria-haspopup="menu" aria-expanded="false" aria-label="Actions for ${escape(product.name)}" data-grid-actions="${product.id}">Actions</button><div class="mero-popover mero-menu" id="grid-row-${product.id}-menu" popover role="menu" aria-label="${escape(product.name)} actions"><button type="button" class="mero-menu-item" role="menuitem" hx-params="${gridQueryParams}" hx-get="${gridPath}/${product.id}/edit">Edit</button><button type="button" class="mero-menu-item" role="menuitem" hx-params="${gridQueryParams}" hx-get="${gridPath}/${product.id}/confirm">Delete</button></div></td></tr>`).join('') || `<tr><td colspan="4">${emptyState('No matching products','Change the search or status filter.')}</td></tr>`}</tbody></table></div>
       <div class="mero-action-bar" data-grid-bar hidden><output data-grid-count></output><select class="mero-select" name="next" aria-label="Set selected products to">${options(statuses,'Archived')}</select><button class="mero-button mero-button-primary mero-button-sm" type="submit">Update selected</button><button class="mero-button mero-button-ghost mero-button-sm" data-grid-clear type="button">Clear</button></div>
     </form><footer class="mero-collection-foot">${rows.length} of ${store.products.length} products</footer>
   </section>`;
@@ -169,13 +182,21 @@ function gridExample(query = '') {
 }
 const liveGrid = gridExample();
 const actionBarGrid = gridExample('row=1&row=2');
+// Previews pass the page query, so the no-JS sort and filter links render server-side.
+const gridFromPage = (params, base = []) => gridExample(new URLSearchParams([...base, ...[...params].filter(([name]) => ['q','filter','sort'].includes(name))]).toString());
 export const groups = [{name:'Studio collections',items:[
-  component('data-grid','Data Grid','Search, sort, select and edit products in a server-rendered collection.',liveGrid,'Use GET to return a filtered grid. Save, delete and bulk actions POST to the host and return the same section. Validation returns 422 with the draft. Selection applies to visible rows. Supply the displayed revision to handle changes in another workspace.',[
-    {name:'Bulk selection',demo:actionBarGrid},
-    {name:'Drafts only',demo:gridExample('filter=Draft')},
-    {name:'No matches',demo:gridExample('q=No+such+SKU')},
-  ]),
-  component('action-bar','Action Bar','Select records and apply one status change to the selection.',actionBarGrid,'The action bar appears for a nonempty selection. Bulk actions include the selected row IDs and the current query.'),
+  {
+    ...component('data-grid','Data Grid','Search, sort, select and edit products in a server-rendered collection.',liveGrid,'Use GET to return a filtered grid. The Product and Status headers sort with links that set aria-sort, + Filter adds a status chip, and each row’s Actions menu opens Edit or Delete. Sort and filter links carry the search and filter in their URL, so they also work without JavaScript. Save, delete and bulk actions POST to the host and return the same section. Validation returns 422 with the draft. Selection applies to visible rows. Supply the displayed revision to handle changes in another workspace.',[
+      {name:'Bulk selection',demo:actionBarGrid},
+      {name:'Drafts only',demo:gridExample('filter=Draft')},
+      {name:'No matches',demo:gridExample('q=No+such+SKU')},
+    ]),
+    render: params => gridFromPage(params),
+  },
+  {
+    ...component('action-bar','Action Bar','Select records and apply one status change to the selection.',actionBarGrid,'The action bar appears for a nonempty selection. Bulk actions include the selected row IDs and the current query.'),
+    render: params => gridFromPage(params, [['row','1'],['row','2']]),
+  },
   component('agenda','Agenda','Browse daily bookings and add a timed event.',`<div class="mero-agenda-mount" hx-get="${agendaPath}" hx-trigger="load" hx-swap="innerHTML">${agendaMarkup(initialAgenda)}</div>`,'Return a dated agenda fragment on navigation and after saving a booking. Demo bookings live in memory.'),
   component('empty-state','Empty State','Explain an empty result and give the user a relevant next action.',`<section class="mero-collection-empty">${emptyState('No products in this collection','Add the first product to start tracking inventory.')}<a class="mero-button mero-button-primary mero-button-sm" href="/components/data-grid">Open inventory</a></section>`),
   component('file-tree','File Tree','Expand folders and preview a selected file with native disclosure controls.',fileTree()),
