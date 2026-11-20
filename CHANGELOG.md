@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1 · 20 November 2026
+
+- A failed Studio view switch no longer replaces the workspace with the error response. htmx 4 swaps error responses by default.
+
 ## 0.5.0 · 20 November 2026
 
 - **Breaking:** Mero targets htmx 4 only. htmx 2 is no longer supported, and `mero.js` no longer relays htmx 4 events under htmx 2 names.

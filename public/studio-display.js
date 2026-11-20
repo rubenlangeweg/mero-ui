@@ -49,6 +49,11 @@
       try { localStorage.setItem(storageKey(screen), choice); } catch { /* Optional preference. */ }
     }
   });
+  // htmx 4 still swaps error responses after htmx:response:error, which would replace the workspace.
+  document.addEventListener('htmx:before:swap', event => {
+    const { ctx } = event.detail;
+    if (choices.has(ctx) && ctx.response?.status >= 400) event.preventDefault();
+  });
   // htmx:error covers network errors and timeouts, not user aborts.
   for (const failure of ['htmx:response:error', 'htmx:error']) {
     document.addEventListener(failure, event => {

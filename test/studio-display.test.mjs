@@ -76,6 +76,8 @@ test('Studio resolves the host, saved choice and direct link without adding a Ba
   const failed = calendarPage.waitForResponse(response => response.status() === 503);
   await calendar.getByRole('link', { name: 'Week' }).click();
   await failed;
+  await calendarPage.getByText('Could not switch views. Try again.').waitFor();
+  assert.equal(await calendar.getByRole('link', { name: 'Agenda', current: 'page' }).count(), 1, 'a failed view switch keeps the current workspace');
   await calendarPage.unroute(failedGet);
   await calendarPage.goto(base + '&view=calendar');
   await calendar.getByRole('link', { name: 'Agenda', current: 'page' }).waitFor();
