@@ -20,7 +20,7 @@ const brand = `<a class="site-brand" href="/" aria-label="Mero UI home">
 
 const footerGroups = [
   ['Documentation', [
-    ['/start', 'Quick start'], ['/docs/design-principles', 'Design principles'], ['/docs/responsive-layouts', 'Responsive layouts'],
+    ['/start', 'Quick start'], ['/docs/design-principles', 'Design principles'], ['/docs/responsive-layouts', 'Responsive layouts'], ['/docs/reference', 'Reference'],
     ['/themes', 'Theme studio'], ['/playground', 'Playground'],
   ]],
   ['Components', [
@@ -212,6 +212,7 @@ export function catalogLayout({ groups, active, content }) {
             <a href="/start"${active === "" ? ' aria-current="page"' : ""}>Quick start</a>
             <a href="/docs/design-principles"${active === "design-principles" ? ' aria-current="page"' : ""}>Design principles</a>
             <a href="/docs/responsive-layouts"${active === "responsive-layouts" ? ' aria-current="page"' : ""}>Responsive layouts</a>
+            <a href="/docs/reference"${active === "reference" ? ' aria-current="page"' : ""}>Reference</a>
           </div>
           <div class="catalog-guide-links"><span>Explore</span>
             <a href="/components"${active === undefined ? ' aria-current="page"' : ""}>All components</a>
