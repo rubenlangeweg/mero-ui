@@ -398,6 +398,10 @@
 :where(.mero-alert-title) { font-weight: 650; }
 :where(.mero-alert p) { margin: 0; }
 
+:where(.mero-live) { inline-size: min(100%, 22rem); }
+:where(.mero-live-status) { margin-block-start: .75rem; }
+:where(.mero-live [data-mero-live-retry][hidden]) { display: none; }
+
 :where(.mero-progress, .mero-meter) { appearance: none; display: block; inline-size: 100%; block-size: .5rem; border: 0; border-radius: 99rem; background: var(--mero-hover); overflow: hidden; }
 :where(.mero-field:has(> .mero-meter, > .mero-progress)) { inline-size: min(100%, 16rem); }
 :where(.mero-measure-label) { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; }

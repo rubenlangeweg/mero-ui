@@ -11,6 +11,9 @@ const emitted = [
   ["mero:action", "/components/action-button", "Action Button",
     "Fires on a <code>data-mero-action</code> button when its request starts and when it ends, or on the document when a swap removed the button. Requires <code>mero-forms.js</code>.",
     "{ state, status, message }", "<code>state</code> is <code>pending</code>, <code>succeeded</code>, <code>rejected</code> or <code>unknown</code>. <code>status</code> and <code>message</code> are set once the request ends."],
+  ["mero:refresh", "/components/live-progress", "Live Progress",
+    "Fires on a <code>data-mero-live</code> region to read the latest status. Set <code>hx-trigger=\"mero:refresh\"</code> on the region. Requires <code>mero-live.js</code>.",
+    "", ""],
   ["mero:kanban-move", "/components/kanban", "Kanban",
     "Fires on a card after it moves to another lane. Requires <code>mero-collections.js</code>.",
     "{ card, from, to }", "<code>from</code> and <code>to</code> are the lanes’ <code>data-lane</code> values."],
@@ -78,6 +81,13 @@ const attributes = [
     ["data-mero-return-focus", "On the form. Selector for the element to focus after <code>mero:form-saved</code>."],
     ["data-mero-fallback-focus", "On the form. Selector to focus when the return-focus element is gone."],
     ["data-mero-close-all", "On a form in a nested dialog. A save closes the parent dialogs too."],
+  ]],
+  ["Live progress", "mero-live.js", [
+    ["data-mero-live", "On a region with <code>hx-get</code> and <code>hx-trigger=\"mero:refresh\"</code>. Its value is the interval in milliseconds, 3000 by default. Polling pauses while the page is hidden. Send <code>Mero-Live: done</code> on the final successful response."],
+    ["data-mero-live-status", "Use this polite status region as the innerHTML target. Return a status label as an HTML fragment. Mero skips a repeated label so it is announced once."],
+    ["data-mero-live-error", "An initially empty status region that announces a failed read. The last good status stays visible until a successful read."],
+    ["data-mero-live-retry", "On a hidden button. Mero shows it after a failed read. Activating it refreshes the status immediately. If a successful read hides the focused button, focus returns to the region."],
+    ["data-mero-live-done", "On an operation with a final status. Mero sets it after a successful response with the terminal header. Render it yourself if the operation has already finished."],
   ]],
   ["Gallery", "mero-gallery.js", [
     ["data-mero-slide", "On each slide. Its value links the slide to a choice control."],

@@ -261,6 +261,17 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     });
   }
 
+  // The demo carries its start time in the fragment so independent previews run independently.
+  function liveProgressDemo({ response, searchParams }) {
+    const now = Date.now();
+    const since = Number(searchParams.get("started"));
+    const started = since > 0 && since <= now ? since : now;
+    const done = now - started >= 5000;
+    const body = `<span class="mero-badge mero-badge-dot">${done ? "Succeeded" : "Running"}</span>
+      <input type="hidden" name="started" value="${started}">`;
+    return send(response, body, { headers: { "Cache-Control": "no-store", ...(done ? { "Mero-Live": "done" } : {}) } });
+  }
+
   function catalogDemo({ response, pathname, searchParams }) {
     const html = catalogFragment(pathname.slice("/demo/catalog/".length), searchParams);
     if (html == null) return false;
@@ -336,6 +347,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     ["*", /^\/demo\/collections\//, ({ request, response, url }) => handleCollectionRequest(request, response, url, store)],
     ["*", /^\/demo\/insights\//, ({ request, response, url }) => handleInsightRequest(request, response, url)],
     ["*", /^\/demo\/workspace\//, ({ request, response, url }) => handleWorkspaceRequest(request, response, url)],
+    ["GET", "/demo/catalog/live-progress", liveProgressDemo],
     ["GET", /^\/demo\/catalog\//, catalogDemo],
     ["POST", "/demo/settings", saveSettings],
     ["POST", "/demo/catalog/action-button", actionDemo],

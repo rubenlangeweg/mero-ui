@@ -25,6 +25,7 @@ export function exampleAssets(item, demo) {
   const assets = ['mero.css','mero.js',...moduleAssets(item.module)];
   if (/\bhx-(?:get|post|put|patch|delete|boost)(?::inherited)?=/.test(demo)) assets.unshift('vendor/htmx.min.js');
   if (/data-mero-(?:form|action)\b/.test(demo)) assets.push('mero-forms.js');
+  if (/data-mero-live(?:=|\s|>)/.test(demo)) assets.push('mero-live.js');
   return assets;
 }
 
