@@ -70,7 +70,7 @@ test("copied compositions align in both writing directions and retain their keyb
   }
   await page.locator("html").evaluate(el => el.dir = "ltr");
 
-  const swap = page.locator(".rl-swap");
+  const swap = page.locator(".mero-swap");
   const initial = await swap.boundingBox();
   await swap.getByRole("checkbox").focus();
   await page.keyboard.press("Space");
@@ -82,7 +82,7 @@ test("copied compositions align in both writing directions and retain their keyb
 
   const select = page.getByLabel("Appearance");
   await select.selectOption("dark");
-  assert.equal(await page.locator("[data-rl-theme-scope]").getAttribute("data-theme"), "dark");
+  assert.equal(await page.locator("[data-mero-theme-scope]").getAttribute("data-theme"), "dark");
   const sku = page.getByRole("textbox", { name: "Catalog SKU" });
   await sku.fill("invalid");
   await sku.press("Enter");

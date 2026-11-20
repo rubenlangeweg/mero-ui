@@ -1,4 +1,4 @@
-import { cp, mkdir, mkdtemp, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { sourceArchiveEntries } from "../server.mjs";
 import { layoutSourceFiles } from "../site/layout-workbench.mjs";
@@ -7,9 +7,6 @@ import { createSourceArchive, inventoryArchiveEntries } from "../site/inventory-
 await mkdir(".cloudflare", { recursive: true });
 const stage = await mkdtemp(".cloudflare/site-assets-");
 await cp("public", stage, { recursive: true });
-for (const name of await readdir("public")) {
-  if (/^mero[.-]/.test(name)) await cp(join("public", name), join(stage, name.replace(/^mero/, "relay")));
-}
 for (const file of layoutSourceFiles) {
   const destination = join(stage, "source", file);
   await mkdir(dirname(destination), { recursive: true });
@@ -18,7 +15,6 @@ for (const file of layoutSourceFiles) {
 const downloads = join(stage, "downloads");
 await mkdir(downloads);
 await writeFile(join(downloads, "mero-ui.tar.gz"), await createSourceArchive(sourceArchiveEntries));
-await cp(join(downloads, "mero-ui.tar.gz"), join(downloads, "relay-ui.tar.gz"));
 await writeFile(join(downloads, "studio-inventory.tar.gz"), await createSourceArchive(inventoryArchiveEntries));
 await writeFile(join(stage, "_headers"), [
   "/source/*", "  Content-Type: text/plain; charset=utf-8", "  X-Robots-Tag: noindex",

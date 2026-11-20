@@ -42,10 +42,10 @@ The commenter prefers returning a custom HTML element for a single record and a 
 
 ```html
 <button hx-get="/products/42/card" hx-target="#product-42" hx-swap="outerHTML">Refresh</button>
-<article id="product-42" class="rl-card">Arc Task Lamp · Ivory</article>
+<article id="product-42" class="mero-card">Arc Task Lamp · Ivory</article>
 ```
 
-After a finish change, that endpoint could return `<article id="product-42" class="rl-card">Arc Task Lamp · Graphite</article>`. The host can write a single `productCard(product)` template and reuse it on the full page and in the endpoint. The browser receives a complete card in both cases. In the commenter’s version, the outer tag might instead be `<product-card id="product-42">`. Browser-defined behavior for that tag comes from registering a custom element. [HTMX swap modes](https://htmx.org/attributes/hx-swap/) · [Custom element registration](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements)
+After a finish change, that endpoint could return `<article id="product-42" class="mero-card">Arc Task Lamp · Graphite</article>`. The host can write a single `productCard(product)` template and reuse it on the full page and in the endpoint. The browser receives a complete card in both cases. In the commenter’s version, the outer tag might instead be `<product-card id="product-42">`. Browser-defined behavior for that tag comes from registering a custom element. [HTMX swap modes](https://htmx.org/attributes/hx-swap/) · [Custom element registration](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements)
 
 **Mero’s default should be native HTML, short CSS classes and server-rendered fragments.** Consider one optional light-DOM custom element for the gallery if encapsulating drag setup and teardown materially simplifies integration. Keep images and links in server-rendered HTML. A Shadow DOM implementation adds an integration cost because HTMX needs to process the shadow root explicitly. [HTMX Web Components guide](https://htmx.org/examples/web-components/)
 

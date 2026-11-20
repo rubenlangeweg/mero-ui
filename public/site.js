@@ -1,7 +1,7 @@
 (() => {
   const root = document.documentElement;
   let saved;
-  try { saved = localStorage.getItem("relay-theme"); } catch {}
+  try { saved = localStorage.getItem("mero-theme"); } catch {}
 
   function setTheme(theme) {
     root.dataset.theme = theme;
@@ -15,7 +15,7 @@
       toggle.setAttribute("aria-label", label);
       toggle.title = label;
     });
-    document.dispatchEvent(new Event("relay:site-theme"));
+    document.dispatchEvent(new Event("mero:site-theme"));
   }
 
   for (const frame of document.querySelectorAll('[data-live-specimen]')) {
@@ -43,7 +43,7 @@
     const toggle = event.target.closest("[data-theme-toggle]");
     if (toggle) {
       setTheme(root.dataset.theme === "light" ? "dark" : "light");
-      try { localStorage.setItem("relay-theme", root.dataset.theme); } catch {}
+      try { localStorage.setItem("mero-theme", root.dataset.theme); } catch {}
     }
 
     const copy = event.target.closest("[data-copy-code]");

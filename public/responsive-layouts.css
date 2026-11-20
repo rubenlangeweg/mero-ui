@@ -1,20 +1,20 @@
-.guide-bench { margin-block: 1.25rem .85rem; border: 1px solid var(--site-line); border-radius: var(--rl-radius-panel); overflow: clip; background: var(--site-panel); }
+.guide-bench { margin-block: 1.25rem .85rem; border: 1px solid var(--site-line); border-radius: var(--mero-radius-panel); overflow: clip; background: var(--site-panel); }
 .guide-controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .4rem 1.25rem; padding: .55rem clamp(.75rem, 2vw, 1.2rem); border-block-end: 1px solid var(--site-line); }
 .guide-measure, .guide-presets { display: flex; align-items: center; gap: .6rem; }
 .guide-measure { flex-wrap: wrap; font-size: .82rem; font-weight: 550; }
 .guide-measure output { color: var(--site-muted); font: .75rem var(--site-mono); }
-.guide-measure input { inline-size: clamp(5rem, 10vw, 9rem); min-block-size: 2rem; padding: 0; margin: 0; accent-color: var(--rl-accent); cursor: pointer; }
+.guide-measure input { inline-size: clamp(5rem, 10vw, 9rem); min-block-size: 2rem; padding: 0; margin: 0; accent-color: var(--mero-accent); cursor: pointer; }
 .guide-presets { gap: .125rem; }
-.guide-presets a { display: inline-flex; align-items: center; min-block-size: 2.25rem; padding-inline: .7rem; color: var(--site-muted); text-decoration: none; font-size: .8rem; font-weight: 550; border-radius: var(--rl-radius); }
+.guide-presets a { display: inline-flex; align-items: center; min-block-size: 2.25rem; padding-inline: .7rem; color: var(--site-muted); text-decoration: none; font-size: .8rem; font-weight: 550; border-radius: var(--mero-radius); }
 .guide-presets a:hover, .guide-presets a[aria-current] { color: var(--site-fg); background: var(--site-raised); }
 .guide-stage { padding: clamp(.65rem, 2vw, 1.25rem); background-color: var(--site-bg); background-image: radial-gradient(var(--site-line) .85px, transparent .85px); background-size: 15px 15px; }
 .guide-host { inline-size: min(var(--guide-width, 100%), 100%); margin-inline: auto; }
 .guide-facts { margin: 0; padding: 0; }
-.guide-facts > div { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .2rem .8rem; border-block-start: 1px solid var(--rl-line); padding-block: .5rem; font-size: .82rem; }
-.guide-facts dt { color: var(--rl-muted); }
+.guide-facts > div { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .2rem .8rem; border-block-start: 1px solid var(--mero-line); padding-block: .5rem; font-size: .82rem; }
+.guide-facts dt { color: var(--mero-muted); }
 .guide-facts dd { margin: 0; font-weight: 550; }
 .guide-bench, .guide-bench [id] { scroll-margin-block-start: 7rem; }
-.guide-controls :where(a, input):focus-visible { outline: 2px solid var(--rl-accent); outline-offset: 2px; }
+.guide-controls :where(a, input):focus-visible { outline: 2px solid var(--mero-accent); outline-offset: 2px; }
 .responsive-guide .principle-code > p { color: var(--site-muted); }
 @media (pointer: coarse) {
   .guide-presets a, .guide-measure input { min-block-size: 44px; align-items: center; }

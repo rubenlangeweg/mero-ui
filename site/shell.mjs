@@ -62,7 +62,7 @@ export function embeddedLayout({title, content, assets, mode, tokens}) {
     <meta name="robots" content="noindex">
     ${assetStyles([...new Set(['site-fonts.css','mero.css', ...assets, 'site.css','lab.css', ...(theme === 'brand' ? ['preview.css'] : [])])])}
     ${assetScripts([...new Set(['vendor/htmx.min.js','mero.js', ...assets, ...(!tokens ? ['layout-preview.js'] : [])])])}
-  </head><body class="site-body layout-embed" hx-headers='{"X-Relay-Embed":"1"}'><main id="main" aria-label="${escape(title)} preview">${markup}</main></body></html>`;
+  </head><body class="site-body layout-embed" hx-headers='{"X-Mero-Embed":"1"}'><main id="main" aria-label="${escape(title)} preview">${markup}</main></body></html>`;
 }
 
 export function shell({ title = 'Mero UI', description, path = '/', origin, indexable = true, body, nav = 'home', assets = [] }) {
@@ -72,7 +72,7 @@ export function shell({ title = 'Mero UI', description, path = '/', origin, inde
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#09090a">
-  <script>try { if (localStorage.getItem("relay-theme") === "light") document.documentElement.dataset.theme = "light" } catch {}</script>
+  <script>try { if (localStorage.getItem("mero-theme") === "light") document.documentElement.dataset.theme = "light" } catch {}</script>
   <meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false}'>
   ${seoHead({ title, description, path, origin, indexable })}
   <link rel="stylesheet" href="/site-fonts.css">
@@ -97,7 +97,7 @@ export function shell({ title = 'Mero UI', description, path = '/', origin, inde
         <button class="site-theme" type="button" data-theme-toggle aria-label="Switch to light theme" title="Switch to light theme">
           <span class="theme-glyph" aria-hidden="true">☼</span>
         </button>
-        <a class="rl-button rl-button-primary site-cta nav-start" href="/start">Get started</a>
+        <a class="mero-button mero-button-primary site-cta nav-start" href="/start">Get started</a>
       </div>
     </div>
   </header>
@@ -151,8 +151,8 @@ export function home({ workbench, componentCount, product, apps = [] }) {
       <div class="hero-intro">
         <p class="hero-description">Copy HTML components into your server templates. Loading states, keyboard controls, and focus handling come built in.</p>
         <div class="hero-actions">
-          <a class="rl-button rl-button-primary site-cta" href="/components">Browse components</a>
-          <a class="rl-button rl-button-ghost site-cta" href="/playground">Try the playground <span aria-hidden="true">→</span></a>
+          <a class="mero-button mero-button-primary site-cta" href="/components">Browse components</a>
+          <a class="mero-button mero-button-ghost site-cta" href="/playground">Try the playground <span aria-hidden="true">→</span></a>
         </div>
       </div>
     </div>
@@ -188,7 +188,7 @@ export function home({ workbench, componentCount, product, apps = [] }) {
   </section>
   <section class="site-wrap home-start home-app-start" aria-labelledby="home-start-title">
     <div class="home-app-copy"><h2 id="home-start-title">Bring your own backend.</h2><p>Use the same component markup in a full page or an HTML fragment returned by your server.</p></div>
-    <a class="rl-button rl-button-primary site-cta" href="/start">Read the docs <span aria-hidden="true">→</span></a>
+    <a class="mero-button mero-button-primary site-cta" href="/start">Read the docs <span aria-hidden="true">→</span></a>
   </section>`;
 }
 

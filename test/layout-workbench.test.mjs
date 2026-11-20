@@ -57,8 +57,8 @@ test("the Kanban example and Studio walkthrough demonstrate their published move
   t.after(() => browser.close());
   const page = await browser.newPage();
   await page.goto(base + "/components/kanban");
-  const board = page.locator("[data-rl-kanban]");
-  await board.evaluate(el => el.addEventListener("relay:kanban-move", event => {
+  const board = page.locator("[data-mero-kanban]");
+  await board.evaluate(el => el.addEventListener("mero:kanban-move", event => {
     const { card, from, to } = event.detail;
     el.dataset.lastMove = JSON.stringify([card.querySelector("strong").textContent, from, to]);
   }, { once: true }));

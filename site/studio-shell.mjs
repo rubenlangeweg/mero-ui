@@ -24,8 +24,8 @@ function icon(id) {
 
 export function renderStudioShell(view, content, studio, { params = new URLSearchParams(), brand = "Studio" } = {}) {
   const counts = { companies: studio.companies.length, board: studio.tasks.length };
-  return `<div id="studio-workspace" class="rl-app studio-workspace" hx-history="false" data-studio-view="${esc(view)}">
-    <aside class="rl-app-nav studio-nav">
+  return `<div id="studio-workspace" class="mero-app studio-workspace" hx-history="false" data-studio-view="${esc(view)}">
+    <aside class="mero-app-nav studio-nav">
       <a class="studio-identity" ${studioLink("overview", {}, params)} aria-label="${esc(brand)} workspace overview">
         <span class="studio-identity-mark">${icon("studio")}</span><span>${esc(brand)}<small>Team workspace</small></span>
       </a>
@@ -35,7 +35,7 @@ export function renderStudioShell(view, content, studio, { params = new URLSearc
         </a>`).join("")}</div>`).join("")}
       </nav>
     </aside>
-    <section class="rl-app-main studio-main" aria-label="Workspace content">${content}</section>
+    <section class="mero-app-main studio-main" aria-label="Workspace content">${content}</section>
   </div>`;
 }
 
@@ -70,7 +70,7 @@ function metrics(studio, store, params) {
     ["inventory", "Catalog items", store.products.length, "Inventory"],
   ];
   return `<dl class="studio-metrics">${metrics.map(([view, name, value, target]) =>
-    `<div class="rl-stat studio-metric"><dt>${icon(view)}${name}</dt><dd><a ${studioLink(view, {}, params)} aria-label="${name}, ${value}. Open ${target}">${value}<span>${icon("arrow")}</span></a></dd></div>`).join("")}</dl>`;
+    `<div class="mero-stat studio-metric"><dt>${icon(view)}${name}</dt><dd><a ${studioLink(view, {}, params)} aria-label="${name}, ${value}. Open ${target}">${value}<span>${icon("arrow")}</span></a></dd></div>`).join("")}</dl>`;
 }
 
 function panelLink(view, label, params) {
@@ -116,7 +116,7 @@ export function renderStudioOverview(studio, store, params = new URLSearchParams
   const active = studio.tasks.filter(t => t.status !== "done");
   return `<div class="studio-overview">
     <header class="studio-overview-head"><div><${h}>Workspace overview</${h}><p>${fullDate.format(now)}</p></div>
-      <a class="rl-button rl-button-primary" ${studioLink("board", { compose: "task" }, params)}>${icon("add")} New task</a>
+      <a class="mero-button mero-button-primary" ${studioLink("board", { compose: "task" }, params)}>${icon("add")} New task</a>
     </header>
     ${metrics(studio, store, params)}
     ${schedule(studio, weekDates(now), now, params, subheading)}

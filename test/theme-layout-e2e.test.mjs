@@ -53,13 +53,13 @@ test("a theme edited from the homepage opens with the same controls in a fresh b
   await shared.getByRole("button", { name: "Done", exact: true }).click();
   const preview = shared.getByRole("region", { name: "Live preview" });
   const accent = await preview.getByRole("button", { name: "Preview invitation" }).evaluate(button =>
-    getComputedStyle(button).getPropertyValue("--rl-accent").trim());
+    getComputedStyle(button).getPropertyValue("--mero-accent").trim());
   assert.ok(accent);
   await preview.getByRole("link", { name: "CRM", exact: true }).click();
   await shared.frameLocator('iframe[title="CRM theme preview"]').getByRole("heading", { name: "Sales pipeline" }).waitFor();
   await shared.waitForFunction(expected => {
     const heading = document.querySelector('iframe[title="CRM theme preview"]').contentDocument.querySelector("h1");
-    return heading && getComputedStyle(heading).getPropertyValue("--rl-accent").trim() === expected;
+    return heading && getComputedStyle(heading).getPropertyValue("--mero-accent").trim() === expected;
   }, accent);
   await fitsViewport(shared);
 });
@@ -152,7 +152,7 @@ test("the layout gallery downloads only matching viewport and theme captures", o
   const { browser, page } = await start(t);
   for (const [width, theme, suffix] of [[390, "light", "light-phone"], [1280, "dark", "dark"]]) {
     const gallery = await browser.newPage({ viewport: { width, height: 800 } });
-    await gallery.addInitScript(value => localStorage.setItem("relay-theme", value), theme);
+    await gallery.addInitScript(value => localStorage.setItem("mero-theme", value), theme);
     const art = new Set();
     gallery.on("request", request => {
       const image = new URL(request.url()).pathname;

@@ -6,7 +6,7 @@ export function proStage({ product, outOfBand = false } = {}) {
   const title = esc(product?.name ?? "Arc Task Lamp");
   const selected = finishes.find(item => item.value === product?.finish) ?? finishes[0];
   return `<section id="studio-feature" class="pro-stage site-wrap" aria-label="Studio workspace preview"${outOfBand ? ' hx-swap-oob="outerHTML"' : " data-stage-intro"}>
-    <rl-gallery class="ps-window" role="region" aria-label="${title} gallery">
+    <mero-gallery class="ps-window" role="region" aria-label="${title} gallery">
       <header class="ps-toolbar">
         <span class="ps-window-controls" aria-hidden="true"><i></i><i></i><i></i></span>
         <span class="ps-workspace"><span class="ps-workspace-mark" aria-hidden="true"></span> Studio workspace</span>
@@ -23,7 +23,7 @@ export function proStage({ product, outOfBand = false } = {}) {
           <div class="ps-product-summary">
             <div>
               <h2 id="ps-product-title">${title}</h2>
-              <p><span class="ps-live-swatch" aria-hidden="true"></span>Finish · <span data-rl-gallery-label aria-live="polite">${selected.label}</span></p>
+              <p><span class="ps-live-swatch" aria-hidden="true"></span>Finish · <span data-mero-gallery-label aria-live="polite">${selected.label}</span></p>
             </div>
             ${galleryArrows()}
           </div>
@@ -47,18 +47,18 @@ export function proStage({ product, outOfBand = false } = {}) {
             <fieldset class="ps-finish-list">
               <legend class="ps-visually-hidden">Finish</legend>
               ${finishes.map(item => `<label class="ps-finish ps-finish-${item.value}">
-                <input type="radio" name="studio-finish" data-rl-gallery-choice value="${item.value}"${item === selected ? " checked" : ""}>
+                <input type="radio" name="studio-finish" data-mero-gallery-choice value="${item.value}"${item === selected ? " checked" : ""}>
                 <span class="ps-finish-swatch" aria-hidden="true"></span>
                 <span><strong>${item.label}</strong><small>${item.material}</small></span>
               </label>`).join("")}
             </fieldset>
           </form>
         ${product
-          ? `<a class="ps-edit-link" data-rl-gallery-link href="/layouts/dashboard?view=inventory&amp;edit=6&amp;finish=${selected.value}">Edit in inventory <span aria-hidden="true">↗</span></a>
+          ? `<a class="ps-edit-link" data-mero-gallery-link href="/layouts/dashboard?view=inventory&amp;edit=6&amp;finish=${selected.value}">Edit in inventory <span aria-hidden="true">↗</span></a>
              <a class="ps-static ps-edit-link" href="/layouts/dashboard?view=inventory#product-6">View in inventory <span aria-hidden="true">↗</span></a>`
           : '<a class="ps-edit-link" href="/layouts/dashboard?view=inventory">Open inventory <span aria-hidden="true">↗</span></a>'}
         </article>
       </div>
-    </rl-gallery>
+    </mero-gallery>
   </section>`;
 }

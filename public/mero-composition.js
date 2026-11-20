@@ -15,7 +15,7 @@
   }
   document.addEventListener("click", (event) => {
     const control = event.target.closest("[data-cycle-next],[data-cycle-play]");
-    const cycle = control?.closest("[data-rl-text-cycle]");
+    const cycle = control?.closest("[data-mero-text-cycle]");
     if (!cycle) return;
     if (control.hasAttribute("data-cycle-next")) {
       stop(cycle);
@@ -33,28 +33,28 @@
     );
   });
   document.addEventListener("change", (event) => {
-    const picker = event.target.closest("[data-rl-theme-picker]");
-    const scope = picker?.closest("[data-rl-theme-scope]");
+    const picker = event.target.closest("[data-mero-theme-picker]");
+    const scope = picker?.closest("[data-mero-theme-scope]");
     if (scope) scope.dataset.theme = picker.value;
   });
   document.addEventListener("submit", (event) => {
-    const form = event.target.closest("[data-rl-check-form]");
+    const form = event.target.closest("[data-mero-check-form]");
     if (!form) return;
     event.preventDefault();
     form.querySelector("output").textContent = "SKU format accepted.";
   });
   document.addEventListener("input", (event) => {
-    const form = event.target.closest("[data-rl-check-form]");
+    const form = event.target.closest("[data-mero-check-form]");
     if (form) form.querySelector("output").textContent = "";
   });
   let tick;
   function update() {
-    const clocks = document.querySelectorAll("[data-rl-cutoff-hour]");
+    const clocks = document.querySelectorAll("[data-mero-cutoff-hour]");
     clearTimeout(tick);
     if (!clocks.length) return;
     const now = new Date();
     for (const clock of clocks) {
-      const hour = clock.dataset.rlCutoffHour;
+      const hour = clock.dataset.meroCutoffHour;
       if (!/^([01]?\d|2[0-3])$/.test(hour)) continue;
       const target = new Date(now);
       target.setUTCHours(Number(hour), 0, 0, 0);

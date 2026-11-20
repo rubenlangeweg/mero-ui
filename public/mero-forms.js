@@ -1,10 +1,10 @@
 /**
  * Optional HTMX form behavior. Server responses:
  * 422 + replacement form for validation, or HX-Trigger-After-Settle:
- * {"relay:form-saved":{"message":"Saved"}} after any successful swap.
+ * {"mero:form-saved":{"message":"Saved"}} after any successful swap.
  */
 (() => {
-  const formSelector = "form[data-rl-form]";
+  const formSelector = "form[data-mero-form]";
   const requesting = new WeakMap();
 
   function requestForm(event) {
@@ -28,7 +28,7 @@
     requesting.set(form, buttons);
     form.setAttribute("aria-busy", "true");
     buttons.forEach((button) => { button.disabled = true; });
-    const error = form.querySelector("[data-rl-form-error]");
+    const error = form.querySelector("[data-mero-form-error]");
     if (error) error.hidden = true;
   });
 
@@ -46,7 +46,7 @@
   });
 
   function showError(form, message) {
-    const error = form.querySelector("[data-rl-form-error]");
+    const error = form.querySelector("[data-mero-form-error]");
     if (error) {
       error.textContent = message;
       error.hidden = false;
@@ -67,17 +67,17 @@
     requesting.get(form)?.forEach((button) => { button.disabled = false; });
     requesting.delete(form);
     if (!event.detail.failed || event.detail.xhr.status === 422) return;
-    showError(form, event.detail.xhr.getResponseHeader("Relay-Form-Error") || "The request could not be completed. Check the current state and try again.");
+    showError(form, event.detail.xhr.getResponseHeader("Mero-Form-Error") || "The request could not be completed. Check the current state and try again.");
   });
 
-  document.addEventListener("relay:form-saved", (event) => {
+  document.addEventListener("mero:form-saved", (event) => {
     const form = event.target.closest(formSelector);
     if (!form) return;
-    const focus = [form.dataset.rlReturnFocus, form.dataset.rlFallbackFocus]
+    const focus = [form.dataset.meroReturnFocus, form.dataset.meroFallbackFocus]
       .filter(Boolean).map((selector) => document.querySelector(selector)).find(Boolean);
     let dialog = form.closest("dialog");
     while (dialog) {
-      const parent = form.hasAttribute("data-rl-close-all") ? dialog.parentElement.closest("dialog") : null;
+      const parent = form.hasAttribute("data-mero-close-all") ? dialog.parentElement.closest("dialog") : null;
       window.MeroUI.close(dialog, { focus: parent ? null : focus });
       dialog = parent;
     }

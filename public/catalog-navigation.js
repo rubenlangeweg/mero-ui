@@ -21,7 +21,7 @@
   const isCatalog = path => /^\/components(?:\/[a-z0-9-]+)?$/.test(path);
   const params = new URLSearchParams(location.search);
   const newVisit = () => ({ id: crypto.randomUUID?.() || String(performance.timeOrigin + performance.now()) });
-  let visit = history.state?.relayCatalog || newVisit();
+  let visit = history.state?.meroCatalog || newVisit();
   let family = params.get("family") ?? visit.family ?? "";
   search.value = params.get("q") ?? visit.query ?? "";
   let firstResult;
@@ -98,7 +98,7 @@
   function persist(url = location.href) {
     storeReadingState();
     remember();
-    history.replaceState({ ...history.state, relayCatalog: positions.get(visit.id) }, "", url);
+    history.replaceState({ ...history.state, meroCatalog: positions.get(visit.id) }, "", url);
   }
 
   function updateFilters() {
@@ -230,8 +230,8 @@
     notice.textContent = "";
     try {
       const response = await fetch(url, { signal: request.signal, headers: { "HX-Request": "true", "HX-Target": "catalog-content" } });
-      if (!response.ok || !response.headers.has("X-Relay-Assets")) throw new Error("Catalog unavailable");
-      const [html] = await Promise.all([response.text(), ...response.headers.get("X-Relay-Assets").split(",").filter(Boolean).map(loadAsset)]);
+      if (!response.ok || !response.headers.has("X-Mero-Assets")) throw new Error("Catalog unavailable");
+      const [html] = await Promise.all([response.text(), ...response.headers.get("X-Mero-Assets").split(",").filter(Boolean).map(loadAsset)]);
       if (request.signal.aborted) return;
       const previousY = scrollY;
       const previousNavTop = nav.scrollTop;
@@ -240,7 +240,7 @@
         persist();
         if (variant) readingState = visit;
         visit = newVisit();
-        history.pushState({ relayCatalog: visit }, "", url);
+        history.pushState({ meroCatalog: visit }, "", url);
       } else {
         visit = saved;
         search.value = saved.query || "";
@@ -249,7 +249,7 @@
       currentPath = url.pathname;
       window.htmx.swap(content, html, { swapStyle: "innerHTML", swapDelay: 0, settleDelay: 0 });
       updatePageMetadata();
-      document.dispatchEvent(new Event("relay:site-theme"));
+      document.dispatchEvent(new Event("mero:site-theme"));
       bindContent();
       restoreReadingState(readingState);
       filter();
@@ -284,10 +284,10 @@
     navigate(url, null, Boolean(link.closest(".doc-variants")));
   });
   addEventListener("hashchange", () => {
-    if (!history.state?.relayCatalog && currentPath === location.pathname) { visit = newVisit(); persist(); }
+    if (!history.state?.meroCatalog && currentPath === location.pathname) { visit = newVisit(); persist(); }
   });
   addEventListener("popstate", event => {
-    const saved = event.state?.relayCatalog;
+    const saved = event.state?.meroCatalog;
     if (!saved) return;
     navigate(new URL(location.href), positions.get(saved.id) || saved);
   });

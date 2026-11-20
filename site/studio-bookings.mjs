@@ -86,13 +86,13 @@ function toolbar(studio, opts) {
   const weekStep = direction => {
     const target = offset(week, direction * 7);
     const label = direction < 0 ? "Previous week" : "Next week";
-    const attrs = `class="rl-button rl-button-sm rl-button-ghost rl-button-icon sbk-arrow${direction > 0 ? " sbk-forward" : ""}" aria-label="${label}"`;
+    const attrs = `class="mero-button mero-button-sm mero-button-ghost mero-button-icon sbk-arrow${direction > 0 ? " sbk-forward" : ""}" aria-label="${label}"`;
     return validDay(target) ? `<a ${attrs} ${link({ week: target })}><i aria-hidden="true"></i></a>`
       : `<button ${attrs} disabled><i aria-hidden="true"></i></button>`;
   };
   return `<div class="sbk-toolbar">
     <div class="sbk-period">${weekStep(-1)}
-    <a class="rl-button rl-button-sm rl-button-ghost" ${link({ week: monday(today()) })}>Today</a>
+    <a class="mero-button mero-button-sm mero-button-ghost" ${link({ week: monday(today()) })}>Today</a>
     ${weekStep(1)}</div>
     <details class="sbk-filter"><summary>${esc(company?.name ?? "All companies")}</summary>
     <div>${menuItem("", "All companies")}${studio.companies.map(c => menuItem(c.id, c.name)).join("")}</div></details>
@@ -159,7 +159,7 @@ function agenda(studio, { bookings, days, link, selected }) {
 
 function bookingDetail(studio, { selected: b, link, params, sectionHeading }) {
   const company = studio.companies.find(c => c.id === b.companyId);
-  return `<section class="sbk-detail" aria-label="Booking details" data-room="${resourceColor(b.resource)}"><div class="sbk-detail-top"><div><span class="sbk-room-label">${esc(b.resource)}</span><${sectionHeading} tabindex="-1" data-studio-initial-focus>${esc(b.title)}</${sectionHeading}></div><div class="sbk-detail-actions"><a class="rl-button rl-button-secondary rl-button-sm" ${link({ booking: b.id, edit: "1" })}>Edit booking</a><a class="rl-button rl-button-sm rl-button-ghost" ${link({})}>Close details</a></div></div>
+  return `<section class="sbk-detail" aria-label="Booking details" data-room="${resourceColor(b.resource)}"><div class="sbk-detail-top"><div><span class="sbk-room-label">${esc(b.resource)}</span><${sectionHeading} tabindex="-1" data-studio-initial-focus>${esc(b.title)}</${sectionHeading}></div><div class="sbk-detail-actions"><a class="mero-button mero-button-secondary mero-button-sm" ${link({ booking: b.id, edit: "1" })}>Edit booking</a><a class="mero-button mero-button-sm mero-button-ghost" ${link({})}>Close details</a></div></div>
     <p>${fullDate.format(utcDate(b.date))} · ${esc(b.start)}–${esc(b.end)}</p>
     <dl><div><dt>Company</dt><dd><a ${studioLink("companies", { company: b.companyId }, params)}>${esc(company?.name ?? b.companyId)}</a></dd></div><div><dt>Host</dt><dd>${esc(b.owner)}</dd></div></dl>
     ${b.notes ? `<p>${esc(b.notes)}</p>` : ""}
@@ -173,22 +173,22 @@ function bookingForm(studio, { link, params, company, days, week, display, secti
   const bookingId = v("id");
   const title = bookingId ? "Edit booking" : "New booking";
   return `<form class="sbk-form" ${studioForm("/demo/studio/bookings", params)} aria-labelledby="studio-booking-form">
-    <div class="sbk-form-head"><${sectionHeading} id="studio-booking-form">${title}</${sectionHeading}><a class="rl-button rl-button-ghost rl-button-sm" ${link(bookingId ? { booking: bookingId } : {})}>Cancel</a></div>
-    ${error ? `<p class="rl-field-error" role="alert">${esc(error)}</p>` : ""}
+    <div class="sbk-form-head"><${sectionHeading} id="studio-booking-form">${title}</${sectionHeading}><a class="mero-button mero-button-ghost mero-button-sm" ${link(bookingId ? { booking: bookingId } : {})}>Cancel</a></div>
+    ${error ? `<p class="mero-field-error" role="alert">${esc(error)}</p>` : ""}
     ${bookingId ? `<input type="hidden" name="id" value="${esc(bookingId)}">` : ""}
     <input type="hidden" name="calendarWeek" value="${esc(week)}">
     ${display ? `<input type="hidden" name="display" value="${display}">` : ""}
     ${company ? `<input type="hidden" name="companyFilter" value="${esc(company.id)}">` : ""}
     <div class="sbk-fields">
-      <label class="rl-field sbk-wide"><span class="rl-label">Booking name</span><input class="rl-input" name="title" data-studio-initial-focus value="${esc(v("title"))}" maxlength="80" required></label>
-      <label class="rl-field"><span class="rl-label">Company</span><select class="rl-select" name="companyId" required>${options(studio.companies.map(c => [c.id, c.name]), v("companyId") || company?.id)}</select></label>
-      <label class="rl-field"><span class="rl-label">Room</span><select name="resource" class="rl-select" required>${options(resources.map(r => [r.name, r.name]), v("resource"))}</select></label>
-      <label class="rl-field"><span class="rl-label">Date</span><input type="date" class="rl-input" name="date" min="0001-01-01" max="9999-12-31" value="${esc(v("date") || defaultDay)}" required></label>
-      <label class="rl-field"><span class="rl-label">Host</span><input class="rl-input" name="owner" value="${esc(v("owner") || "Studio team")}" maxlength="60" required></label>
-      <label class="rl-field"><span class="rl-label">Starts at</span><input type="time" class="rl-input" name="start" value="${esc(v("start") || "10:00")}" required></label>
-      <label class="rl-field"><span class="rl-label">Ends at</span><input type="time" class="rl-input" name="end" value="${esc(v("end") || "11:00")}" required></label>
-      <label class="rl-field sbk-wide"><span class="rl-label">Notes <small>(optional)</small></span><textarea class="rl-textarea" name="notes" maxlength="500" rows="2">${esc(v("notes"))}</textarea></label>
-    </div><button class="rl-button rl-button-primary rl-button-sm" type="submit">${bookingId ? "Save changes" : "Create booking"}</button>
+      <label class="mero-field sbk-wide"><span class="mero-label">Booking name</span><input class="mero-input" name="title" data-studio-initial-focus value="${esc(v("title"))}" maxlength="80" required></label>
+      <label class="mero-field"><span class="mero-label">Company</span><select class="mero-select" name="companyId" required>${options(studio.companies.map(c => [c.id, c.name]), v("companyId") || company?.id)}</select></label>
+      <label class="mero-field"><span class="mero-label">Room</span><select name="resource" class="mero-select" required>${options(resources.map(r => [r.name, r.name]), v("resource"))}</select></label>
+      <label class="mero-field"><span class="mero-label">Date</span><input type="date" class="mero-input" name="date" min="0001-01-01" max="9999-12-31" value="${esc(v("date") || defaultDay)}" required></label>
+      <label class="mero-field"><span class="mero-label">Host</span><input class="mero-input" name="owner" value="${esc(v("owner") || "Studio team")}" maxlength="60" required></label>
+      <label class="mero-field"><span class="mero-label">Starts at</span><input type="time" class="mero-input" name="start" value="${esc(v("start") || "10:00")}" required></label>
+      <label class="mero-field"><span class="mero-label">Ends at</span><input type="time" class="mero-input" name="end" value="${esc(v("end") || "11:00")}" required></label>
+      <label class="mero-field sbk-wide"><span class="mero-label">Notes <small>(optional)</small></span><textarea class="mero-textarea" name="notes" maxlength="500" rows="2">${esc(v("notes"))}</textarea></label>
+    </div><button class="mero-button mero-button-primary mero-button-sm" type="submit">${bookingId ? "Save changes" : "Create booking"}</button>
   </form>`;
 }
 
@@ -200,8 +200,8 @@ export function renderStudioBookings(studio, params, { error = "", values = {}, 
   const heading = pageHeading ? "h1" : "h2";
   const rooms = new Set(bookings.map(b => b.resource)).size;
   return `<section class="sbk-calendar" aria-label="Bookings" data-studio-screen="calendar"${!opts.display && !error ? ` data-studio-default-url="${esc(opts.agendaUrl)}"` : ""}>
-    <header class="rl-page-head sbk-head"><div><${heading}>Bookings</${heading}><p>${weekLabel(week)}</p></div>
-      <a class="rl-button rl-button-primary rl-button-sm" ${link({ new: "1" })}><span class="sbk-plus" aria-hidden="true">+</span>New booking</a></header>
+    <header class="mero-page-head sbk-head"><div><${heading}>Bookings</${heading}><p>${weekLabel(week)}</p></div>
+      <a class="mero-button mero-button-primary mero-button-sm" ${link({ new: "1" })}><span class="sbk-plus" aria-hidden="true">+</span>New booking</a></header>
     ${showForm ? bookingForm(studio, opts, editing && !error ? selected : values, error) : selected ? bookingDetail(studio, opts) : ""}
     ${toolbar(studio, opts)}
     <div class="sbk-schedule"><div class="sbk-caption"><strong>${bookings.length} ${bookings.length === 1 ? "booking" : "bookings"}${rooms ? ` <span>· ${rooms} ${rooms === 1 ? "room" : "rooms"}</span>` : ""}</strong><div class="sbk-legend">${resources.map(r => `<span data-room="${r.color}" class="sbk-room-label">${r.name}</span>`).join("")}</div></div>

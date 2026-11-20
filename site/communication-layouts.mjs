@@ -54,7 +54,7 @@ function icon(key) {
 }
 function avatar(person, small = false) {
   const [,initials,color] = people[person];
-  return `<span aria-hidden="true" class="rl-avatar comm-avatar comm-${color}${small?" comm-small":""}">${initials}</span>`;
+  return `<span aria-hidden="true" class="mero-avatar comm-avatar comm-${color}${small?" comm-small":""}">${initials}</span>`;
 }
 function appUrl(screen, params = {}, fragment = false) {
   const query = new URLSearchParams(Object.entries(params).filter(([,v])=>v));
@@ -69,7 +69,7 @@ function formAction(screen, action) {
   return `method="post" action="${url}" hx-post="${url}"`;
 }
 function hidden(name,value) { return `<input type="hidden" name="${name}" value="${esc(value)}">`; }
-function feedback(error) { return `<p class="comm-error" data-rl-form-error role="alert"${error?"":" hidden"}>${esc(error)}</p>`; }
+function feedback(error) { return `<p class="comm-error" data-mero-form-error role="alert"${error?"":" hidden"}>${esc(error)}</p>`; }
 function coverAttachment() {
   return `<a class="comm-attachment" href="/studio-lamp.webp" download="field-notes-cover.webp" aria-label="Download Field Notes cover photograph">
     <img src="/studio-lamp.webp" alt="" width="72" height="52"><span><strong>Cover photograph</strong><small>WebP · 13 KB</small></span>${icon("download")}</a>`;
@@ -110,16 +110,16 @@ function mailScreen(state, params, options = {}) {
     const replies=(state.replies.get(id)||[]).map(reply=>`<article class="comm-reply"><div>${avatar("you",true)}<strong>You</strong><time>${esc(reply.time)}</time></div><p>${esc(reply.text)}</p></article>`).join("");
     reader=`<section class="comm-reader" aria-label="Open message"><div class="comm-reader-bar">
       <a class="comm-back" ${navigate("mail",{folder})}>${icon("back")} Messages</a><span class="comm-tag"><i></i>${tag}</span>
-      <form ${formAction("mail","move")} data-rl-form>${hidden("thread",id)}${hidden("folder",folder)}${hidden("destination",folder==="archive"?"inbox":"archive")}
+      <form ${formAction("mail","move")} data-mero-form>${hidden("thread",id)}${hidden("folder",folder)}${hidden("destination",folder==="archive"?"inbox":"archive")}
         <button class="comm-text-action" type="submit">${icon(folder==="archive"?"inbox":"archive")}${label}</button>${feedback("")}</form></div>
       <div class="comm-letter"><h2 tabindex="-1" data-comm-heading>${subject}</h2>
       <div class="comm-byline">${avatar(person)}<span><strong>${name}</strong><small>To you</small></span><time>${date}${date==="Today"?" · "+time:""}</time></div>
       <div class="comm-letter-body">${body.map(line=>`<p>${line}</p>`).join("")}</div>${id==="proofs" ? coverAttachment() : ""}${replies}</div>
-      <form class="comm-reply-form" ${formAction("mail","reply")} data-rl-form data-comm-compose="${id}">
+      <form class="comm-reply-form" ${formAction("mail","reply")} data-mero-form data-comm-compose="${id}">
         ${hidden("thread",id)}${hidden("folder",folder)}${hidden("nonce", randomUUID())}
         <label for="mail-reply">${icon("reply")}Reply to ${name.split(" ")[0]}</label>
-        <textarea id="mail-reply" class="rl-textarea" name="message" rows="2" maxlength="1600" required placeholder="Write your reply…"${result.error?' aria-invalid="true" aria-describedby="mail-error"':""}>${esc(result.draft)}</textarea>
-        <div id="mail-error">${feedback(result.error)}</div><button class="rl-button rl-button-primary rl-button-sm" type="submit">Send reply ${icon("send")}</button>
+        <textarea id="mail-reply" class="mero-textarea" name="message" rows="2" maxlength="1600" required placeholder="Write your reply…"${result.error?' aria-invalid="true" aria-describedby="mail-error"':""}>${esc(result.draft)}</textarea>
+        <div id="mail-error">${feedback(result.error)}</div><button class="mero-button mero-button-primary mero-button-sm" type="submit">Send reply ${icon("send")}</button>
       </form></section>`;
   }
   return frame("mail","Studio mail","studio@north.example",Boolean(selected && params.has("thread")),
@@ -142,10 +142,10 @@ function chatScreen(state, params, options={}) {
       <div><h2 tabindex="-1" data-comm-heading>${direct?"":icon("hash")}${room.name}</h2><p>${room.description}</p></div>
       <span class="comm-members" role="img" aria-label="Participants: ${room.members.map(p=>people[p][0]).join(", ")}">${room.members.map(p=>avatar(p,true)).join("")}</span></div>
       <div class="comm-feed" tabindex="0" aria-label="Message history"><div class="comm-date"><span>Today</span></div>
-      <ol>${feed}</ol></div><form ${formAction("chat","send")} class="comm-chat-compose" data-rl-form data-comm-compose="${room.id}">
+      <ol>${feed}</ol></div><form ${formAction("chat","send")} class="comm-chat-compose" data-mero-form data-comm-compose="${room.id}">
       ${hidden("room",room.id)}${hidden("nonce",randomUUID())}<label class="comm-sr" for="chat-message">Message ${label}</label>
-      <textarea class="rl-textarea" id="chat-message" name="message" maxlength="1600" rows="2" placeholder="Message ${label}…" required${result.error?' aria-invalid="true" aria-describedby="chat-error"':""}>${esc(result.draft)}</textarea>
-      <button type="submit" class="rl-button rl-button-primary rl-button-sm">Send ${icon("send")}</button><div id="chat-error">${feedback(result.error)}</div></form></section>`;
+      <textarea class="mero-textarea" id="chat-message" name="message" maxlength="1600" rows="2" placeholder="Message ${label}…" required${result.error?' aria-invalid="true" aria-describedby="chat-error"':""}>${esc(result.draft)}</textarea>
+      <button type="submit" class="mero-button mero-button-primary mero-button-sm">Send ${icon("send")}</button><div id="chat-error">${feedback(result.error)}</div></form></section>`;
   return frame("chat","Team chat","North Studio",params.get("view")!=="channels",`<div class="comm-split comm-chat-split">${sidebar}${main}</div>`,result,state.draftScope);
 }
 
@@ -164,11 +164,11 @@ async function readBody(request) {
 export function createCommunicationLayouts() {
   const sessions=new Map();
   function getSession(request,response) {
-    let key=request.headers.cookie?.match(/(?:^|;\s*)relay_comm=([a-f\d-]{36})(?:;|$)/)?.[1];
+    let key=request.headers.cookie?.match(/(?:^|;\s*)mero_comm=([a-f\d-]{36})(?:;|$)/)?.[1];
     let state=sessions.get(key);
     if(!state) {
       key=randomUUID(); state=newSession();
-      response.appendHeader("Set-Cookie",`relay_comm=${key}; Path=/; HttpOnly; SameSite=Lax`);
+      response.appendHeader("Set-Cookie",`mero_comm=${key}; Path=/; HttpOnly; SameSite=Lax`);
     }
     sessions.delete(key);
     sessions.set(key,state);

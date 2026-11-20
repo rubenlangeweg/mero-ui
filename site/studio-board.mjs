@@ -79,9 +79,9 @@ function readout(studio, task, scope, params) {
     <div class="stb-inspector-controls"><form ${studioForm('/demo/studio/tasks', params)}>
       <input type="hidden" name="operation" value="move"><input type="hidden" name="id" value="${esc(task.id)}">
       ${scopeFields(scope)}<input type="hidden" name="openTask" value="1">
-      <label class="rl-field"><span class="rl-label" id="stb-move-status-label">Task status</span><select class="rl-select" aria-labelledby="stb-move-status-label" name="status">${options(Object.entries(studioTaskStages), task.status)}</select></label>
-      <p class="stb-error" role="alert" data-rl-form-error hidden></p>
-      <button class="rl-button rl-button-primary" type="submit">Save status</button>
+      <label class="mero-field"><span class="mero-label" id="stb-move-status-label">Task status</span><select class="mero-select" aria-labelledby="stb-move-status-label" name="status">${options(Object.entries(studioTaskStages), task.status)}</select></label>
+      <p class="stb-error" role="alert" data-mero-form-error hidden></p>
+      <button class="mero-button mero-button-primary" type="submit">Save status</button>
     </form><a class="stb-back" ${studioLink('board', scope, params)}>Back to ${scope.display === 'list' ? 'list' : 'board'}</a></div>
   </article>`;
 }
@@ -93,14 +93,14 @@ function composer(studio, scope, params, values, error) {
   return `<section class="stb-compose" aria-label="New task">
     <form ${studioForm('/demo/studio/tasks', params)}>
       <input type="hidden" name="operation" value="create">${scopeFields(scope)}
-      <label class="rl-field stb-wide"><span class="rl-label">Task title</span><input id="studio-task-title" data-studio-initial-focus class="rl-input" name="title" required maxlength="100" value="${esc(value('title'))}"></label>
-      <label class="rl-field"><span class="rl-label" id="stb-company-label">Company</span><select class="rl-select" aria-labelledby="stb-company-label" name="companyId" required>${options([['','Choose a company'], ...studio.companies.map(item => [item.id, item.name])], company)}</select></label>
-      <label class="rl-field"><span class="rl-label" id="stb-owner-label">Owner</span><select class="rl-select" aria-labelledby="stb-owner-label" name="owner">${options(pairs(owners), value('owner') || owners[0])}</select></label>
-      <label class="rl-field"><span class="rl-label" id="stb-stage-label">Status</span><select class="rl-select" aria-labelledby="stb-stage-label" name="status">${options(Object.entries(studioTaskStages), value('status') || params.get('stage') || 'backlog')}</select></label>
-      <label class="rl-field"><span class="rl-label" id="stb-priority-label">Priority</span><select class="rl-select" aria-labelledby="stb-priority-label" name="priority">${options(pairs(priorities), value('priority') || 'Normal')}</select></label>
-      <label class="rl-field stb-wide"><span class="rl-label">Description <small>(optional)</small></span><textarea class="rl-input" rows="2" name="description" maxlength="600">${esc(value('description'))}</textarea></label>
-      <p class="stb-error stb-wide" role="alert" data-rl-form-error${error ? '' : ' hidden'}>${esc(error)}</p>
-      <div class="stb-actions stb-wide"><button class="rl-button rl-button-primary" type="submit">Create task</button><a class="rl-button rl-button-ghost" ${studioLink('board', scope, params)}>Cancel</a></div>
+      <label class="mero-field stb-wide"><span class="mero-label">Task title</span><input id="studio-task-title" data-studio-initial-focus class="mero-input" name="title" required maxlength="100" value="${esc(value('title'))}"></label>
+      <label class="mero-field"><span class="mero-label" id="stb-company-label">Company</span><select class="mero-select" aria-labelledby="stb-company-label" name="companyId" required>${options([['','Choose a company'], ...studio.companies.map(item => [item.id, item.name])], company)}</select></label>
+      <label class="mero-field"><span class="mero-label" id="stb-owner-label">Owner</span><select class="mero-select" aria-labelledby="stb-owner-label" name="owner">${options(pairs(owners), value('owner') || owners[0])}</select></label>
+      <label class="mero-field"><span class="mero-label" id="stb-stage-label">Status</span><select class="mero-select" aria-labelledby="stb-stage-label" name="status">${options(Object.entries(studioTaskStages), value('status') || params.get('stage') || 'backlog')}</select></label>
+      <label class="mero-field"><span class="mero-label" id="stb-priority-label">Priority</span><select class="mero-select" aria-labelledby="stb-priority-label" name="priority">${options(pairs(priorities), value('priority') || 'Normal')}</select></label>
+      <label class="mero-field stb-wide"><span class="mero-label">Description <small>(optional)</small></span><textarea class="mero-input" rows="2" name="description" maxlength="600">${esc(value('description'))}</textarea></label>
+      <p class="stb-error stb-wide" role="alert" data-mero-form-error${error ? '' : ' hidden'}>${esc(error)}</p>
+      <div class="stb-actions stb-wide"><button class="mero-button mero-button-primary" type="submit">Create task</button><a class="mero-button mero-button-ghost" ${studioLink('board', scope, params)}>Cancel</a></div>
     </form>
   </section>`;
 }
@@ -114,7 +114,7 @@ function lanes(tasks, names, scope, params, laneHeading, cardHeading, newTask) {
           <div class="stb-cards">${items.length ? items.map(task => card(task, names.get(task.companyId), scope, cardHeading, params)).join('') : '<p class="stb-empty">No tasks</p>'}</div>
         </section>`;
       }).join('')}</div>
-      <form data-stb-move ${studioForm('/demo/studio/tasks', params)}><input type="hidden" name="operation" value="move">${scopeFields(scope)}<input type="hidden" name="id"><input type="hidden" name="status"><p class="stb-error" role="alert" data-rl-form-error hidden></p></form>`;
+      <form data-stb-move ${studioForm('/demo/studio/tasks', params)}><input type="hidden" name="operation" value="move">${scopeFields(scope)}<input type="hidden" name="id"><input type="hidden" name="status"><p class="stb-error" role="alert" data-mero-form-error hidden></p></form>`;
 }
 
 export function renderStudioBoard(studio, params, { error = '', values = {}, pageHeading = true } = {}) {
@@ -139,8 +139,8 @@ export function renderStudioBoard(studio, params, { error = '', values = {}, pag
     ...scope, ...selection, ...(compose ? { compose: 'task', stage: stageName && stageId } : {}), display: 'list',
   }, params);
   return `<section class="stb-board" aria-label="Studio task board" data-studio-screen="board"${alternate ? ` data-studio-default-url="${esc(alternate)}"` : ''}>
-    <header class="rl-page-head stb-head"><div><${heading}>${compose ? 'New task' : 'Task board'}</${heading}><p>${compose ? (company ? esc(company.name) + ' · ' : '') + esc(stageName || 'Studio projects') : company ? esc(company.name) : 'Studio projects'}${compose ? '' : ' · ' + tasks.length + (tasks.length === 1 ? ' task' : ' tasks')}</p></div>
-      ${compose ? '' : `<a class="rl-button rl-button-primary" ${newTask()}><span class="stb-plus" aria-hidden="true">+</span>New task</a>`}
+    <header class="mero-page-head stb-head"><div><${heading}>${compose ? 'New task' : 'Task board'}</${heading}><p>${compose ? (company ? esc(company.name) + ' · ' : '') + esc(stageName || 'Studio projects') : company ? esc(company.name) : 'Studio projects'}${compose ? '' : ' · ' + tasks.length + (tasks.length === 1 ? ' task' : ' tasks')}</p></div>
+      ${compose ? '' : `<a class="mero-button mero-button-primary" ${newTask()}><span class="stb-plus" aria-hidden="true">+</span>New task</a>`}
     </header>
     ${compose ? composer(studio, scope, params, values, error) : `
       ${error ? `<p role="alert" class="stb-error">${esc(error)}</p>` : ''}

@@ -8,13 +8,13 @@ test("Studio renders each finish as a gallery view, radio option and inventory d
   const lamp = createLabStore().products.find(product => product.id === 6);
   for (const finish of finishes) {
     const page = proStage({ product: { ...lamp, finish: finish.value } });
-    assert.match(page, new RegExp(`data-rl-gallery-link href="/layouts/dashboard\\?view=inventory&amp;edit=6&amp;finish=${finish.value}"`));
-    assert.match(page, new RegExp(`data-rl-gallery-choice value="${finish.value}" checked`));
-    assert.match(page, new RegExp(`data-rl-slide="${finish.value}"`));
-    assert.match(page, new RegExp(`data-rl-gallery-label aria-live="polite">${finish.label}<`));
+    assert.match(page, new RegExp(`data-mero-gallery-link href="/layouts/dashboard\\?view=inventory&amp;edit=6&amp;finish=${finish.value}"`));
+    assert.match(page, new RegExp(`data-mero-gallery-choice value="${finish.value}" checked`));
+    assert.match(page, new RegExp(`data-mero-slide="${finish.value}"`));
+    assert.match(page, new RegExp(`data-mero-gallery-label aria-live="polite">${finish.label}<`));
     assert.equal((page.match(/ checked/g) ?? []).length, 1);
   }
-  assert.match(proStage({ product: { ...lamp, finish: 'unknown' } }), /data-rl-gallery-choice value="ivory" checked/);
+  assert.match(proStage({ product: { ...lamp, finish: 'unknown' } }), /data-mero-gallery-choice value="ivory" checked/);
 });
 
 test("media examples expose the exact working markup, keyboard controls and unobstructed local images", () => {
@@ -22,9 +22,9 @@ test("media examples expose the exact working markup, keyboard controls and unob
   assert.deepEqual(items.map(item => item.id), ["carousel", "hover-gallery", "diff", "holo-card"]);
   for (const item of items) assert.equal(item.code, item.demo);
   for (const item of items.slice(0, 2)) {
-    assert.equal((item.code.match(/data-rl-slide=/g) ?? []).length, 3);
-    assert.equal((item.code.match(/data-rl-gallery-choice/g) ?? []).length, 3);
-    assert.match(item.code, /<ol class="rl-gallery-track" tabindex="0"/);
+    assert.equal((item.code.match(/data-mero-slide=/g) ?? []).length, 3);
+    assert.equal((item.code.match(/data-mero-gallery-choice/g) ?? []).length, 3);
+    assert.match(item.code, /<ol class="mero-gallery-track" tabindex="0"/);
     assert.doesNotMatch(item.code, /\bid=|https?:\/\//);
   }
 });

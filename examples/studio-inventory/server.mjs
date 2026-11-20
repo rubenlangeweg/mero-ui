@@ -24,10 +24,10 @@ function page(content, theme, url) {
     <style>
       @font-face{font-family:Geist;src:url("/fonts/geist.woff2") format("woff2");font-weight:100 900;font-display:swap}
       @font-face{font-family:"Geist Mono";src:url("/fonts/geist-mono.woff2") format("woff2");font-weight:100 900;font-display:swap}
-      *{box-sizing:border-box}body{margin:0;background:var(--rl-bg);color:var(--rl-text);font-family:var(--rl-font)}
+      *{box-sizing:border-box}body{margin:0;background:var(--mero-bg);color:var(--mero-text);font-family:var(--mero-font)}
       main{max-width:72rem;margin:clamp(1rem,5vw,4rem) auto;padding:0 1rem}
       main>nav{display:flex;flex-wrap:wrap;gap:1rem;margin-block-end:1rem}main>nav a{color:inherit}
-      .examples{display:grid;grid-template-columns:minmax(0,1fr);gap:1.25rem}.tenant{min-width:0;--rl-primary:#23655e;--rl-primary-ink:white;--rl-accent:#368a80}
+      .examples{display:grid;grid-template-columns:minmax(0,1fr);gap:1.25rem}.tenant{min-width:0;--mero-primary:#23655e;--mero-primary-ink:white;--mero-accent:#368a80}
     </style>
     <script defer src="/vendor/htmx.min.js"></script><script defer src="/mero.js"></script>
     <script defer src="/mero-forms.js"></script><script defer src="/mero-inventory.js"></script>

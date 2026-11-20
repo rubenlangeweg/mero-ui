@@ -40,5 +40,5 @@ export function studioSearch() {
 export function studioForm(action, context) {
   const params = appearanceParams(context);
   const url = esc(action + (params.size ? "?" + params.toString() : ""));
-  return `action="${url}" method="post" hx-post="${url}" ${target} data-rl-form`;
+  return `action="${url}" method="post" hx-post="${url}" ${target} data-mero-form`;
 }

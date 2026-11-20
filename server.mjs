@@ -76,14 +76,14 @@ function startGuide() {
   const install = `<link rel="stylesheet" href="/mero.css">
 <script defer src="/vendor/htmx.min.js"></script>
 <script defer src="/mero.js"></script>`;
-  const markup = `<button type="button" class="rl-button rl-button-primary"
+  const markup = `<button type="button" class="mero-button mero-button-primary"
         hx-get="/demo/stock-summary" hx-target="next output"
         hx-disabled-elt="this">
   Check inventory
 </button>
 <output aria-live="polite"></output>`;
   return docs("Get started", "Use Mero UI with any backend that can render HTML fragments.", `
-    <div><a class="rl-button rl-button-primary site-cta" href="/downloads/mero-ui.tar.gz" download>Download source ↓</a></div>
+    <div><a class="mero-button mero-button-primary site-cta" href="/downloads/mero-ui.tar.gz" download>Download source ↓</a></div>
     <p>Extract the archive and run <code>npm start</code> with Node 22 or newer. The app runs at <a href="/">127.0.0.1:4173</a>. For just the editable table and its server routes, <a href="/downloads/studio-inventory.tar.gz" download>download Studio Inventory</a>.</p>
     <h2>Load the assets</h2>
     <p>The sample serves these files from its <code>public/</code> directory. Use the same paths in your app, or point them to your own asset directory.</p>
@@ -101,7 +101,7 @@ function startGuide() {
     <p>Open the <a href="/playground">inventory playground</a>, choose a validation error under <strong>Next save</strong>, then edit and save a product. The server returns the filled-in form with HTTP 422. The drawer stays open and focuses the invalid field.</p>
     <p>The <strong>HTTP exchange</strong> tab shows the returned form and headers. The <a href="/downloads/studio-inventory.tar.gz" download>standalone inventory</a> includes the same template and routes. Add <a href="/mero-forms.js" download>mero-forms.js</a> after the core to use these behaviors in your app.</p>
     <h2>Theme your app</h2>
-    <p>Use the <a href="/themes">theme studio</a> to preview your colors, radii and typography, then export the <code>--rl-*</code> tokens into your stylesheet. Set <code>data-theme="light"</code> or <code>data-theme="dark"</code> on the document to choose a theme.</p>
+    <p>Use the <a href="/themes">theme studio</a> to preview your colors, radii and typography, then export the <code>--mero-*</code> tokens into your stylesheet. Set <code>data-theme="light"</code> or <code>data-theme="dark"</code> on the document to choose a theme.</p>
     <p>Read the <a href="/docs/design-principles">design principles</a> for action hierarchy, spacing and focus after a save. Try the <a href="/docs/responsive-layouts">resizable company directory</a> to see how a layout behaves inside a narrow panel.</p>
   `);
 }
@@ -165,10 +165,10 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
       const screen = pathname.startsWith("/layouts/") && pathname.slice("/layouts/".length);
       if ((method === "GET" && screen === "dashboard") || (method === "POST" && Object.hasOwn(studioActions, pathname))) {
         let params = new URLSearchParams(searchParams);
-        const standalone = params.get("embed") === "1" || request.headers["sec-fetch-dest"] === "iframe" || request.headers["x-relay-embed"] === "1";
+        const standalone = params.get("embed") === "1" || request.headers["sec-fetch-dest"] === "iframe" || request.headers["x-mero-embed"] === "1";
         if (standalone) params.set("embed", "1");
         const fragment = request.headers["hx-request"] === "true" && request.headers["hx-target"] === "studio-workspace" && request.headers["hx-history-restore-request"] !== "true";
-        response.setHeader("Vary", "HX-Request, HX-Target, HX-History-Restore-Request, Sec-Fetch-Dest, X-Relay-Embed");
+        response.setHeader("Vary", "HX-Request, HX-Target, HX-History-Restore-Request, Sec-Fetch-Dest, X-Mero-Embed");
         let options = {};
         if (method === "POST") {
           const form = await formBody(request);
@@ -196,7 +196,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
       }
       if (method === "GET" && layoutPages.has(screen)) {
         const { name: title, description } = layoutPages.get(screen);
-        response.setHeader("Vary", "HX-Request, HX-Target, HX-History-Restore-Request, Sec-Fetch-Dest, X-Relay-Embed");
+        response.setHeader("Vary", "HX-Request, HX-Target, HX-History-Restore-Request, Sec-Fetch-Dest, X-Mero-Embed");
         let assets, content;
         if (screen === "settings") {
           assets = settingsAssets;
@@ -210,7 +210,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
           if (request.headers["hx-request"] === "true" && request.headers["hx-target"] === "business-layout" &&
               request.headers["hx-history-restore-request"] !== "true") return send(response, content, { headers: { "X-Robots-Tag": "noindex" } });
         }
-        if (searchParams.get("embed") === "1" || request.headers["sec-fetch-dest"] === "iframe" || request.headers["x-relay-embed"] === "1") {
+        if (searchParams.get("embed") === "1" || request.headers["sec-fetch-dest"] === "iframe" || request.headers["x-mero-embed"] === "1") {
           const theme = searchParams.get("studio") === "1" ? readTheme(searchParams) : null;
           return send(response, embeddedLayout({ title, content, assets, mode: theme?.mode || searchParams.get("theme"), tokens: theme && themeTokens(theme) }));
         }
@@ -228,7 +228,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
           if (request.headers["hx-request"] === "true" && request.headers["hx-target"] === "catalog-content" && request.headers["hx-history-restore-request"] !== "true") {
             const head = seoHead({ title, description, path: pathname, origin });
             return send(response, `<title>${esc(title)} · Mero UI</title><template data-catalog-head>${head}</template>${content}`, { headers: {
-              "X-Relay-Assets": assets.join(","), "X-Robots-Tag": "noindex",
+              "X-Mero-Assets": assets.join(","), "X-Robots-Tag": "noindex",
             } });
           }
           return page({ title, description, nav: "components", assets: ["vendor/htmx.min.js", ...assets, "catalog-navigation.js"],
@@ -239,7 +239,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
         const file = pathname.slice("/source/".length);
         if (layoutSourceFiles.has(file)) return send(response, await readFile(new URL(file, import.meta.url)), { type: types[".txt"] });
       }
-      if (serveFiles && method === "GET" && ["/downloads/mero-ui.tar.gz", "/downloads/relay-ui.tar.gz"].includes(pathname)) {
+      if (serveFiles && method === "GET" && pathname === "/downloads/mero-ui.tar.gz") {
         const archive = await createSourceArchive(sourceArchiveEntries);
         return send(response, archive, {type:"application/gzip",headers:{"Content-Disposition":'attachment; filename="mero-ui.tar.gz"'}});
       }
@@ -265,7 +265,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
         const result = updateSettings(settings, params);
         if (result.error) return send(response, renderSettingsForm(result.values, result.error), { status: 422 });
         return send(response, renderSettingsForm(settings), { headers: {
-          "HX-Trigger-After-Settle": JSON.stringify({ "relay:form-saved": { target: "#layout-settings", message: "Settings saved" } }),
+          "HX-Trigger-After-Settle": JSON.stringify({ "mero:form-saved": { target: "#layout-settings", message: "Settings saved" } }),
         } });
       }
 
@@ -273,7 +273,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
 
       const type = types[extname(pathname)];
       if (serveFiles && method === "GET" && type && /^\/(?:fonts\/|vendor\/)?[a-z0-9.-]+$/i.test(pathname)) {
-        const assetPath = pathname.slice(1).replace(/^relay(?=[.-])/, "mero");
+        const assetPath = pathname.slice(1);
         const asset = await readFile(new URL("./public/" + assetPath, import.meta.url)).catch((error) => {
           if (error.code !== "ENOENT") throw error;
         });

@@ -42,7 +42,7 @@ test('inline editor keeps an invalid draft and creates and deletes a valid produ
   assert.match(invalid.html,/already uses this SKU/);
   const saved = await request(store,`${grid}/save`,{...draft,sku:'ARC-01'});
   const id=store.products.at(-1).id;
-  assert.match(saved.html,new RegExp(`data-rl-grid-focus="edit-${id}"`));
+  assert.match(saved.html,new RegExp(`data-mero-grid-focus="edit-${id}"`));
   assert.equal(store.products.at(-1).sku,'ARC-01');
   const filtered=await request(store,`${grid}?q=nonexistent`);
   assert.match(filtered.html,/No matching products/);
@@ -91,7 +91,7 @@ test('agenda returns a correctable booking draft and stops at calendar boundarie
   const invalid = await request(store, route, {date:'2027-05-14',time:'12:30',title:'   ',location:'Studio <A>'});
   assert.equal(invalid.status,422);
   assert.match(invalid.html,/data-agenda-focus="invalid"/);
-  assert.match(invalid.html,/<details class="rl-collection-details" open>/);
+  assert.match(invalid.html,/<details class="mero-collection-details" open>/);
   assert.match(invalid.html,/name="title"[^>]+aria-invalid="true"/);
   assert.match(invalid.html,/value="Studio &lt;A&gt;"/);
   for (const [date,action] of [['0001-01-01','previous'],['9999-12-31','next']]) {

@@ -80,7 +80,7 @@ test("workspace and gallery interactions survive hidden panels, resized viewport
 
   await page.goto(base + "/preview/carousel");
   await page.evaluate(() => {
-    const gallery = document.querySelector("rl-gallery");
+    const gallery = document.querySelector("mero-gallery");
     const panel = document.createElement("section");
     panel.hidden = true;
     gallery.before(panel);
@@ -90,16 +90,16 @@ test("workspace and gallery interactions survive hidden panels, resized viewport
     requestAnimationFrame(() => { panel.hidden = false; });
   });
   await page.waitForFunction(() => {
-    const gallery = document.querySelector("rl-gallery");
-    const track = gallery.querySelector(".rl-gallery-track").getBoundingClientRect();
-    const selected = gallery.querySelector('[data-rl-slide="sand"]').getBoundingClientRect();
+    const gallery = document.querySelector("mero-gallery");
+    const track = gallery.querySelector(".mero-gallery-track").getBoundingClientRect();
+    const selected = gallery.querySelector('[data-mero-slide="sand"]').getBoundingClientRect();
     return track.width > 0 && Math.abs(track.left - selected.left) < 2;
   });
-  assert.equal(await page.locator("rl-gallery output").textContent(),"Warm sand");
+  assert.equal(await page.locator("mero-gallery output").textContent(),"Warm sand");
 
   await page.goto(base + "/preview/diff");
   await page.locator("html").evaluate(el => { el.dir = "rtl"; });
-  const captions = await page.locator(".rl-diff-caption span").evaluateAll(items => items.map(el => el.getBoundingClientRect().left));
+  const captions = await page.locator(".mero-diff-caption span").evaluateAll(items => items.map(el => el.getBoundingClientRect().left));
   assert.ok(captions[0] < captions[1],"the ivory caption should match the physical left side of the photographs");
   assert.deepEqual(errors,[]);
 });
@@ -134,7 +134,7 @@ test("workspace control rows, icon buttons and disclosures keep their hit areas 
     const select = page.getByRole("combobox");
     await select.selectOption(value);
     assert.equal(await select.inputValue(),value);
-    assert.ok(await select.evaluate(el => el.classList.contains("rl-select")));
+    assert.ok(await select.evaluate(el => el.classList.contains("mero-select")));
   }
 
   await open("checkbox-button-group");

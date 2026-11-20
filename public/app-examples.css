@@ -6,7 +6,7 @@
 .app-gallery-card { display: block; min-inline-size: 0; border-radius: .85rem; scroll-margin-block-start: 6.3rem; }
 .app-gallery-card:target .app-gallery-open { color: var(--site-fg); border-color: var(--site-subtle); }
 .app-gallery-art { display: grid; place-items: start center; aspect-ratio: 1.84; padding: 6% 5% 0; isolation: isolate; overflow: hidden; border: 1px solid color-mix(in srgb, var(--app-art) 58%, var(--site-line)); border-radius: 1rem; background: linear-gradient(155deg, color-mix(in srgb, var(--app-art) 10%, var(--site-panel)), color-mix(in srgb, var(--app-art) 31%, var(--site-panel))); }
-.app-gallery-shot { inline-size: 100%; aspect-ratio: 1080 / 600; border-radius: .5rem .5rem 0 0; border: 1px solid color-mix(in srgb, var(--site-line) 70%, var(--app-art)); background: var(--site-panel) var(--app-shot-light) center top / 100% auto no-repeat; box-shadow: 0 9px 30px #11121723; transform: translateY(2%); transition: transform .24s var(--rl-ease), box-shadow .24s ease; }
+.app-gallery-shot { inline-size: 100%; aspect-ratio: 1080 / 600; border-radius: .5rem .5rem 0 0; border: 1px solid color-mix(in srgb, var(--site-line) 70%, var(--app-art)); background: var(--site-panel) var(--app-shot-light) center top / 100% auto no-repeat; box-shadow: 0 9px 30px #11121723; transform: translateY(2%); transition: transform .24s var(--mero-ease), box-shadow .24s ease; }
 [data-theme="dark"] .app-gallery-shot { background-image: var(--app-shot-dark); box-shadow: 0 10px 32px #08080966; }
 .app-color-dashboard { --app-art: #9b9faf; }
 .app-color-mail { --app-art: #7899ac; }
@@ -42,15 +42,15 @@
 .app-example-tabs a svg { inline-size: 1rem; block-size: 1rem; }
 .app-example-tabs a:hover, .app-example-tabs a[aria-current="page"] { color: var(--site-fg); background: var(--site-raised); }
 .app-example-stage, .app-example-stage > * { min-inline-size: 0; }
-.app-example-stage:has(> #business-layout) { padding: clamp(.9rem, 2.5vw, 2rem); border: 1px solid var(--rl-line); border-radius: 1rem; background: var(--rl-bg); }
+.app-example-stage:has(> #business-layout) { padding: clamp(.9rem, 2.5vw, 2rem); border: 1px solid var(--mero-line); border-radius: 1rem; background: var(--mero-bg); }
 .app-example-stage .docs-preview > #business-layout { padding: clamp(.85rem, 2.5vw, 2rem); }
 .app-example-stage .docs-preview > .comm-frame { border: 0; border-radius: 0; }
 .app-example-stage .doc-lab-options [data-open-preview] { display: inline-flex; justify-content: center; gap: .35rem; width: auto; padding-inline: .6rem; color: var(--site-fg); font-size: .8rem; white-space: nowrap; }
 .app-example-stage .doc-lab { margin: 0; }
 .app-example-stage .doc-lab > [role="tabpanel"] { margin-block-start: 0; }
 .app-example-stage .doc-lab .docs-preview { display: block; align-content: start; justify-items: stretch; padding: 0; background-image: none; }
-.app-example-stage .docs-preview > :is(.rl-app, .comm-frame, #business-layout) { inline-size: 100%; }
-.app-example-stage .docs-preview .rl-app { border: 0; border-radius: 0; }
+.app-example-stage .docs-preview > :is(.mero-app, .comm-frame, #business-layout) { inline-size: 100%; }
+.app-example-stage .docs-preview .mero-app { border: 0; border-radius: 0; }
 .app-example-page > .component-install { margin-block-start: 1.5rem; }
 #studio-task-guide :is(ol, p) { max-inline-size: 68ch; color: var(--site-muted); font-size: .9rem; line-height: 1.6; }
 #studio-task-guide ol { padding-inline-start: 1.4rem; }

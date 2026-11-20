@@ -60,10 +60,10 @@ test('CRM and Finance links update records, chart data and browser history with 
       await page.setViewportSize({ width:320, height:850 });
       const tickInset = await page.locator('.bu-chart').evaluate(panel => Math.min(...[...panel.querySelectorAll('text[text-anchor="end"]')].map(tick => tick.getBoundingClientRect().left - panel.getBoundingClientRect().left)));
       assert.ok(tickInset >= 4, `Chart labels need a visible inset, got ${tickInset}px`);
-      const point = page.locator('.bu-chart [data-rl-plot-value]').first();
+      const point = page.locator('.bu-chart [data-mero-plot-value]').first();
       await point.focus();
       await point.press('ArrowRight');
-      assert.match(await page.locator('[data-rl-plot-readout]').textContent(), /Sep 8/);
+      assert.match(await page.locator('[data-mero-plot-readout]').textContent(), /Sep 8/);
     }
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     await page.close();

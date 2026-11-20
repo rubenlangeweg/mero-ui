@@ -26,8 +26,8 @@ async function openPreview(t) {
 test('chart keyboard navigation and independent chat and report updates', browserOptions, async t => {
   const {page, visit} = await openPreview(t);
   await visit('line-chart?variant=Period%20picker');
-  const current = page.locator('[data-rl-plot-value]:focus');
-  await page.locator('[data-rl-plot-value][tabindex="0"]').focus();
+  const current = page.locator('[data-mero-plot-value]:focus');
+  await page.locator('[data-mero-plot-value][tabindex="0"]').focus();
   await page.keyboard.press('ArrowRight');
   assert.match(await current.getAttribute('aria-label'), /Tue · Shipped/);
   await page.keyboard.press('ArrowDown');
@@ -39,21 +39,21 @@ test('chart keyboard navigation and independent chat and report updates', browse
   await page.locator('[name=period]').selectOption('recent');
   await page.getByRole('button',{name:'Apply'}).click();
   await page.getByText('Friday to Sunday').waitFor();
-  assert.equal(await page.locator('[data-rl-plot-value][tabindex="0"]').count(), 1);
+  assert.equal(await page.locator('[data-mero-plot-value][tabindex="0"]').count(), 1);
 
   await visit('chat-list-view');
-  await page.locator('.rl-chat-inbox').evaluate(first => {
+  await page.locator('.mero-chat-inbox').evaluate(first => {
     const second = first.cloneNode(true);
     first.after(second);
     window.htmx.process(second);
   });
-  const inbox = page.locator('.rl-chat-inbox').last();
+  const inbox = page.locator('.mero-chat-inbox').last();
   const peak = inbox.getByRole('link',{name:'Peak capacity'});
   await peak.click();
   await page.getByRole('heading',{name:'Peak capacity'}).waitFor();
   assert.equal(await peak.getAttribute('aria-current'), 'true');
   assert.equal(await inbox.locator('nav [aria-current]').count(), 1);
-  assert.equal(await page.locator('.rl-chat-inbox').first().locator('nav [aria-current]').innerText(), 'Weekly dispatches');
+  assert.equal(await page.locator('.mero-chat-inbox').first().locator('nav [aria-current]').innerText(), 'Weekly dispatches');
   await page.route('**/demo/insights/thread?topic=mix', route => route.fulfill({status:503,body:'Unavailable'}));
   await inbox.getByRole('link',{name:'Collection mix'}).click();
   await page.getByText('Could not load the update. Try again.').waitFor();
@@ -68,21 +68,21 @@ test('chart keyboard navigation and independent chat and report updates', browse
   assert.equal(await input.getAttribute('aria-invalid'), 'true');
   await input.fill('Which day shipped most?');
   await send.click();
-  await page.locator('.rl-chat-message').nth(3).waitFor();
+  await page.locator('.mero-chat-message').nth(3).waitFor();
   assert.equal(await input.getAttribute('aria-invalid'), null);
-  assert.match(await page.locator('.rl-chat-message').last().innerText(), /56 units/);
+  assert.match(await page.locator('.mero-chat-message').last().innerText(), /56 units/);
   for (let i=4; i<12; i+=2) {
     await input.fill('Show the collection mix');
     await send.click();
-    await page.locator('.rl-chat-message').nth(i+1).waitFor();
+    await page.locator('.mero-chat-message').nth(i+1).waitFor();
   }
-  const log = page.locator('.rl-chat-history');
+  const log = page.locator('.mero-chat-history');
   assert(await log.evaluate(el => el.scrollHeight > el.clientHeight + 25));
   assert(await log.evaluate(el => el.scrollHeight - el.clientHeight - el.scrollTop < 4));
   await log.evaluate(el => {el.scrollTop = 0;});
   await input.fill('Summarize this week');
   await send.click();
-  await page.locator('.rl-chat-message').nth(13).waitFor();
+  await page.locator('.mero-chat-message').nth(13).waitFor();
   assert.equal(await log.evaluate(el => el.scrollTop), 0);
 
   await visit('markdown');
@@ -99,7 +99,7 @@ test('metric text stays inside its card and neighboring controls share their ali
     await page.setViewportSize({width,height:800});
     await visit('number-value');
     await page.evaluate(()=>document.fonts.ready);
-    const insets = await page.locator('.rl-insight-metric').evaluateAll(cards=>cards.map(card=>{
+    const insets = await page.locator('.mero-insight-metric').evaluateAll(cards=>cards.map(card=>{
       const range=document.createRange();
       range.selectNodeContents(card.querySelector('data'));
       const rect=range.getBoundingClientRect(), outer=card.getBoundingClientRect();
@@ -114,7 +114,7 @@ test('metric text stays inside its card and neighboring controls share their ali
     'Apply and its select share both edges');
   await visit('composed-chart');
   const order=await page.locator('svg').evaluate(svg=>{
-    const line=svg.querySelector('.rl-plot-line');
+    const line=svg.querySelector('.mero-plot-line');
     return Array.from(svg.querySelectorAll('g:has(rect)')).every(bar=>
       Boolean(bar.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING));
   });
@@ -125,6 +125,6 @@ test('metric text stays inside its card and neighboring controls share their ali
   await disclosure.press('Enter');
   assert(await page.getByText('Input',{exact:true}).isVisible());
   await visit('chat-attachment');
-  const tile=await page.locator('.rl-chat-file > span').first().boundingBox();
+  const tile=await page.locator('.mero-chat-file > span').first().boundingBox();
   assert.equal(tile.width,tile.height);
 });

@@ -68,17 +68,17 @@ export function mutateStudioCompany(studio, form) {
 function profileEditor(company, params, heading, error, submitted) {
   const values = error ? submitted : company;
   const errors = error ? profileErrors(values) : {};
-  const field = (key, label, type) => `<label class="rl-field">
-    <span class="rl-label">${label}</span><input class="rl-input" type="${type}" name="${key}" required${key === 'industry' ? ' data-studio-initial-focus' : ''} ${type === 'number' ? 'min="0" step="1"' : 'maxlength="80"'}
+  const field = (key, label, type) => `<label class="mero-field">
+    <span class="mero-label">${label}</span><input class="mero-input" type="${type}" name="${key}" required${key === 'industry' ? ' data-studio-initial-focus' : ''} ${type === 'number' ? 'min="0" step="1"' : 'maxlength="80"'}
     value="${esc(values[key])}"${errors[key] ? ` aria-invalid="true" aria-describedby="sc-error-${key}"` : ''}>
-    ${errors[key] ? `<small class="rl-field-error" id="sc-error-${key}">${esc(errors[key])}</small>` : ''}</label>`;
+    ${errors[key] ? `<small class="mero-field-error" id="sc-error-${key}">${esc(errors[key])}</small>` : ''}</label>`;
   return `<article class="sc-record" aria-label="Edit company profile">
     <header class="sc-identity">${mark(company, true)}<div><${heading}>Edit company</${heading}><p>${esc(company.name)}</p></div></header>
     <form class="sc-edit-form" ${studioForm('/demo/studio/companies', params)}>
       <input type="hidden" name="company" value="${esc(company.id)}"><input type="hidden" name="q" value="${esc(params.get('q'))}">
-      ${error ? `<p class="rl-field-error" role="alert">${esc(error)}</p>` : ''}
+      ${error ? `<p class="mero-field-error" role="alert">${esc(error)}</p>` : ''}
       ${field('industry', 'Industry', 'text')}${field('city', 'City', 'text')}${field('employees', 'Team size', 'number')}
-      <div class="sc-edit-actions"><button class="rl-button rl-button-primary" type="submit">Save changes</button><a class="rl-button rl-button-ghost" ${studioLink('companies', { company: company.id, q: params.get('q') }, params)}>Cancel</a></div>
+      <div class="sc-edit-actions"><button class="mero-button mero-button-primary" type="submit">Save changes</button><a class="mero-button mero-button-ghost" ${studioLink('companies', { company: company.id, q: params.get('q') }, params)}>Cancel</a></div>
     </form>
   </article>`;
 }
@@ -99,7 +99,7 @@ function recordDetail(company, studio, params, pageHeading, error, values) {
   return `<article class="sc-record" aria-label="${esc(company.name)} company record">
     <a class="sc-back sc-text-link" ${studioLink('companies', { q: params.get('q') }, params)}><span aria-hidden="true">← </span>Company directory</a>
     <header class="sc-identity">${mark(company, true)}<div><${detailHeading}${params.get('company') === company.id ? ' data-studio-initial-focus tabindex="-1"' : ''}>${esc(company.name)}</${detailHeading}><p>${esc(company.industry)}<span aria-hidden="true"> · </span>${esc(company.city)}</p></div>
-      <a class="rl-button rl-button-sm sc-edit" ${studioLink('companies', { company: company.id, q: params.get('q'), edit: 'profile' }, params)}>Edit company</a></header>
+      <a class="mero-button mero-button-sm sc-edit" ${studioLink('companies', { company: company.id, q: params.get('q'), edit: 'profile' }, params)}>Edit company</a></header>
     <dl class="sc-metrics"><div><dt>Open pipeline</dt><dd>${money.format(company.pipeline)}</dd></div><div><dt>Open tasks</dt><dd>${openTasks}</dd></div><div><dt>Bookings</dt><dd>${bookings.length}</dd></div></dl>
     <div class="sc-facts"><dl><div><dt>Account owner</dt><dd>${esc(company.owner)}</dd></div><div><dt>Team size</dt><dd>${company.employees} employees</dd></div></dl></div>
     <div class="sc-blocks">
@@ -119,14 +119,14 @@ export function renderStudioCompanies(studio, params, { pageHeading = true, erro
   const heading = pageHeading ? 'h1' : 'h2';
   const directoryHeading = pageHeading ? 'h2' : 'h3';
   return `<section class="sc-companies" aria-label="Company workspace">
-    <header class="rl-page-head sc-head"><div><${heading}>Companies</${heading}><p>Client accounts, contacts and project work.</p></div></header>
-    ${error && !requested ? `<p class="rl-field-error" role="alert">${esc(error)}</p>` : ''}
+    <header class="mero-page-head sc-head"><div><${heading}>Companies</${heading}><p>Client accounts, contacts and project work.</p></div></header>
+    ${error && !requested ? `<p class="mero-field-error" role="alert">${esc(error)}</p>` : ''}
     <div class="sc-panes"${requested ? ' data-open-record' : ''}>
     <section class="sc-directory" aria-label="Company directory"><div class="sc-directory-head"><${directoryHeading}>Directory</${directoryHeading}><span>${companies.length}${q ? ` / ${studio.companies.length}` : ''}</span></div>
     <form class="sc-search" role="search" aria-label="Search company directory" ${studioSearch()}>
       <input type="hidden" name="view" value="companies">${studioContextFields(params)}
-      <input class="rl-input" type="search" id="studio-company-search" aria-label="Search companies" name="q" value="${esc(q)}" placeholder="Search companies">
-      <button class="rl-button" type="submit" aria-label="Search companies"><span class="sc-search-icon" aria-hidden="true"></span></button>
+      <input class="mero-input" type="search" id="studio-company-search" aria-label="Search companies" name="q" value="${esc(q)}" placeholder="Search companies">
+      <button class="mero-button" type="submit" aria-label="Search companies"><span class="sc-search-icon" aria-hidden="true"></span></button>
     </form>
     ${q && companies.length ? `<a class="sc-clear sc-text-link" ${studioLink('companies', {}, params)}>Clear search</a>` : ''}
     ${companies.length ? `<nav class="sc-accounts" aria-label="Companies">${companies.map(company => `<a class="sc-account" ${studioLink('companies', { q, company: company.id }, params)}${company === selected ? ' aria-current="true"' : ''}>

@@ -32,7 +32,7 @@ export const infoPages = new Map([
   ])],
   ["/privacy", page("Privacy", "The Mero UI preview keeps your theme preference in your browser and stores submitted demo edits in the sample server’s memory.", [
     ["What the server receives", `<p>Submitting a demo form sends the entered values to the server running this preview. Inventory records and Studio workspace edits are shared across visitors to that server. Use fictional details in these examples.</p>
-      <p>The mail and chat layouts use a session cookie named <code>relay_comm</code> to keep your conversations separate. Sending a message adds it to the demo session. Restarting the sample server clears its in-memory records.</p>`],
+      <p>The mail and chat layouts use a session cookie named <code>mero_comm</code> to keep your conversations separate. Sending a message adds it to the demo session. Restarting the sample server clears its in-memory records.</p>`],
     ["What your browser remembers", `<p>The theme switch stores your light or dark preference in local storage. Mail and chat keep unsent drafts in the tab’s session storage. htmx also uses session storage for navigation history.</p>
       <p>To remove the saved preference, drafts and session cookie, clear this site’s data in your browser settings. This removes the browser’s copy. Shared records on the demo server have a separate lifetime.</p>`],
   ])],

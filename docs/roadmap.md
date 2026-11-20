@@ -31,13 +31,13 @@ Give Mero and daisyUI plus stock HTMX the same edit endpoint, visual brief and d
 
 Use the existing inventory as the source. Expose the responsive table, search, category filter, sort, edit drawer and delete confirmation as a copyable block with scoped CSS, its HTML fragments and a runnable local reference server. Scope DOM IDs and targets so two blocks can coexist. Give consumers control over URLs, colors and navigation. Check the graphite theme, light theme and an Origo-style token override in a local fixture.
 
-Keep the API small. Create and edit open a form. Delete opens a confirmation. All three use ordinary HTMX requests and the existing `data-rl-form` behavior. The host owns validation and persistence. Mero owns pending feedback, error presentation and focus after a swap. [Form behavior](../public/mero-forms.js) · [Existing routes](../server.mjs)
+Keep the API small. Create and edit open a form. Delete opens a confirmation. All three use ordinary HTMX requests and the existing `data-mero-form` behavior. The host owns validation and persistence. Mero owns pending feedback, error presentation and focus after a swap. [Form behavior](../public/mero-forms.js) · [Existing routes](../server.mjs)
 
 | Exchange | What the host returns | What the user sees |
 | --- | --- | --- |
 | Open create, edit or delete | A dialog fragment with the form or confirmation | Focus enters the dialog. Cancel returns to the opener. |
 | Invalid save | HTTP 422 with the filled-in form and field errors | The drawer stays open. The draft survives and the invalid field receives focus. |
-| Successful mutation | HTTP 200, out-of-band results and affected counters, `HX-Reswap: none`, and `HX-Trigger-After-Settle` carrying `relay:form-saved` | Filtered results and counts agree. Focus returns to the edited item or a surviving control after deletion. |
+| Successful mutation | HTTP 200, out-of-band results and affected counters, `HX-Reswap: none`, and `HX-Trigger-After-Settle` carrying `mero:form-saved` | Filtered results and counts agree. Focus returns to the edited item or a surviving control after deletion. |
 | Failed request | An error status, or no response on connection loss | Preserve the draft. If a save response was lost, help the user check whether the change landed before submitting again. |
 
 ### 3. Make the site demonstrate the difference

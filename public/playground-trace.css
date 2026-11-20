@@ -2,7 +2,7 @@
   min-inline-size: 0;
   padding: 18px;
   border: 1px solid var(--site-line);
-  border-radius: var(--rl-radius-panel);
+  border-radius: var(--mero-radius-panel);
   color: var(--site-fg);
   background: var(--site-panel);
 }
@@ -26,6 +26,6 @@
 .pg-trace-list button[aria-current], .pg-trace-list button:hover { background: var(--site-raised); }
 .pg-trace-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pg-trace-result { color: var(--site-muted); }
-.pg-trace-result[data-outcome="success"] { color: var(--rl-success); }
-.pg-trace-result[data-outcome="error"] { color: var(--rl-danger); }
+.pg-trace-result[data-outcome="success"] { color: var(--mero-success); }
+.pg-trace-result[data-outcome="error"] { color: var(--mero-danger); }
 [data-trace-id] [role="tab"] { scroll-margin-block-start: 110px; }

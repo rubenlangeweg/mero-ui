@@ -17,7 +17,7 @@ test("communication examples retain replies per session and accept regular HTML 
   const base = await serve(t);
   const page = await fetch(base+"/layouts/mail");
   const cookie = page.headers.get("set-cookie")?.split(";")[0];
-  assert.ok(cookie?.startsWith("relay_comm="));
+  assert.ok(cookie?.startsWith("mero_comm="));
   for (let i=0;i<2;i++) {
     const reply = await fetch(base+"/demo/layouts/mail/reply", {
       method:"POST",headers:{Cookie:cookie},redirect:"manual",

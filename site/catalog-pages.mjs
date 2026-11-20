@@ -10,7 +10,7 @@ export function catalogIndex() {
       <a class="catalog-feature catalog-feature-grid" href="/components/data-grid"><span class="mini-stock" aria-hidden="true"><span>Product <i>Status</i></span><span>Arc Task Lamp <i>Active</i></span><span>Forma Vase <i>Draft</i></span></span><span><strong>Editable collection</strong><small>Sort, select and edit rows</small></span></a>
     </div>
     <label class="catalog-family-picker">Browse by family
-      <select class="rl-select" data-catalog-family><option value="">All families</option>${groups.map((group) => `<option value="${catalogGroupId(group.name)}">${esc(group.name)}</option>`).join("")}</select>
+      <select class="mero-select" data-catalog-family><option value="">All families</option>${groups.map((group) => `<option value="${catalogGroupId(group.name)}">${esc(group.name)}</option>`).join("")}</select>
     </label>
     ${groups
       .map(
@@ -24,7 +24,7 @@ export function catalogIndex() {
 export function exampleAssets(item, demo) {
   const assets = ['mero.css','mero.js',...moduleAssets(item.module)];
   if (/\bhx-(?:get|post|put|patch|delete)=/.test(demo)) assets.unshift('vendor/htmx.min.js');
-  if (demo.includes('data-rl-form')) assets.push('mero-forms.js');
+  if (demo.includes('data-mero-form')) assets.push('mero-forms.js');
   return assets;
 }
 

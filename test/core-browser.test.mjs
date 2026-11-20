@@ -107,7 +107,6 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
   const trigger = second.getByRole("button", { name: "Workspace details" });
   await trigger.click();
   await second.getByRole("dialog").waitFor();
-  assert.equal(await page.evaluate(() => window.MeroUI === window.RelayUI), true);
   await page.evaluate(() => window.MeroUI.toast("Saved inside dialog", { duration: 0 }));
   const dismiss = second.getByRole("dialog").getByRole("button", { name: "Dismiss notification" });
   await dismiss.focus();
@@ -115,7 +114,7 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
   await dismiss.press("Enter");
   assert.equal(await second.getByRole("dialog").getByText("Saved inside dialog").count(), 0);
   await page.keyboard.press("Escape");
-  await page.waitForFunction(() => document.activeElement?.matches("section:nth-of-type(2) [data-rl-open]"));
+  await page.waitForFunction(() => document.activeElement?.matches("section:nth-of-type(2) [data-mero-open]"));
 
   const combo = second.getByRole("combobox", { name: "Workspace" });
   await combo.fill("not-a-workspace");
@@ -166,7 +165,7 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
   assert.match(await sections.first().getByRole("tabpanel").innerText(), /deployment/);
   assert.match(await sections.nth(2).getByRole("tabpanel").innerText(), /invited collaborators/);
   assert.deepEqual(await page.evaluate(() => ["light-preview", "dark-preview"].map(id =>
-    getComputedStyle(document.getElementById(id)).getPropertyValue("--rl-surface").trim())), ["#fff", "#1c1c1e"]);
+    getComputedStyle(document.getElementById(id)).getPropertyValue("--mero-surface").trim())), ["#fff", "#1c1c1e"]);
   assert.deepEqual(errors, []);
 });
 

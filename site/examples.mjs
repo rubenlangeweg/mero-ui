@@ -49,9 +49,9 @@ export function interactiveExample({
   ];
   if (hasRequests) views.push(["http", "HTTP exchange"]);
   const tabId = (key) => `docs-${id}-${key}`;
-  return `<section class="doc-lab" data-rl-tabs data-doc-lab${trace ? ` data-trace-id="${esc(id)}"` : ""}>
+  return `<section class="doc-lab" data-mero-tabs data-doc-lab${trace ? ` data-trace-id="${esc(id)}"` : ""}>
     <div class="doc-lab-head"><div class="doc-tab-list" role="tablist" aria-label="Example views">${views.map(([key, name], i) => `<button type="button" id="${tabId(key)}-tab" role="tab" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" aria-controls="${tabId(key)}">${name}</button>`).join("")}</div>
-    <div class="doc-lab-options">${openUrl ? `<a class="doc-source-jump" href="#${tabId("source")}">View template</a>` : ""}${themeSelector ? '<select class="rl-select" aria-label="Preview theme" data-preview-theme><option value="auto">Page theme</option><option value="light">Light</option><option value="dark">Dark</option><option value="brand">Tenant theme</option></select>' : ""}${openUrl ? `<a href="${esc(openUrl)}" data-open-preview target="_blank" rel="noopener" aria-label="${openLabel ? esc(openLabel) + ' in a new tab' : 'Open standalone preview'}">${openLabel ? esc(openLabel) + ' ' : ''}<span aria-hidden="true">↗</span></a>` : ""}</div></div>
+    <div class="doc-lab-options">${openUrl ? `<a class="doc-source-jump" href="#${tabId("source")}">View template</a>` : ""}${themeSelector ? '<select class="mero-select" aria-label="Preview theme" data-preview-theme><option value="auto">Page theme</option><option value="light">Light</option><option value="dark">Dark</option><option value="brand">Tenant theme</option></select>' : ""}${openUrl ? `<a href="${esc(openUrl)}" data-open-preview target="_blank" rel="noopener" aria-label="${openLabel ? esc(openLabel) + ' in a new tab' : 'Open standalone preview'}">${openLabel ? esc(openLabel) + ' ' : ''}<span aria-hidden="true">↗</span></a>` : ""}</div></div>
     ${variantLinks}
     <div role="tabpanel" aria-labelledby="${tabId("preview")}-tab" id="${tabId("preview")}"><div class="docs-preview" data-sample-scope>${demo}</div></div>
     <div role="tabpanel" aria-labelledby="${tabId("source")}-tab" id="${tabId("source")}"${sourceTarget ? ` data-template-for="${esc(sourceTarget)}"` : ""} hidden>${codePanel(code, sourceCaption)}</div>

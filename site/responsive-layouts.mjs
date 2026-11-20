@@ -81,13 +81,13 @@ export function responsiveLayoutsPage(params = new URLSearchParams(), { panesOnl
         <p>Load the two stylesheets below. Give each company its own GET route. Render <code>data-open-record</code> on <code>.sc-panes</code> when the URL selects a company. For HTMX requests, return the updated <code>#companies</code> element and focus the record heading after the swap.</p>
         ${codePanel(paneTemplate, "Company directory HTML")}
       </details>
-      <p><a class="rl-link" href="/layouts/dashboard?view=companies">Open the Studio company directory</a></p>
+      <p><a class="mero-link" href="/layouts/dashboard?view=companies">Open the Studio company directory</a></p>
     </section>
     <section aria-labelledby="layout-patterns"><h2 id="layout-patterns">Choose a layout by its contents</h2>
       <dl class="principle-states">
-        <div><dt>Fields</dt><dd>Use <code>rl-stack</code> for vertical spacing. Keep each field’s label, input and error together.</dd></div>
-        <div><dt>Actions</dt><dd>Use <code>rl-row</code> for a wrapping row. Choose <a class="rl-link" href="/components/toolbar">Toolbar</a> when the first and last groups need to sit on opposite edges.</dd></div>
-        <div><dt>Cards</dt><dd>Use <a class="rl-link" href="/components/item-card-group">Item Card Group</a> for equal columns. Each card gets at least 13rem where space allows. At smaller widths it fills the row.</dd></div>
+        <div><dt>Fields</dt><dd>Use <code>mero-stack</code> for vertical spacing. Keep each field’s label, input and error together.</dd></div>
+        <div><dt>Actions</dt><dd>Use <code>mero-row</code> for a wrapping row. Choose <a class="mero-link" href="/components/toolbar">Toolbar</a> when the first and last groups need to sit on opposite edges.</dd></div>
+        <div><dt>Cards</dt><dd>Use <a class="mero-link" href="/components/item-card-group">Item Card Group</a> for equal columns. Each card gets at least 13rem where space allows. At smaller widths it fills the row.</dd></div>
       </dl>
     </section>
   </article>`;

@@ -41,5 +41,5 @@ export function renderMarkdown(source) {
   }
   if (code) html.push(`<pre><code>${escape(code.join('\n'))}</code></pre>`);
   flushBlock();
-  return `<div class="rl-markdown">${html.join('\n')}</div>`;
+  return `<div class="mero-markdown">${html.join('\n')}</div>`;
 }

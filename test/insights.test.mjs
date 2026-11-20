@@ -24,7 +24,7 @@ test('insight catalog ships labelled chart marks and data tables for each figure
   for (const entry of charts) {
     assert.match(entry.demo,/<figcaption>/);
     assert.match(entry.demo,/<th scope="row">/);
-    assert.match(entry.demo,/data-rl-plot-value=/);
+    assert.match(entry.demo,/data-mero-plot-value=/);
     assert.equal(entry.demo,entry.code);
     assert.doesNotMatch(entry.demo,/NaN|Infinity/);
   }
@@ -42,7 +42,7 @@ test('chat responses escape the prompt, use local records, and reject invalid in
   const result = await request('POST','/demo/insights/reply',{message:'Which day shipped most? <script>'});
   assert.equal(result.status,200);
   assert.match(result.body,/&lt;script&gt;/);
-  assert.equal(result.body.match(/class="rl-chat-message"/g).length,2);
+  assert.equal(result.body.match(/class="mero-chat-message"/g).length,2);
   assert.match(result.body,/56 units/);
   assert.equal((await request('POST','/demo/insights/reply',{message:' '.repeat(4)})).status,422);
   assert.equal((await request('POST','/demo/insights/reply',{message:'a'.repeat(1001)})).status,422);
@@ -76,10 +76,10 @@ test('each plot has one keyboard entry, including a pie with leading zero rows',
   }
   const config = {type:'pie',title:'Volume',series:['Units'],rows:[{label:'None',values:[0]},{label:'Large',values:[1e308]},{label:'More',values:[1e308]}]};
   const pie = renderChart(config);
-  assert.equal(pie.match(/data-rl-plot-value=/g)?.length, 2);
+  assert.equal(pie.match(/data-mero-plot-value=/g)?.length, 2);
   assert.match(pie,/tabindex="0" role="img" aria-label="Large/);
   const empty = renderChart({...config,rows:config.rows.slice(0,1)});
   assert.match(empty,/All categories are zero/);
   assert.match(empty,/<th scope="row">None<\/th>/);
-  assert.doesNotMatch(empty,/data-rl-plot-readout/);
+  assert.doesNotMatch(empty,/data-mero-plot-readout/);
 });

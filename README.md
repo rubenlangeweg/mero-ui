@@ -38,7 +38,7 @@ Download the [complete preview and source](http://127.0.0.1:4173/downloads/mero-
 
 The [coverage map](docs/component-coverage.md) links the catalog to the original reference families. The [edit comparison](examples/edit-comparison/README.md) uses the same edit flow across three implementations. The [responsive layout and documentation research](docs/review/responsive-layouts-and-documentation.md) compares established systems and sets out the proposed mobile and documentation pilots.
 
-The inventory form uses `mero-forms.js` for pending state, a replacement form on HTTP 422, and a successful `relay:form-saved` event. The host supplies validation, persistence and authorization in its own application. A chart table, campus map and chat assistant in the catalog use local sample data. The chat demo gives deterministic replies.
+The inventory form uses `mero-forms.js` for pending state, a replacement form on HTTP 422, and a successful `mero:form-saved` event. The host supplies validation, persistence and authorization in its own application. A chart table, campus map and chat assistant in the catalog use local sample data. The chat demo gives deterministic replies.
 
 ## Verify
 

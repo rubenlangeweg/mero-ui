@@ -117,12 +117,12 @@
   border-radius: 15px;
   background: #1c1c1b;
 }
-.ps-product-image .rl-gallery-track { width: 100%; height: 100%; }
-.ps-product-image .rl-gallery-track > li { aspect-ratio: auto; }
-.ps-product-image .rl-gallery-track:focus-visible { outline-color: #f1e6d1; }
+.ps-product-image .mero-gallery-track { width: 100%; height: 100%; }
+.ps-product-image .mero-gallery-track > li { aspect-ratio: auto; }
+.ps-product-image .mero-gallery-track:focus-visible { outline-color: #f1e6d1; }
 .ps-finish-form { margin: 0; }
 .ps-window:defined .ps-static,
-.ps-window:not(:defined) :is(.rl-gallery-track, .rl-gallery-arrows, .ps-finish-form, .ps-choice-heading, [data-rl-gallery-link]) { display: none; }
+.ps-window:not(:defined) :is(.mero-gallery-track, .mero-gallery-arrows, .ps-finish-form, .ps-choice-heading, [data-mero-gallery-link]) { display: none; }
 .ps-saved-finish { display: flex; align-items: center; gap: 10px; margin: 16px 0 0; color: var(--ps-ink); font-size: 13px; }
 .ps-saved-finish small { display: block; margin-top: 2px; color: var(--ps-muted); font-size: 11px; }
 
@@ -178,15 +178,15 @@
 }
 .ps-product-summary p { margin-top: 6px; }
 .ps-card-heading p { margin-bottom: 5px; }
-.ps-product-summary .rl-gallery-arrows { flex: none; gap: 5px; }
-.ps-product-summary .rl-gallery-arrows button {
+.ps-product-summary .mero-gallery-arrows { flex: none; gap: 5px; }
+.ps-product-summary .mero-gallery-arrows button {
   min-width: 35px;
   min-height: 35px;
   border-color: #ffffff29;
   background: #ffffff08;
   color: #f4eee5;
 }
-.ps-product-summary .rl-gallery-arrows button:not([aria-disabled=true]):hover { background: #ffffff15; border-color: #ffffff5c; }
+.ps-product-summary .mero-gallery-arrows button:not([aria-disabled=true]):hover { background: #ffffff15; border-color: #ffffff5c; }
 
 .ps-stage-grid.ps-gallery-only { grid-template-areas: "product finishes"; grid-template-columns: minmax(0, 1.8fr) minmax(184px, .82fr); }
 .ps-journal, .ps-finishes {
@@ -298,7 +298,7 @@
   font-weight: 620;
 }
 .ps-edit-link:hover { background: #fff; }
-.pro-stage a:focus-visible, .ps-product-summary .rl-gallery-arrows button:focus-visible { outline-color: #f1e6d1; }
+.pro-stage a:focus-visible, .ps-product-summary .mero-gallery-arrows button:focus-visible { outline-color: #f1e6d1; }
 
 @media (prefers-reduced-motion: no-preference) {
   .pro-stage[data-stage-intro] .ps-card {
@@ -327,7 +327,7 @@
     opacity: 0;
     animation: ps-lamp-exposure 720ms ease-in-out backwards;
   }
-  .ps-toolbar-link, .ps-edit-link, .ps-finish, .ps-product-summary .rl-gallery-arrows button {
+  .ps-toolbar-link, .ps-edit-link, .ps-finish, .ps-product-summary .mero-gallery-arrows button {
     transition: background-color 140ms ease-out, border-color 140ms ease-out, color 140ms ease-out;
   }
 }
@@ -376,7 +376,7 @@
   .ps-product-image { aspect-ratio: 1.56; border-radius: 10px; }
   .ps-image-status { top: 9px; left: 9px; }
   .ps-product-summary { padding: 12px 9px 11px; }
-  .ps-product-summary .rl-gallery-arrows button { min-width: 38px; min-height: 38px; }
+  .ps-product-summary .mero-gallery-arrows button { min-width: 38px; min-height: 38px; }
   .ps-journal, .ps-finishes { padding: 14px; border-radius: 14px; }
   .ps-finish-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 12px; }
   .ps-finish { flex-direction: column; align-items: start; gap: 7px; padding: 8px 6px; border-color: var(--ps-line); }
