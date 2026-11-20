@@ -482,6 +482,43 @@
 :where(.mero-row-link):focus-visible { outline: none; }
 :where(.mero-table tr:has(.mero-row-link:focus-visible)) { outline: 2px solid var(--mero-accent); outline-offset: -2px; }
 
+/* Give size-contained cards an intrinsic width in centered grids and other shrink-to-fit layouts. */
+:where(.mero-table-cards, .mero-table-cards-wide) { contain-intrinsic-inline-size: 25rem; }
+:where([data-mero-cell-label], .mero-table-sort-label) { display: none; }
+@media (width < 48rem) {
+  :where(.mero-table-cards) { container: mero-table-cards / inline-size; overflow: visible; }
+}
+@media (width < 64rem) {
+  :where(.mero-table-cards-wide) { container: mero-table-cards / inline-size; overflow: visible; }
+}
+@container mero-table-cards (min-width: 0px) {
+  :where(.mero-table, .mero-table caption, .mero-table thead) { display: block; }
+  :where(.mero-table-sort-label) { display: block; margin-block-start: .75rem; font-weight: 600; }
+  :where(.mero-table thead tr) { display: flex; flex-wrap: wrap; gap: .4rem; margin-block-end: .75rem; }
+  :where(.mero-table thead th) { padding: 0; background: none; border: 0; }
+  :where(.mero-table thead th:not(:has(a))) {
+    position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%);
+  }
+  :where(.mero-table thead a) {
+    align-items: center; min-block-size: 2rem; padding-inline: .65rem;
+    border: 1px solid var(--mero-line); border-radius: var(--mero-radius);
+  }
+  :where(.mero-table thead [aria-sort] a) { background: var(--mero-raised); color: var(--mero-text); }
+  :where(.mero-table tbody) { display: grid; gap: .65rem; }
+  :where(.mero-table tbody tr) {
+    display: grid; min-inline-size: 0; padding: .55rem .8rem;
+    border: 1px solid var(--mero-line); border-radius: var(--mero-radius);
+    background: var(--mero-surface);
+  }
+  :where(.mero-table tbody :is(th, td)) {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: center;
+    justify-items: start; gap: .6rem; padding: .28rem 0; border: 0; white-space: normal; overflow-wrap: anywhere;
+  }
+  :where(.mero-table td[colspan]) { display: block; }
+  :where(.mero-table [data-mero-cell-label]) { display: inline; color: var(--mero-muted); font-size: .76rem; }
+  :where(.mero-table .mero-row-link) { font-weight: 600; }
+}
+
 :where(.mero-calendar) { inline-size: min(100%, 20rem); }
 :where(.mero-calendar-table) { border-collapse: collapse; inline-size: 100%; margin-block-start: .55rem; table-layout: fixed; text-align: center; }
 :where(.mero-calendar-table th) { padding-block: .2rem .4rem; color: var(--mero-muted); font: 550 .69rem/1.2 var(--mero-font); }

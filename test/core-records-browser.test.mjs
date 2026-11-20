@@ -23,7 +23,7 @@ test("sortable table sorts through ?sort links with and without scripts",
     page.on("pageerror", error => errors.push(error.message));
     await page.goto(base + "/preview/sortable-table");
 
-    const productHeader = page.locator("th").filter({ hasText: "Product" });
+    const productHeader = page.getByRole("columnheader", { name: "Product" });
     const firstRow = () => page.locator("tbody .mero-row-link").first().textContent();
     assert.equal(await productHeader.getAttribute("aria-sort"), "ascending");
     await page.evaluate(() => { window.sameDocument = true; });
@@ -49,17 +49,48 @@ test("sortable table sorts through ?sort links with and without scripts",
     assert.equal(await firstRow(), "Woven Throw");
     assert.deepEqual(errors, []);
 
-    await page.setViewportSize({ width: 320, height: 640 });
-    const overflow = await page.evaluate(() => {
-      const wrap = document.querySelector(".mero-table-wrap");
-      return { wrap: wrap.scrollWidth > wrap.clientWidth, page: document.documentElement.scrollWidth > innerWidth };
-    });
-    assert.deepEqual(overflow, { wrap: true, page: false });
+    for (const width of [320, 360, 390]) {
+      await page.setViewportSize({ width, height: 844 });
+      const dimensions = await page.locator(".mero-table-wrap").evaluate(wrap => ({
+        wrapperFits: wrap.scrollWidth === wrap.clientWidth,
+        pageFits: document.documentElement.scrollWidth === innerWidth,
+        buttonsFit: [...wrap.querySelectorAll("tbody button")].every(button => {
+          const bounds = button.getBoundingClientRect();
+          const card = button.closest("tr").getBoundingClientRect();
+          return bounds.width > 0 && bounds.left >= card.left && bounds.right <= card.right && card.right <= innerWidth;
+        }),
+      }));
+      assert.deepEqual(dimensions, { wrapperFits: true, pageFits: true, buttonsFit: true }, `cards fit at ${width}px`);
+    }
+    assert.equal(await page.getByRole("table", { name: /Studio products/ }).count(), 1);
+    assert.equal(await page.getByRole("rowgroup").count(), 2);
+    assert.equal(await page.getByRole("columnheader").count(), 4);
+    const card = page.getByRole("row", { name: /Halo Pendant/ });
+    assert.equal(await card.getByRole("rowheader", { name: "Halo Pendant" }).count(), 1);
+    assert.deepEqual(await card.locator("[data-mero-cell-label]:visible").allTextContents(), ["Product", "Category", "Status", "Actions"]);
+    await page.getByRole("link", { name: "Category", exact: true }).click();
+    await page.waitForURL(/sort=category/);
+    await page.waitForFunction(() => document.querySelector("#records-sort-category")?.closest("th").ariaSort === "ascending");
+    await card.getByRole("button").click();
+    await page.getByRole("menuitem", { name: "Open details" }).waitFor();
+    assert.equal(new URL(page.url()).searchParams.has("open"), false);
+    await page.keyboard.press("Escape");
+    await card.getByRole("cell", { name: "Lighting" }).click({ force: true });
+    await page.waitForURL(/open=2/);
+    await page.goBack();
+    await page.waitForFunction(() => document.activeElement.matches(".mero-row-link") && document.activeElement.textContent === "Halo Pendant");
 
-    const context = await browser.newContext({ javaScriptEnabled: false });
+    await page.setViewportSize({ width: 800, height: 844 });
+    assert.equal(await card.locator("[data-mero-cell-label]:visible").count(), 0);
+    await page.locator(".mero-table-wrap").evaluate(wrap => wrap.classList.replace("mero-table-cards", "mero-table-cards-wide"));
+    await card.locator("[data-mero-cell-label]").first().waitFor();
+    assert.equal(await card.locator("[data-mero-cell-label]:visible").count(), 4);
+
+    const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
     t.after(() => context.close());
     const plain = await context.newPage();
     await plain.goto(base + "/preview/sortable-table");
+    assert.equal(await plain.locator("tbody tr").first().locator("[data-mero-cell-label]:visible").count(), 4);
     await plain.getByRole("link", { name: "Status" }).click();
     await plain.waitForURL(/sort=status/);
     assert.equal(await plain.locator("th[aria-sort]").textContent(), "Status ↑");
