@@ -1,5 +1,6 @@
 import { escapeHtml } from "../html.mjs"
 import { item, section } from "./helpers.mjs"
+import { typedConfirmation } from "./typed-confirmation.mjs"
 
 export function commandResults(query, pages) {
   const matches = name => name.toLowerCase().includes(query)
@@ -40,6 +41,7 @@ export const groups = [
     item("alert-dialog", "Alert Dialog", "Ask for confirmation on a decision that calls for attention.",
       overlay("demo-alert-dialog", "Archive project?", "This removes the project from active views.", { trigger: "Archive project", action: "Archive", role: "alertdialog" }),
       "Focus starts on Cancel. Connect the confirmation to a form action in your application."),
+    typedConfirmation,
     item("drawer", "Drawer", "Open a full-height edge panel for work that benefits from more room.",
       overlay("demo-drawer", "Review deployment", "The staging build is ready to review.", { variant: "drawer", trigger: "Open drawer" })),
     item("modal", "Modal", "Open a centered, named dialog with native focus containment.",

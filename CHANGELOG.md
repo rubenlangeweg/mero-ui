@@ -7,6 +7,7 @@
 - Live Progress polls a status fragment while the tab is visible, keeps the last good status when a read fails and stops at the server’s terminal response.
 - Sortable Table and Filter Chips show labelled cards below 768 px. Sorting, row actions and focus on Back work in both layouts.
 - The command menu accepts named result groups. Arrow keys cross groups, Home and End reach the first and last result, and the live status counts selectable options.
+- Typed Confirmation gates destructive forms on an exact phrase and an optional required reason. It keeps the dialog open on validation errors, rejection and unknown outcomes.
 
 ## 0.5.1 · 20 November 2026
 

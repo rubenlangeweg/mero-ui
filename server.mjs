@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { pathToFileURL } from "node:url";
+import { confirmationResponse } from "./site/core/typed-confirmation.mjs";
 import { catalogFragment } from "./site/core-components.mjs";
 import { groups, components, moduleAssets } from "./site/catalog.mjs";
 import { catalogIndex, componentPage, exampleAssets, standalonePage } from "./site/catalog-pages.mjs";
@@ -288,6 +289,15 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     } });
   }
 
+  async function typedConfirmationDemo({ request, response, searchParams }) {
+    const params = await formBody(request);
+    if (!params) return send(response, "Form is too large.", { status: 413 });
+    const requested = searchParams.get("outcome");
+    const outcome = ["rejected", "unknown"].includes(requested) ? requested : undefined;
+    const { body = "", status, headers } = confirmationResponse(params, outcome);
+    return send(response, body, { status, headers });
+  }
+
   function actionDemo({ response, searchParams }) {
     const outcomes = {
       succeeded: [200, { "Mero-Action-Message": "Export restarted." }],
@@ -351,6 +361,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     ["GET", /^\/demo\/catalog\//, catalogDemo],
     ["POST", "/demo/settings", saveSettings],
     ["POST", "/demo/catalog/action-button", actionDemo],
+    ["POST", "/demo/catalog/typed-confirmation", typedConfirmationDemo],
     ["*", /^\/demo\//, demoNotFound],
     ...(serveFiles ? [["GET", /^\/(?:fonts\/|vendor\/)?[a-z0-9.-]+$/i, staticAsset]] : []),
   ];

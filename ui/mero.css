@@ -656,6 +656,11 @@
 :where(.mero-dialog-body) { padding: 1.2rem; }
 :where(.mero-dialog-title, .mero-dialog h2) { margin: 0; color: var(--mero-text); font: 660 1.18rem/1.25 var(--mero-font); }
 :where(.mero-dialog-title + .mero-description) { margin-block-start: .4rem; }
+:where(.mero-confirm-phrase) {
+  color: var(--mero-text);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
 :where(.mero-dialog-header) { display: flex; align-items: center; justify-content: space-between; gap: .7rem; margin-block-end: .9rem; }
 :where(.mero-dialog-footer) { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .5rem; margin-block-start: .9rem; }
 

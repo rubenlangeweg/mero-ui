@@ -74,6 +74,12 @@ const attributes = [
     ["data-mero-request", "With a pending state. Sets a progress cursor on the element."],
   ]],
   ["Forms", "mero-forms.js", [
+    ["data-mero-confirm", 'Add to a <code>data-mero-form</code> inside a static alert dialog. <a href="/components/typed-confirmation">Typed Confirmation</a> is a UX guard only. The server must re-check the phrase and permissions. Return HTTP 422 with the replacement form and mark its invalid field. Other 4xx responses report rejection. A 5xx or network failure leaves the dialog open with an unknown outcome. On a confirmed 2xx send <code>HX-Reswap: none</code> and <code>mero:form-saved</code> to close and return focus.'],
+    ["data-mero-confirm-phrase", "On the visible code element containing the exact phrase. Reference its ID in the input’s <code>aria-describedby</code>."],
+    ["data-mero-confirm-input", "On the text input. Matching is case-sensitive and ignores leading and trailing whitespace."],
+    ["data-mero-confirm-reason", "On the optional reason field. Add <code>required</code> to require a non-empty, trimmed value."],
+    ["data-mero-confirm-submit", "On the danger submit button. Render it disabled until the phrase and any required reason are ready."],
+    ["data-mero-confirm-hint", "A polite status in the form explaining what still needs to be entered. Associate it with the input and the confirm button."],
     ["data-mero-form", "On a form that htmx submits. Disables its submit buttons while the request runs, swaps in the replacement form on HTTP 422 and focuses the first invalid field."],
     ["data-mero-action", "On a button outside a form that makes an htmx request. Shows its outcome and ignores clicks while the request runs. <code>Mero-Action-Outcome</code> and <code>Mero-Action-Message</code> response headers override the state and the text."],
     ["*data-mero-action-state", "On a <code>data-mero-action</code> button: <code>pending</code>, then <code>succeeded</code> (2xx), <code>rejected</code> (4xx other than 408) or <code>unknown</code> (anything else, including network errors)."],
