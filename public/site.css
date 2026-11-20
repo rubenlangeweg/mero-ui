@@ -76,8 +76,8 @@
 .site-nav a { padding: 7px 11px; border-radius: 999px; color: var(--site-muted); font-size: 13px; font-weight: 530; transition: color .16s, background .16s; }
 .site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--site-fg); background: var(--site-raised); }
 .site-nav-actions { display: flex; align-items: center; gap: 10px; justify-self: end; }
-.site-theme { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--site-fg); cursor: pointer; transition: background .16s; }
-.site-theme:hover { background: var(--site-raised); }
+.site-icon-action { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--site-fg); cursor: pointer; transition: background .16s; }
+.site-icon-action:hover { background: var(--site-raised); }
 .theme-glyph { font: 21px/1 system-ui, sans-serif; }
 [data-theme="light"] .theme-glyph { font-size: 0; }
 [data-theme="light"] .theme-glyph::after { content: "☾"; font: 22px/1 system-ui, sans-serif; }
@@ -231,7 +231,7 @@
   .site-nav { grid-column: span 2; grid-row: 2; flex-wrap: wrap; gap: 2px; margin-inline-start: -7px; }
   .site-nav a { padding: 5px 8px; font-size: 12px; }
   .site-nav-actions { grid-row: 1; grid-column: 2; gap: 4px; }
-  .site-theme { height: 31px; width: 31px; }
+  .site-icon-action { height: 31px; width: 31px; }
 }
 @media (max-width: 380px) {
   .site-nav { gap: 1px; }
@@ -269,7 +269,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .site-body :where(.site-nav a, .site-theme, .catalog-card) { transition: none; }
+  .site-body :where(.site-nav a, .site-icon-action, .catalog-card) { transition: none; }
   .site-cta:active { transform: none; }
 }
 
