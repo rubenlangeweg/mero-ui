@@ -18,7 +18,15 @@ When serving the site on a public domain, set `MERO_SITE_ORIGIN` to its full ori
 
 ## Use a component
 
-Install the UI assets and HTMX with `npm install @rubenlangeweg/mero-ui htmx.org@2`. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
+Install the UI assets from the [GitHub release](https://github.com/rubenlangeweg/mero-ui/releases) and HTMX from npm:
+
+```sh
+npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.3.0/rubenlangeweg-mero-ui-0.3.0.tgz htmx.org@2
+```
+
+To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.3.0/ui/mero.css`.
+
+Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
 
 Serve `ui/mero.css` and `ui/mero.js` from your app. Include HTMX 2.x for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. The local catalog includes HTMX 2.0.11 and Geist with their license notices.
 
