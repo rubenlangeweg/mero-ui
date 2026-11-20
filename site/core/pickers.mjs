@@ -30,7 +30,7 @@ export const groups = [
   section("Pickers", [
     item("autocomplete", "Autocomplete", "Request matching options from the server as a user types.",
       combo("demo-autocomplete", { remote: true }),
-      "HTMX replaces the options with a server-rendered fragment. Use the arrow keys and Enter to select a result. A search without matches leaves the empty message visible.", [
+      "HTMX replaces the options with a server-rendered fragment. Use the arrow keys and Enter to select a result. Escape clears the active option. Arrow Down requests current results again if you dismissed a pending search. An empty search result leaves the message visible.", [
         ["Local shortlist", combo("shortlist", { label: "Pinned workspace", names: ["Studio North", "Atlas", "Beacon"] }), {
           description: "Filter a short list of pinned workspaces already on the page.",
           notes: "Type to narrow the three choices. Use the arrow keys to move through matches and Enter to choose a workspace.",

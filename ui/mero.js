@@ -26,7 +26,7 @@
   function open(ref, { trigger = document.activeElement } = {}) {
     const dialog = element(ref);
     if (!(dialog instanceof HTMLDialogElement) || dialog.open || !dialog.isConnected) return;
-    dialogOpeners.set(dialog, trigger);
+    dialogOpeners.set(dialog, { trigger, previouslyFocused: document.activeElement });
     dialog.showModal();
     const input = dialog.matches("[data-mero-command]") && dialog.querySelector('[role="combobox"]');
     if (input) {
@@ -46,13 +46,19 @@
   }
 
   function returnFocus(dialog) {
-    const focus = element(dialogFocus.get(dialog) ?? dialogOpeners.get(dialog));
+    const opener = dialogOpeners.get(dialog);
+    const focus = element(dialogFocus.get(dialog) ?? opener?.trigger);
     dialogFocus.delete(dialog);
     dialogOpeners.delete(dialog);
     if (!focus?.isConnected || focus.matches(":disabled") || dialog.contains(focus)) return;
-    // Native dialog restoration also runs on close. Refocus after it completes.
+    // Let native restoration finish. If the user already moved to another
+    // field, taking focus back would also dismiss that field's suggestions.
     requestAnimationFrame(() => {
-      if (focus.isConnected && !dialog.open) focus.focus({ preventScroll: true });
+      const active = document.activeElement;
+      if (focus.isConnected && !dialog.open && active !== focus &&
+        (active === document.body || active === opener?.previouslyFocused || active === element(opener?.trigger) || dialog.contains(active))) {
+        focus.focus({ preventScroll: true });
+      }
     });
   }
 
@@ -228,9 +234,13 @@
     list.hidden = !isOpen;
     input.setAttribute("aria-expanded", String(isOpen));
     if (!isOpen) {
-      input.removeAttribute("aria-activedescendant");
-      list.querySelector("[data-mero-active]")?.removeAttribute("data-mero-active");
+      clearComboActive(input, list);
     }
+  }
+
+  function clearComboActive(input, list) {
+    input.removeAttribute("aria-activedescendant");
+    for (const item of list.querySelectorAll("[data-mero-active]")) item.removeAttribute("data-mero-active");
   }
 
   function comboStatus(input, message, error = false) {
@@ -252,12 +262,10 @@
       const empty = list.querySelector("[data-mero-empty-option]");
       if (empty) empty.hidden = optionsFor(list).length > 0;
     }
+    const options = optionsFor(list);
     const current = element(input.getAttribute("aria-activedescendant"));
-    if (current?.hidden) {
-      current.removeAttribute("data-mero-active");
-      input.removeAttribute("aria-activedescendant");
-    }
-    const count = optionsFor(list).length;
+    if (!options.includes(current)) clearComboActive(input, list);
+    const count = options.length;
     const empty = list.querySelector('[aria-disabled="true"]:not([hidden])');
     setComboOpen(input, Boolean(count || empty));
     comboStatus(input, count ? count + (count === 1 ? " suggestion" : " suggestions") : empty?.textContent ?? "No matching options");
@@ -557,7 +565,7 @@
         event.preventDefault();
         if (target.hasAttribute("data-mero-combo-pending")) return;
         if (target.closest("[data-mero-combo-remote]") && (target.hasAttribute("data-mero-combo-error") ||
-          target.value !== (displayedQueries.get(target) ?? target.defaultValue))) {
+          target.value !== displayedQueries.get(target))) {
           target.removeAttribute("data-mero-combo-dismissed");
           target.dispatchEvent(new CustomEvent("mero:query", { bubbles: true }));
           return;
@@ -585,6 +593,8 @@
     if (!input.matches?.('[data-mero-combo] [role="combobox"]')) return;
     if (input.closest("[data-mero-combo-remote]")) {
       currentQueries.delete(input);
+      // Only a settled response establishes which options belong to this text.
+      displayedQueries.delete(input);
       input.removeAttribute("data-mero-combo-dismissed");
       input.removeAttribute("data-mero-combo-error");
       input.setAttribute("data-mero-combo-pending", "");

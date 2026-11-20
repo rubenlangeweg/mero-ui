@@ -38,6 +38,8 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
   page.on("pageerror", error => errors.push(error.message));
   const template = ["tabs", "autocomplete", "modal", "accordion", "radio-group", "pagination", "calendar", "tooltip"]
     .map(id => examples.get(id).demo).join("\n");
+  // A form can render a saved draft with its initial, unfiltered options.
+  const draft = template.replace('name="q" type="text" role="combobox"', 'name="q" type="text" role="combobox" value="not-a-workspace"');
   const body = `<section>${template}</section><section>${template}</section>
     <button hx-get="/prepend" hx-target="body" hx-swap="afterbegin">Insert a copy</button>
     <div data-theme="light" id="light-preview"><div data-theme="dark" id="dark-preview"></div></div>`;
@@ -49,7 +51,7 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
         <link rel="stylesheet" href="/mero.css"><script defer src="/htmx.js"></script>
         <script defer src="/mero.js"></script><body>${body}</body></html>` });
     }
-    if (url.pathname === "/prepend") return route.fulfill({ contentType: "text/html", body: `<section>${template}</section>` });
+    if (url.pathname === "/prepend") return route.fulfill({ contentType: "text/html", body: `<section>${draft}</section>` });
     if (url.pathname.endsWith("/autocomplete")) {
       if (url.searchParams.get("q") === "offline") return route.fulfill({ status: 503, body: "" });
       return route.fulfill({ contentType: "text/html", body: catalogFragment("autocomplete", url.searchParams) });
@@ -122,6 +124,7 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
   await combo.press("ArrowDown");
   assert.equal(await combo.getAttribute("aria-activedescendant"), null);
   await second.getByRole("option", { name: "No workspaces found" }).waitFor();
+  assert.equal(await second.locator("[data-mero-active]").count(), 0);
   await combo.fill("missing");
   await second.getByRole("option", { name: "No workspaces found" }).waitFor();
   await combo.press("ArrowDown");
@@ -135,6 +138,19 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
   await combo.press("Enter");
   assert.equal(await combo.inputValue(), "Cobalt");
   assert.equal(await sections.first().getByRole("combobox").inputValue(), "");
+
+  // The next field can gain focus between native dialog dismissal and Mero's
+  // deferred focus restoration. The settled results still belong to that field.
+  await trigger.click();
+  await second.getByRole("dialog").evaluate(dialog => dialog.addEventListener("close", () => {
+    const input = dialog.closest("section").querySelector('[role="combobox"]');
+    input.focus();
+    input.value = "missing";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }, { once: true }));
+  await page.keyboard.press("Escape");
+  await second.getByRole("option", { name: "No workspaces found" }).waitFor();
+  assert.equal(await combo.evaluate(input => document.activeElement === input), true);
 
   // Resolve an older request during the debounce window for a newer query.
   let releaseOld;
@@ -161,6 +177,13 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
   await page.getByRole("button", { name: "Insert a copy" }).click();
   await page.waitForFunction(() => document.querySelectorAll("section").length === 3 &&
     new Set([...document.querySelectorAll("[id]")].map(el => el.id)).size === document.querySelectorAll("[id]").length);
+  const restoredDraft = sections.first().getByRole("combobox", { name: "Workspace" });
+  await restoredDraft.fill("not-a-workspace");
+  await restoredDraft.press("Escape");
+  await restoredDraft.press("ArrowDown");
+  assert.equal(await restoredDraft.getAttribute("aria-activedescendant"), null);
+  await sections.first().getByRole("option", { name: "No workspaces found" }).waitFor();
+  assert.equal(await sections.first().locator("[data-mero-active]").count(), 0);
   await sections.first().getByRole("tab", { name: "History" }).click();
   assert.match(await sections.first().getByRole("tabpanel").innerText(), /deployment/);
   assert.match(await sections.nth(2).getByRole("tabpanel").innerText(), /invited collaborators/);

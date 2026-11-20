@@ -59,7 +59,7 @@ const attributes = [
     ["*data-mero-active", "On the option highlighted with the keyboard."],
     ["*data-mero-combo-pending", "On the combobox input while a request for options is in flight."],
     ["*data-mero-combo-error", "On the combobox input after a request for options failed."],
-    ["*data-mero-combo-dismissed", "On the combobox input after Escape, so a late response does not reopen the list."],
+    ["*data-mero-combo-dismissed", "On the combobox input after Escape. Dismissal clears the active option and blocks late responses. Arrow Down requests fresh options when the server has yet to confirm the current query."],
     ["*data-mero-error", "On the combobox status element while it shows an error."],
     ["*data-mero-tooltip-below", "On a tooltip placed below its anchor because there is no room above."],
     ["*data-mero-tooltip-dismissed", "On a tooltip closed with Escape, until the pointer and focus leave it."],

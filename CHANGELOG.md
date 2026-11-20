@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Pull requests and releases run the complete test suite in Chromium, Firefox and WebKit. Publishing waits for all three.
+- Remote comboboxes activate only options returned for the current query, including when Firefox restores a saved draft. Escape and empty results clear the active option.
 
 ## 0.5.1 · 20 November 2026
 
