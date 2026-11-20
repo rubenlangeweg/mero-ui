@@ -19,6 +19,10 @@ The homepage keeps its graphite palette and lamp photography. The featured card 
 
 The two large frames below the hero now contain a filterable report and a working conversation about the same shipment data. Their headings align on desktop. On mobile the examples stack, and opening the chart table expands the frame to fit. [Desktop capture](review/home-desktop.png) · [Mobile capture](review/home-mobile.png)
 
+## Browser coverage
+
+Every pull request and release runs the full test suite in Chromium, Firefox and WebKit. Set `MERO_BROWSER` to select an engine locally. The catalog audit runs in Chromium. Drawers dim the page behind them. Full-screen backdrop blur stalled the inventory drawer in Linux WebKit and left Save outside the viewport during the slide. [Local verification](../README.md#verify)
+
 ## Evidence and remaining work
 
 - The Chromium audit checked all 162 components and 10 named variants in the docs and as standalone previews, plus 20 site and embedded app routes. All 728 page states passed axe, label and ARIA reference, page-width, failed-response and browser-exception checks at 360 px dark and 1280 px light. [Audit runner](../scripts/audit-catalog.mjs) · [Visual review and spacing standards](component-standards.md)

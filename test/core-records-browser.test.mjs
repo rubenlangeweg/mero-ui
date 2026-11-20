@@ -31,7 +31,7 @@ test("sortable table sorts through ?sort links with and without scripts",
     await page.waitForURL(/sort=-name/);
     await page.waitForFunction(() => document.querySelector("th[aria-sort]")?.getAttribute("aria-sort") === "descending");
     assert.equal(await firstRow(), "Woven Throw");
-    assert.equal(await page.evaluate(() => document.activeElement.id), "records-sort-name");
+    await page.waitForFunction(() => document.activeElement.id === "records-sort-name");
     assert.equal(await page.evaluate(() => window.sameDocument), true, "hx-boost swaps the table in place");
     assert.equal(await page.locator("[data-mero-records]").count(), 1);
 
@@ -111,6 +111,16 @@ test("focus returns to the opened row link after Back",
     await page.waitForFunction(() => document.querySelector("th[aria-sort]")?.getAttribute("aria-sort") === "ascending");
     await page.waitForFunction(() => document.activeElement?.id === "records-sort-name");
     assert.deepEqual(errors, []);
+
+    const legacy = await browser.newPage();
+    await legacy.addInitScript(() => Object.defineProperty(window, "navigation", { value: undefined }));
+    await legacy.goto(base + "/preview/sortable-table");
+    assert.equal(await legacy.evaluate(() => window.navigation), undefined);
+    await legacy.getByRole("link", { name: "Product" }).press("Enter");
+    await legacy.waitForURL(/sort=-name/);
+    await legacy.goBack();
+    await legacy.waitForFunction(() => document.querySelector("th[aria-sort]")?.ariaSort === "ascending" &&
+      document.activeElement.id === "records-sort-name");
 
     const blocked = await browser.newPage();
     const blockedErrors = [];

@@ -130,7 +130,7 @@ test('collection interactions preserve drafts, keyboard focus and access to popo
     await trigger.scrollIntoViewIfNeeded();
     await trigger.focus();
     // WebKit's default macOS keyboard settings reach links with Option+Tab.
-    await page.keyboard.press(engine === 'webkit' ? 'Alt+Tab' : 'Tab');
+    await page.keyboard.press(engine === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab');
     const link = page.getByRole('link',{name:'View studio agenda'});
     assert.ok(await link.evaluate(el => {
       const bounds = el.getBoundingClientRect();

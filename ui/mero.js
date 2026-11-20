@@ -5,6 +5,7 @@
   const dialogFocus = new WeakMap();
   const autoOpened = new WeakSet();
   const menuFocusLast = new WeakSet();
+  const tabbedMenus = new WeakSet();
   const swappedFocus = new WeakMap();
   const remoteQueries = new WeakMap();
   const currentQueries = new WeakMap();
@@ -411,7 +412,8 @@
     if (event.newState === "open") {
       menuItems(menu).at(menuFocusLast.has(menu) ? -1 : 0)?.focus();
       menuFocusLast.delete(menu);
-    } else if ((document.activeElement === document.body || menu.contains(document.activeElement)) && button?.isConnected) {
+      tabbedMenus.delete(menu);
+    } else if (!tabbedMenus.delete(menu) && (document.activeElement === document.body || menu.contains(document.activeElement)) && button?.isConnected) {
       button.focus({ preventScroll: true });
     }
   }, true);
@@ -528,6 +530,8 @@
         event.preventDefault();
         target.click();
       } else if (event.key === "Tab") {
+        // Let native Tab leave the menu, including when focus moves to browser chrome.
+        tabbedMenus.add(menu);
         menu.hidePopover();
         menuButton(menu)?.focus();
       }
@@ -693,7 +697,10 @@
     // The detached opener still answers closest() through its old subtree.
     const region = event.target.closest?.("[data-mero-restore-focus]");
     if (region && document.activeElement === document.body && opener?.closest?.("[data-mero-restore-focus]")) {
-      region.querySelector("[data-mero-focus-fallback]")?.focus({ preventScroll: true });
+      // Some browsers leave pointer-activated links unfocused. Keep the triggering
+      // control when its ID survives the swap, then use the designated fallback.
+      if (opener.id) region.querySelector("#" + CSS.escape(opener.id))?.focus({ preventScroll: true });
+      if (document.activeElement === document.body) region.querySelector("[data-mero-focus-fallback]")?.focus({ preventScroll: true });
     }
   });
 

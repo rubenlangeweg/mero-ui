@@ -33,7 +33,7 @@ export const groups = [
           </div>
         </li>
       </ul>`,
-      "Enter, Space or Down Arrow opens the menu on its first item, and Up Arrow on its last. Arrow keys, Home, End and a typed letter move between items. Escape closes the menu and returns focus to the button. Tab closes it and moves on."),
+      "Enter, Space or Down Arrow opens the menu on its first item, and Up Arrow on its last. Arrow keys, Home, End and a typed letter move between items. Escape closes the menu and returns focus to the button. Tab and Shift+Tab close it and continue in the browser’s tab order."),
     item("list-box", "List Box", "Present a selectable collection with arrow-key navigation.", `
       <ul class="mero-listbox" role="listbox" aria-label="Workspace" data-mero-listbox>
         <li class="mero-option" id="listbox-atlas" role="option" aria-selected="true" tabindex="0">Atlas</li>

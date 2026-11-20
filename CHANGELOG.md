@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Pull requests and releases run the complete test suite in Chromium, Firefox and WebKit. Publishing waits for all three.
+
 ## 0.5.1 · 20 November 2026
 
 - A failed Studio view switch no longer replaces the workspace with the error response. htmx 4 swaps error responses by default.

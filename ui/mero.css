@@ -665,6 +665,9 @@
   }
 }
 
+/* A full-height drawer over a dense page can stall WebKit's software renderer when it blurs the entire backdrop. */
+:where(.mero-drawer)::backdrop { backdrop-filter: none; }
+
 :where(.mero-popover, .mero-tooltip-content, .mero-menu, .mero-listbox, .mero-list-box) {
   box-sizing: border-box;
   padding: .45rem;

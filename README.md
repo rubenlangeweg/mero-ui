@@ -72,8 +72,10 @@ The inventory form uses `mero-forms.js` for pending state, a replacement form on
 
 ```sh
 npm ci
-npx playwright install chromium
-npm test
+npx playwright install --with-deps chromium firefox webkit
+MERO_BROWSER=chromium npm test
+MERO_BROWSER=firefox npm test
+MERO_BROWSER=webkit npm test
 npm run pack:ui
 ```
 

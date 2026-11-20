@@ -65,7 +65,7 @@ const attributes = [
     ["*data-mero-tooltip-dismissed", "On a tooltip closed with Escape, until the pointer and focus leave it."],
     ["data-mero-command", "On a <code>&lt;dialog&gt;</code> holding a remote combobox. Cmd or Ctrl K opens it with an empty query, and choosing an option runs that option’s link, <code>hx-*</code> request or toast. Use one per page, and not alongside the workspace Command."],
     ["data-mero-restore-focus", "On a list container. After Back to this page, focuses the link in it that was opened. Links are matched by <code>href</code>."],
-    ["data-mero-focus-fallback", "On one control inside a <code>data-mero-restore-focus</code> container. Gets focus when an htmx swap removes the focused element."],
+    ["data-mero-focus-fallback", "On one control inside a <code>data-mero-restore-focus</code> container. Gets focus after an htmx swap when the initiating control has no focusable replacement with the same ID."],
     ["data-mero-pending", "On any element. Shows a <code>.mero-indicator</code> inside it, as <code>.htmx-request</code> does."],
     ["data-mero-request", "With a pending state. Sets a progress cursor on the element."],
   ]],
