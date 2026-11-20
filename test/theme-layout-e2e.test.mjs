@@ -10,7 +10,7 @@ const playwright = await import(browserConfig.playwrightModule || "playwright").
 const engine = browserConfig.engine || "chromium";
 const options = { skip: !playwright && "Install Playwright for the showcase browser checks" };
 
-async function start(t) {
+async function start(t, viewport = { width: 1280, height: 800 }) {
   const app = createApp();
   await new Promise((resolve, reject) => app.once("error", reject).listen(0, "127.0.0.1", resolve));
   let browser;
@@ -21,7 +21,7 @@ async function start(t) {
   browser = await playwright[engine].launch({
     executablePath: engine === "chromium" ? browserConfig.chromeExecutable : undefined,
   });
-  const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: "reduce" });
+  const page = await browser.newPage({ viewport, reducedMotion: "reduce" });
   page.setDefaultTimeout(7000);
   await page.goto("http://127.0.0.1:" + app.address().port);
   return { browser, page };
@@ -65,20 +65,24 @@ test("a theme edited from the homepage opens with the same controls in a fresh b
 });
 
 test("visitors can open each app from the layout gallery and return to the gallery on a phone", options, async t => {
-  const { page } = await start(t);
-  const showcase = page.locator("#pro");
+  const { browser, page: desktop } = await start(t);
+  const showcase = desktop.locator("#pro");
   await showcase.getByText("Finance", { exact: true }).click();
   assert.equal(await showcase.getByRole("radio", { name: "Finance", exact: true }).isChecked(), true);
   await showcase.getByRole("link", { name: /open finance/i }).click();
-  await page.waitForURL(url => url.pathname === "/layouts/finance");
-  await page.locator(".bu-posting").and(page.getByRole("link", { expanded: false })).first().click();
-  await page.locator("dt").getByText("Reference", { exact: true }).waitFor();
-  await page.waitForURL(url => url.searchParams.has("transaction"));
-  await page.goBack();
-  await page.waitForURL(url => url.pathname === "/layouts/finance" && !url.searchParams.has("transaction"));
-  await page.goBack();
+  await desktop.waitForURL(url => url.pathname === "/layouts/finance");
+  await desktop.locator(".bu-posting").and(desktop.getByRole("link", { expanded: false })).first().click();
+  await desktop.locator("dt").getByText("Reference", { exact: true }).waitFor();
+  await desktop.waitForURL(url => url.searchParams.has("transaction"));
+  await desktop.goBack();
+  await desktop.waitForURL(url => url.pathname === "/layouts/finance" && !url.searchParams.has("transaction"));
+  await desktop.goBack();
   await showcase.getByRole("link", { name: /all layouts/i }).click();
-  await page.setViewportSize({ width: 360, height: 800 });
+  await desktop.waitForURL(url => url.pathname === "/layouts");
+  // Open the phone at its real viewport. Resizing the live gallery can stall Firefox's automation protocol.
+  const page = await browser.newPage({ viewport: { width: 360, height: 800 }, reducedMotion: "reduce" });
+  page.setDefaultTimeout(7000);
+  await page.goto(desktop.url());
   const titles = new Set();
   for (const slug of ["dashboard", "mail", "chat", "crm", "finance", "settings"]) {
     await fitsViewport(page);
@@ -99,8 +103,7 @@ test("visitors can open each app from the layout gallery and return to the galle
 });
 
 test("layout switching, gallery return and standalone navigation retain their context", options, async t => {
-  const { page } = await start(t);
-  await page.setViewportSize({ width: 320, height: 800 });
+  const { page } = await start(t, { width: 320, height: 800 });
   await page.goto(new URL("/layouts/crm", page.url()).href);
   const chooser = page.locator(".app-example-chooser summary");
   await chooser.focus();
