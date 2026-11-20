@@ -25,7 +25,7 @@ Every pull request and release runs the full test suite in Chromium, Firefox and
 
 ## Evidence and remaining work
 
-- The Chromium audit checked all 162 components and 10 named variants in the docs and as standalone previews, plus 20 site and embedded app routes. All 728 page states passed axe, label and ARIA reference, page-width, failed-response and browser-exception checks at 360 px dark and 1280 px light. [Audit runner](../scripts/audit-catalog.mjs) · [Visual review and spacing standards](component-standards.md)
+- The v0.6.0 Chromium audit checked 169 components and 15 named variants in the docs and as standalone previews, plus 31 site and embedded app routes. All 798 page states passed axe, label and ARIA reference, page-width, failed-response and browser-exception checks at 360 px dark and 1280 px light. [Audit runner](../scripts/audit-catalog.mjs) · [Visual review and spacing standards](component-standards.md)
 - The browser checks cover component geometry, navigation history, theme export, responsive app workflows and the downloadable inventory app. The playground checks compare the displayed exchange with the actual response, including recovery from a 422 and reopening an earlier failed request. [Regression suite](../test/) · [Playground journeys](../test/playground-journey.test.mjs)
 - All 162 default snippets were rendered with only their listed assets on a plain 320 px host. Hero and Theme Controller initially overflowed. Both fixes were retested with all 18 composition snippets across three engines. [Clean-host regression](../test/collections-browser.test.mjs)
 
