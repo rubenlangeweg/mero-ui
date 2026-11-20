@@ -72,7 +72,7 @@ test("visitors can open each app from the layout gallery and return to the galle
   await showcase.getByRole("link", { name: /open finance/i }).click();
   await page.waitForURL(url => url.pathname === "/layouts/finance");
   await page.locator(".bu-posting").and(page.getByRole("link", { expanded: false })).first().click();
-  await page.getByText("Reference", { exact: true }).waitFor();
+  await page.locator("dt").getByText("Reference", { exact: true }).waitFor();
   await page.waitForURL(url => url.searchParams.has("transaction"));
   await page.goBack();
   await page.waitForURL(url => url.pathname === "/layouts/finance" && !url.searchParams.has("transaction"));
