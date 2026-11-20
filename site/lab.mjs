@@ -97,7 +97,7 @@ export function renderWorkbench(store, { expanded = false, dashboard = false, in
         <button type="button" id="${prefix}add-product" class="mero-button lab-add" aria-haspopup="dialog" hx-get="${basePath}/new" hx-target="#${prefix}lab-overlay" hx-sync="#${prefix}lab-overlay:replace">${icon("plus")} <span>Add product</span></button>
       </div>
       <form id="${prefix}lab-filters" class="lab-toolbar" role="search" hx-get="${basePath}" hx-target="#${prefix}product-results-frame" hx-swap="innerHTML" hx-sync="this:replace"
-        hx-trigger="submit, input changed delay:200ms from:find [type=search], change">
+        hx-trigger="submit, input changed delay:200ms from:#${prefix}lab-search, change">
         <label class="lab-search">${icon("search")} <span class="lab-sr-only">Search products</span><input id="${prefix}lab-search" type="search" name="q" value="${esc(initial.get("q"))}" placeholder="Search products…" autocomplete="off"></label>
         ${dashboard ? '<input type="hidden" name="dashboard" value="1">' : ""}
         <label class="lab-filter"><span class="lab-sr-only">Filter by category</span><select class="mero-select" name="filterCategory"><option value="">All categories</option>${options(categories, initial.get("filterCategory"))}</select></label>

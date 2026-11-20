@@ -30,7 +30,7 @@ test("Studio's highlighted template copies the last workspace response through n
 
   async function swap(action, path) {
     const [response] = await Promise.all([
-      page.waitForResponse(r => r.request().resourceType() === "xhr" && new URL(r.url()).pathname === path),
+      page.waitForResponse(r => /xhr|fetch/.test(r.request().resourceType()) && new URL(r.url()).pathname === path),
       action(),
     ]);
     return response.text();

@@ -105,7 +105,7 @@ test("a layout's HTTP inspector shows the exact fragment returned after a swap",
     ["mail", /Julian Park/, "/demo/layouts/mail"],
   ]) {
     await page.goto(base + "/layouts/" + screen);
-    const response = page.waitForResponse(r => new URL(r.url()).pathname === fragmentPath && r.request().resourceType() === "xhr");
+    const response = page.waitForResponse(r => new URL(r.url()).pathname === fragmentPath && /xhr|fetch/.test(r.request().resourceType()));
     await page.getByRole("link", { name }).first().click();
     const reply = await response;
     await page.getByRole("tab", { name: "HTTP exchange" }).click();
