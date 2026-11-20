@@ -21,14 +21,18 @@ When serving the site on a public domain, set `MERO_SITE_ORIGIN` to its full ori
 Install the UI assets from the [GitHub release](https://github.com/rubenlangeweg/mero-ui/releases) and HTMX from npm:
 
 ```sh
-npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.3.0/rubenlangeweg-mero-ui-0.3.0.tgz htmx.org@2
+npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.4.0/rubenlangeweg-mero-ui-0.4.0.tgz htmx.org@2
 ```
 
-To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.3.0/ui/mero.css`.
+To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.4.0/ui/mero.css`.
 
 Mero also runs on htmx 4: install `htmx.org@4` instead and read [Use htmx 4](#use-htmx-4). Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
 
-Serve `ui/mero.css` and `ui/mero.js` from your app. Include HTMX 2.x or 4.x for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. The local catalog includes HTMX 2.0.11, HTMX 4.0.2 and Geist with their license notices.
+Serve `ui/mero.css` and `ui/mero.js` from your app. Include HTMX 2.x or 4.x for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. A sortable table sorts on the server through plain `?sort=` header links, so it works without JavaScript. Filter chips work the same way: each chip, the "+ Filter" menu items and "Clear all filters" are links to the URL with that query parameter changed. A `role="menu"` popover gets arrow-key, Home, End, typeahead, Escape and Tab handling from `mero.js`. A `dialog[data-mero-command]` holding a remote combobox opens on Cmd or Ctrl K and runs the chosen server option; use one per page, and not alongside the workspace Command. The local catalog includes HTMX 2.0.11, HTMX 4.0.2 and Geist with their license notices.
+
+### Return focus after Back
+
+Add `data-mero-restore-focus` to a list container. When someone opens a link in it and then presses Back, `mero.js` focuses that link again. This works after a full page load and after an HTMX history restore. Links are matched by their `href`, so keep row hrefs unique on the page. Mark one control in the container with `data-mero-focus-fallback`. It gets focus when an HTMX swap removes the focused element.
 
 ```html
 <link rel="stylesheet" href="/mero.css">
@@ -64,7 +68,7 @@ Download the [complete preview and source](http://127.0.0.1:4173/downloads/mero-
 
 The [coverage map](docs/component-coverage.md) links the catalog to the original reference families. The [edit comparison](examples/edit-comparison/README.md) uses the same edit flow across three implementations.
 
-The inventory form uses `mero-forms.js` for pending state, a replacement form on HTTP 422, and a successful `mero:form-saved` event. The host supplies validation, persistence and authorization in its own application. A chart table, campus map and chat assistant in the catalog use local sample data. The chat demo gives deterministic replies.
+The inventory form uses `mero-forms.js` for pending state, a replacement form on HTTP 422, and a successful `mero:form-saved` event. `mero-forms.js` also reports the outcome of standalone action buttons marked `data-mero-action`. The `Mero-Action-Outcome` (`succeeded`, `rejected` or `unknown`) and `Mero-Action-Message` response headers override the status-based state and its text. The host supplies validation, persistence and authorization in its own application. A chart table, campus map and chat assistant in the catalog use local sample data. The chat demo gives deterministic replies.
 
 ## Verify
 

@@ -66,7 +66,7 @@
 
   const copyTimers = new WeakMap();
   document.addEventListener("keydown", event => {
-    if (event.defaultPrevented || document.querySelector('dialog[open]')) return;
+    if (event.defaultPrevented || document.querySelector('dialog[open], dialog[data-mero-command]')) return;
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
       const search = document.querySelector("[data-catalog-search]");

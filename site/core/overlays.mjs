@@ -26,6 +26,19 @@ export const groups = [
       overlay("demo-drawer", "Review deployment", "The staging build is ready to review.", { variant: "drawer", trigger: "Open drawer" })),
     item("modal", "Modal", "Open a centered, named dialog with native focus containment.",
       overlay("demo-modal", "Workspace details", "Only workspace managers can change access.")),
+    item("command-menu", "Command Menu", "Press Cmd or Ctrl K to search pages and actions returned by your server.", `
+      <button class="mero-button mero-button-outline" type="button" data-mero-open="demo-command" aria-keyshortcuts="Meta+K Control+K">Search commands <kbd class="mero-kbd">Ctrl K</kbd></button>
+      <dialog class="mero-dialog mero-command" id="demo-command" data-mero-command aria-label="Commands">
+        <div class="mero-combo" data-mero-combo data-mero-combo-remote>
+          <input class="mero-input" name="q" type="text" role="combobox" aria-label="Search commands" aria-expanded="false"
+            aria-controls="demo-command-options" aria-autocomplete="list" autocomplete="off" placeholder="Search pages and actions…" autofocus
+            hx-get="/demo/catalog/command-menu" hx-trigger="input changed delay:150ms, mero:query"
+            hx-target="next [role=listbox]" hx-swap="innerHTML" hx-sync="this:replace">
+          <div class="mero-listbox mero-combo-list" id="demo-command-options" role="listbox" aria-label="Commands" hidden></div>
+          <span class="mero-description" data-mero-combo-status role="status"></span>
+        </div>
+      </dialog>`,
+      "The input requests matching options from your server as you type. Arrow keys move through results, Enter opens a link or runs an action, and Escape closes the list and then the dialog, returning focus to where you were. Link the trigger to a search page for visitors without JavaScript. Use either this or the workspace Command on a page, not both."),
     item("popover", "Popover", "Display contextual information using the browser’s top layer.", `
       <button class="mero-button mero-button-outline" type="button" popovertarget="demo-popover">Deployment info</button>
       <div class="mero-popover" id="demo-popover" popover>

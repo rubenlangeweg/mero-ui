@@ -2,6 +2,10 @@
  * Optional HTMX form behavior. Server responses:
  * 422 + replacement form for validation, or HX-Trigger-After-Settle:
  * {"mero:form-saved":{"message":"Saved"}} after any successful swap.
+ * Standalone [data-mero-action] buttons get data-mero-action-state
+ * pending|succeeded|rejected|unknown: 2xx succeeded, 4xx (not 408) rejected,
+ * anything else unknown. Mero-Action-Outcome and Mero-Action-Message headers
+ * override the state and text; a bubbling mero:action event reports each step.
  * Runs on htmx 2 and htmx 4: mero.js relays the htmx 4 events and that header.
  */
 (() => {
@@ -86,5 +90,64 @@
     }
     focus?.focus({ preventScroll: true });
     if (event.detail.message) window.MeroUI.toast(event.detail.message, { tone: "success" });
+  });
+
+  const actionOf = event => event.detail.elt?.closest?.("[data-mero-action]");
+  const actionMessages = {
+    succeeded: ["Done.", "success"],
+    rejected: ["The server refused this action. Nothing changed.", "warning"],
+    unknown: ["The result is unknown. Check the current state before you try again.", "danger"],
+  };
+  const actionStatus = action => action.parentElement?.querySelector("[data-mero-action-status]");
+
+  // htmx queues a click made during a request and sends it later, so the guard runs before its sync logic.
+  // aria-disabled instead of disabled keeps focus on the button.
+  // htmx 4 fires confirm only with hx-confirm, but its configRequest also precedes the sync queue.
+  for (const name of ["htmx:confirm", "htmx:configRequest"]) document.addEventListener(name, (event) => {
+    if (actionOf(event)?.dataset.meroActionState === "pending") event.preventDefault();
+  });
+
+  // A swap can detach the button before afterRequest, so the request remembers its button and status.
+  const actionRequests = new WeakMap();
+
+  // beforeSend, not beforeRequest: a cancelled request never fires afterRequest and would stay pending.
+  document.addEventListener("htmx:beforeSend", (event) => {
+    const action = actionOf(event);
+    if (!action || !event.detail.xhr) return;
+    const output = actionStatus(action);
+    actionRequests.set(event.detail.xhr, { action, output });
+    action.dataset.meroActionState = "pending";
+    action.setAttribute("aria-busy", "true");
+    action.setAttribute("aria-disabled", "true");
+    if (output) { output.textContent = ""; delete output.dataset.tone; }
+    action.dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state: "pending" } }));
+  });
+
+  // htmx fires afterRequest after load, error, abort and timeout alike.
+  document.addEventListener("htmx:afterRequest", (event) => {
+    const xhr = event.detail.xhr;
+    const request = xhr && actionRequests.get(xhr);
+    if (!request) return;
+    actionRequests.delete(xhr); // htmx fires afterRequest again on a connected element after a detaching swap
+    const { action, output } = request;
+    const status = xhr.status;
+    const header = xhr.getResponseHeader("Mero-Action-Outcome");
+    const state = Object.hasOwn(actionMessages, header) ? header
+      : status >= 200 && status < 300 ? "succeeded"
+      : status >= 400 && status < 500 && status !== 408 ? "rejected" : "unknown";
+    const [fallback, tone] = actionMessages[state];
+    const message = xhr.getResponseHeader("Mero-Action-Message") || fallback;
+    action.removeAttribute("aria-busy");
+    action.removeAttribute("aria-disabled");
+    action.dataset.meroActionState = state;
+    if (output?.isConnected) {
+      // Clearing first makes a repeated message announce again.
+      output.textContent = "";
+      output.textContent = message;
+      output.dataset.tone = tone;
+    } else {
+      window.MeroUI?.toast(message, { tone, trigger: action.isConnected ? action : event.target });
+    }
+    (action.isConnected ? action : document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message } }));
   });
 })();

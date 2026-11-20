@@ -1,7 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 · 20 November 2026
 
+- **Menu Button:** a `role="menu"` popover now supports arrow keys, Home, End, typeahead, Escape and Tab, and focus returns to its button.
+- **Action Button:** `data-mero-action` buttons outside a form show pending, succeeded, rejected or outcome-unknown states and fire `mero:action`. Requires `mero-forms.js`.
+- **Sortable Table:** headers sort through plain `?sort=` links, rows open as links, and there is a compact layout.
+- **Filter Chips:** applied filters show as removable chips with a "+ Filter" menu, all stored in the URL.
+- **Command Menu:** `dialog[data-mero-command]` opens on Cmd or Ctrl K and searches results from your server.
+- `data-mero-restore-focus` returns focus to the opened row after Back.
 - Import the server helpers as `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown`. Paths under `ui/` still work.
 - The docs list the `mero:*` events and the `window.MeroUI` functions and every `data-mero-*` attribute under [Reference](https://mero-ui.rubenlangeweg.com/docs/reference).
 

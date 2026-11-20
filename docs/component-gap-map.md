@@ -6,7 +6,7 @@
 
 ## What exists today
 
-Reviewed 20 November 2026. I counted 65 named entries in HeroUI Pro’s public **web** index. Mero has 72 catalog examples aimed at the free HeroUI list. daisyUI lists 68 entries. Each catalog counts different things. For example, Mero’s Range Calendar and Date Range Picker both render a pair of date inputs. Pro’s Agenda is an event scheduler with day, week and month views. [HeroUI Pro index](https://heroui.pro/docs/react/components) · [Agenda](https://heroui.pro/docs/react/components/agenda/) · [daisyUI index](https://daisyui.com/components/) · [Mero catalog](../site/core/)
+Reviewed 20 November 2026. I counted 65 named entries in HeroUI Pro’s public **web** index. Mero has 77 catalog examples aimed at the free HeroUI list. daisyUI lists 68 entries. Each catalog counts different things. For example, Mero’s Range Calendar and Date Range Picker both render a pair of date inputs. Pro’s Agenda is an event scheduler with day, week and month views. [HeroUI Pro index](https://heroui.pro/docs/react/components) · [Agenda](https://heroui.pro/docs/react/components/agenda/) · [daisyUI index](https://daisyui.com/components/) · [Mero catalog](../site/core/)
 
 ### HeroUI Pro coverage
 
@@ -16,7 +16,7 @@ The middle column identifies existing functionality worth keeping. A site-only e
 | --- | --- | --- |
 | Data Display · 18 | **Data Grid** has a searchable, editable inventory table. **Empty State** exists inside its results. **KPI** and **KPI Group** have basic packaged stat styles. **Item Card**, **Item Card Group** and **Widget** have site-only compositions in Studio. | Action Bar, Agenda, Carousel, File Tree, Floating TOC, Holo Card, Hover Card, Kanban, List View, Map, Timeline. |
 | Forms · 11 | **Native Select** has a direct basic equivalent. **Radio Button Group** has selectable finish cards on the homepage. **Checkbox Button Group**, **Cell Switch** and **Number Stepper** have simpler grouped checkboxes, a labelled settings switch and a bounded number field respectively. | Cell Color Picker, Cell Select, Cell Slider, Drop Zone, Inline Select, Rich Text Editor. Mero ships standalone color, select and range inputs. |
-| Navigation · 7 | **AppLayout** and **Sidebar** have a basic packaged responsive shell. **Navbar** is site-only. **Command** has a docs search shortcut. **Segment** has the single-choice behavior of Mero’s radio row. | Context Menu, Stepper. |
+| Navigation · 7 | **AppLayout** and **Sidebar** have a basic packaged responsive shell. **Navbar** is site-only. **Command** has a docs search shortcut. The core **Command Menu** searches server results with keyboard support and returns focus on close. **Segment** has the single-choice behavior of Mero’s radio row. | Context Menu, Stepper. |
 | Feedback · 5 | **Pressable Feedback** has a button press state. | Emoji Reaction Button, Number Value, Rating, Trend Chip. |
 | Layout · 1 | The app shell has fixed responsive regions. | Resizable. |
 | Overlays · 1 | Mero already has a dialog, sheet, drawer and popover in its core. | Emoji Picker. |

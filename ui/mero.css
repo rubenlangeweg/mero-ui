@@ -379,8 +379,11 @@
   white-space: nowrap;
 }
 :where(.mero-badge-dot)::before { content: ""; inline-size: .35rem; block-size: .35rem; border-radius: 50%; background: currentColor; }
-:where(.mero-chip button) { display: inline-grid; place-items: center; padding: 0 .13rem; border: none; border-radius: 99rem; background: transparent; color: inherit; cursor: pointer; }
-:where(.mero-chip button):hover { background: color-mix(in srgb, currentColor 18%, transparent); }
+:where(.mero-chip :is(button, a)) { display: inline-grid; place-items: center; padding: 0 .13rem; border: none; border-radius: 99rem; background: transparent; color: inherit; text-decoration: none; cursor: pointer; }
+:where(.mero-chip :is(button, a)):hover { background: color-mix(in srgb, currentColor 18%, transparent); }
+
+:where(.mero-filter-bar) { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-block-end: .6rem; }
+:where(.mero-filter-chips) { list-style: none; margin: 0; padding: 0; }
 
 :where(.mero-alert) {
   display: grid;
@@ -460,9 +463,20 @@
 :where(.mero-table th) { background: var(--mero-raised); color: var(--mero-muted); font-size: .76rem; font-weight: 600; }
 :where(.mero-table th:first-child) { border-start-start-radius: .45rem; }
 :where(.mero-table th:last-child) { border-start-end-radius: .45rem; }
+:where(.mero-table tbody th) { border-radius: 0; background: none; color: inherit; font: inherit; }
 :where(.mero-table tbody tr) { transition: background-color var(--mero-fast); }
 :where(.mero-table tbody tr):hover { background: var(--mero-raised); }
-:where(.mero-table tbody tr:last-child td) { border-block-end: 0; }
+:where(.mero-table tbody tr:last-child :is(td, th)) { border-block-end: 0; }
+:where(.mero-table th a) { display: inline-flex; gap: .25rem; color: inherit; text-decoration: none; }
+:where(.mero-table th a):hover { color: var(--mero-text); }
+:where(.mero-table-compact) :where(th, td) { padding: .35rem .6rem; }
+/* One real link per row; its ::after covers the row while other controls sit above it. */
+:where(.mero-table tr:has(.mero-row-link)) { position: relative; cursor: pointer; }
+:where(.mero-row-link) { color: inherit; text-decoration: none; }
+:where(.mero-row-link)::after { content: ""; position: absolute; inset: 0; }
+:where(.mero-table tr:has(.mero-row-link)) :where(a, button, input, select):not(.mero-row-link) { position: relative; z-index: 1; }
+:where(.mero-row-link):focus-visible { outline: none; }
+:where(.mero-table tr:has(.mero-row-link:focus-visible)) { outline: 2px solid var(--mero-accent); outline-offset: -2px; }
 
 :where(.mero-calendar) { inline-size: min(100%, 20rem); }
 :where(.mero-calendar-table) { border-collapse: collapse; inline-size: 100%; margin-block-start: .55rem; table-layout: fixed; text-align: center; }
@@ -716,6 +730,8 @@
   cursor: pointer;
 }
 :where(.mero-menu-item:hover, .mero-menu-item:focus-visible, .mero-option:hover, .mero-option:focus-visible, [data-mero-active="true"]) { background: var(--mero-hover); }
+/* Programmatic focus after a pointer open does not match :focus-visible. */
+:where(.mero-menu-item:focus) { background: var(--mero-hover); }
 :where(.mero-option[aria-selected="true"], .mero-list-box [role="option"][aria-selected="true"], .mero-listbox [role="option"][aria-selected="true"]) { color: var(--mero-accent); }
 :where(.mero-option[aria-disabled="true"], .mero-menu-item[disabled], .mero-menu-item[aria-disabled="true"]) { opacity: .5; cursor: not-allowed; }
 :where(.mero-listbox, .mero-list-box) :where([role="option"]) { inline-size: auto; }
@@ -730,6 +746,9 @@
   max-block-size: 12rem;
   overflow: auto;
 }
+:where(.mero-command) { inline-size: min(36rem, calc(100% - 2rem)); margin-block-start: 12vh; padding: .5rem; }
+:where(.mero-command .mero-combo-list:not([hidden])) { position: static; max-block-size: min(50vh, 24rem); margin-block-start: .35rem; box-shadow: none; }
+:where(.mero-option small) { margin-inline-start: auto; color: var(--mero-muted); }
 :where(.mero-scroll-shadow) {
   max-block-size: var(--mero-scroll-height, 10rem);
   overflow: auto;
@@ -784,6 +803,12 @@
 :where(.mero-indicator) { display: none; }
 :where(.htmx-request .mero-indicator, .htmx-request.mero-indicator, [data-mero-pending] .mero-indicator) { display: inline-flex; }
 :where(.htmx-request[data-mero-request], [data-mero-pending][data-mero-request]) { cursor: progress; }
+/* Outranks the aria-disabled cursor on .mero-button. */
+.mero-button[data-mero-action-state=pending] { cursor: progress; }
+:where(.mero-action-status) { color: var(--mero-muted); font-size: .8rem; }
+:where(.mero-action-status[data-tone=success]) { color: var(--mero-success); }
+:where(.mero-action-status[data-tone=warning]) { color: var(--mero-warning); }
+:where(.mero-action-status[data-tone=danger]) { color: var(--mero-danger); }
 :where(.mero-button:has(> .mero-button-label):has(> .mero-indicator)) { display: inline-grid; place-items: center; }
 :where(.mero-button > .mero-button-label, .mero-button > .mero-button-label ~ .mero-indicator) { grid-area: 1 / 1; }
 :where(.htmx-request, [data-mero-pending]) :where(.mero-button-label:has(~ .mero-indicator)) { opacity: 0; }

@@ -18,6 +18,12 @@ export function item(id, name, description, markup, notes, variants = []) {
     }) }
 }
 
+// Default markup comes from empty params; previews pass the request query so ?links render server-side.
+export function rendered(id, name, description, render, notes) {
+  return { ...item(id, name, description, render(new URLSearchParams()), notes),
+    render: params => exampleMarkup(render(params)) }
+}
+
 export function section(name, items) {
   return { name, items }
 }

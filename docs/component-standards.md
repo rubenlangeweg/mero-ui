@@ -20,13 +20,13 @@ Values below assume a 16 px root font size. Use the shared classes and tokens so
 
 | Family | Components | Additional named variants |
 | --- | ---: | ---: |
-| Core controls and display | 72 | 4 |
+| Core controls and display | 77 | 4 |
 | Workspace | 25 | 0 |
 | Media galleries | 4 | 0 |
 | Studio collections | 14 | 3 |
 | Charts and conversations | 29 | 3 |
 | Composition | 18 | 0 |
-| **Total** | **162** | **10** |
+| **Total** | **167** | **10** |
 
 Each component and variant received a visual review. Interactive examples were also exercised in their relevant states. The catalog run produced 344 screenshots across 360 px dark and 1280 px light. All 700 Chromium page checks passed for automated accessibility, broken label and ARIA references, overflow, HTTP errors and browser exceptions. A separate 320 px check with 125% root text found no horizontal page overflow in either writing direction. The regression suite passed 48 tests in each of Chromium, Firefox and WebKit.
 

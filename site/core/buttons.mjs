@@ -28,6 +28,25 @@ export const groups = [
           notes: "The server returns an HTML fragment for the live output. After a failed request the form shows an inline error and enables the button for a retry.",
         }],
       ]),
+    item("action-button", "Action Button", "Run a server action and report whether it succeeded, was refused or has an unknown result.", `
+      <div class="mero-stack">
+        <span class="mero-row">
+          <button class="mero-button mero-button-secondary" type="button" hx-post="/demo/catalog/action-button?outcome=succeeded" hx-swap="none" data-mero-action>
+            <span class="mero-button-label">Retry export</span><span class="mero-indicator mero-spinner" aria-hidden="true"></span></button>
+          <span class="mero-action-status" data-mero-action-status role="status"></span>
+        </span>
+        <span class="mero-row">
+          <button class="mero-button mero-button-danger" type="button" hx-post="/demo/catalog/action-button?outcome=rejected" hx-swap="none" data-mero-action>
+            <span class="mero-button-label">Revoke key</span><span class="mero-indicator mero-spinner" aria-hidden="true"></span></button>
+          <span class="mero-action-status" data-mero-action-status role="status"></span>
+        </span>
+        <span class="mero-row">
+          <button class="mero-button mero-button-outline" type="button" hx-post="/demo/catalog/action-button?outcome=unknown" hx-swap="none" data-mero-action>
+            <span class="mero-button-label">Halt run</span><span class="mero-indicator mero-spinner" aria-hidden="true"></span></button>
+          <span class="mero-action-status" data-mero-action-status role="status"></span>
+        </span>
+      </div>`,
+      "The button shows pending while the request runs and ignores further clicks. A 2xx response means succeeded. A 4xx response other than 408 means rejected: the server refused and nothing changed. A 5xx, 408, timeout or network error means unknown: the action may have happened, so check the current state before you retry. The Mero-Action-Outcome header overrides the state and Mero-Action-Message overrides the text. Each step dispatches a bubbling mero:action event, and data-mero-action-state exposes the state for styling."),
     item("button-group", "Button Group", "Keep related actions together while preserving each button’s own label and focus.", `
       <div class="mero-button-group" role="group" aria-label="Document actions">
         <button class="mero-button mero-button-outline" type="button" data-mero-toast="Document copied">Copy</button>

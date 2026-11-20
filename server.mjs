@@ -279,6 +279,17 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     } });
   }
 
+  function actionDemo({ response, searchParams }) {
+    const outcomes = {
+      succeeded: [200, { "Mero-Action-Message": "Export restarted." }],
+      rejected: [409, { "Mero-Action-Message": "This key was already revoked. Nothing changed." }],
+      unknown: [503],
+    };
+    const outcome = searchParams.get("outcome");
+    const [status, headers] = Object.hasOwn(outcomes, outcome) ? outcomes[outcome] : [400];
+    return send(response, "", { status, headers });
+  }
+
   function demoNotFound({ response }) {
     return send(response, "Demo route not found.", { status: 404 });
   }
@@ -329,6 +340,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     ["*", /^\/demo\/workspace\//, ({ request, response, url }) => handleWorkspaceRequest(request, response, url)],
     ["GET", /^\/demo\/catalog\//, catalogDemo],
     ["POST", "/demo/settings", saveSettings],
+    ["POST", "/demo/catalog/action-button", actionDemo],
     ["*", /^\/demo\//, demoNotFound],
     ...(serveFiles ? [["GET", /^\/(?:fonts\/|vendor\/)?[a-z0-9.-]+$/i, staticAsset]] : []),
   ];

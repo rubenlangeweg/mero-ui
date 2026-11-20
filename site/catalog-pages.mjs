@@ -23,8 +23,8 @@ export function catalogIndex() {
 
 export function exampleAssets(item, demo) {
   const assets = ['mero.css','mero.js',...moduleAssets(item.module)];
-  if (/\bhx-(?:get|post|put|patch|delete)=/.test(demo)) assets.unshift('vendor/htmx.min.js');
-  if (demo.includes('data-mero-form')) assets.push('mero-forms.js');
+  if (/\bhx-(?:get|post|put|patch|delete|boost)=/.test(demo)) assets.unshift('vendor/htmx.min.js');
+  if (/data-mero-(?:form|action)\b/.test(demo)) assets.push('mero-forms.js');
   return assets;
 }
 
