@@ -345,7 +345,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     ...(serveFiles ? [["GET", /^\/(?:fonts\/|vendor\/)?[a-z0-9.-]+$/i, staticAsset]] : []),
   ];
 
-  return createServer(async (request, response) => {
+  const server = createServer(async (request, response) => {
     try {
       // Node leaves the body out of a HEAD response, so the GET routes answer it with the same status and headers.
       if (request.method === "HEAD") request.method = "GET";
@@ -375,6 +375,10 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
       else response.end();
     }
   });
+  // A browser's open connection would otherwise keep close() waiting forever, which hung CI test teardown.
+  const close = server.close.bind(server);
+  server.close = callback => { close(callback); server.closeAllConnections(); return server; };
+  return server;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
