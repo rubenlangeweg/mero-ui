@@ -18,9 +18,9 @@ When serving the site on a public domain, set `MERO_SITE_ORIGIN` to its full ori
 
 ## Use a component
 
-Install the UI assets and HTMX with `npm install @rubenlangeweg/mero-ui htmx.org@2`. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/public/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
+Install the UI assets and HTMX with `npm install @rubenlangeweg/mero-ui htmx.org@2`. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
 
-Serve `public/mero.css` and `public/mero.js` from your app. Include HTMX 2.x for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. The local catalog includes HTMX 2.0.11 and Geist with their license notices.
+Serve `ui/mero.css` and `ui/mero.js` from your app. Include HTMX 2.x for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. The local catalog includes HTMX 2.0.11 and Geist with their license notices.
 
 ```html
 <link rel="stylesheet" href="/mero.css">
@@ -30,7 +30,7 @@ Serve `public/mero.css` and `public/mero.js` from your app. Include HTMX 2.x for
 
 Use the [theme studio](http://127.0.0.1:4173/themes) to try colors, fonts and radii on real components or an app layout. Export the CSS, load it after `mero.css` and set `data-theme="light"` or `data-theme="dark"` on a document or section.
 
-Media uses `mero-gallery` assets. Collections use `mero-collections`. Workspace controls use `mero-workspace`. Charts and conversation examples use `mero-insights`. Presentation utilities use `mero-composition`. Each pair comprises a stylesheet and a deferred script. The two optional server helpers in `public/insight-*.mjs` render charts and a small Markdown subset.
+Media uses `mero-gallery` assets. Collections use `mero-collections`. Workspace controls use `mero-workspace`. Charts and conversation examples use `mero-insights`. Presentation utilities use `mero-composition`. Each pair comprises a stylesheet and a deferred script. The two optional server helpers in `ui/insight-*.mjs` render charts and a small Markdown subset.
 
 ## Take an example into another app
 

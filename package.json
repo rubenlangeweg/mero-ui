@@ -13,10 +13,7 @@
     "deploy": "npm run build && cf deploy --prebuilt"
   },
   "files": [
-    "public/mero*.css",
-    "public/mero*.js",
-    "public/insight-*.mjs",
-    "public/studio-lamp.webp",
+    "ui",
     "README.md"
   ],
   "engines": {

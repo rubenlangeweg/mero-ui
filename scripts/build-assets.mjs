@@ -7,6 +7,7 @@ import { createSourceArchive, inventoryArchiveEntries } from "../site/inventory-
 await mkdir(".cloudflare", { recursive: true });
 const stage = await mkdtemp(".cloudflare/site-assets-");
 await cp("public", stage, { recursive: true });
+await cp("ui", stage, { recursive: true });
 for (const file of layoutSourceFiles) {
   const destination = join(stage, "source", file);
   await mkdir(dirname(destination), { recursive: true });

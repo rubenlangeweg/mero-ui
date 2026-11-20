@@ -29,7 +29,9 @@ import { renderLayout, renderSettingsForm } from "./site/layouts.mjs";
 import { createStudio, renderStudio, studioActions, studioAssets, studioView, studioViews, updateSettings } from "./site/studio.mjs";
 import { studioUrl } from "./site/studio-links.mjs";
 
-export const sourceArchiveEntries = ["LICENSE", ".gitignore", "README.md", "package.json", "package-lock.json", "server.mjs", "site", "public", "examples", "test", "scripts", "docs", "worker.mjs", "vite.config.mjs", "cloudflare.config.ts"];
+export const sourceArchiveEntries = ["LICENSE", ".gitignore", "README.md", "package.json", "package-lock.json", "server.mjs", "site", "ui", "public", "examples", "test", "scripts", "docs", "worker.mjs", "vite.config.mjs", "cloudflare.config.ts"];
+// The files the npm package ships live in ui/. Site-only files stay in public/.
+const libraryAsset = /^(?:mero[a-z-]*\.(?:css|js)|insight-[a-z-]+\.mjs|studio-lamp\.webp)$/;
 const formAssets = ["mero.css", "vendor/htmx.min.js", "mero.js", "mero-forms.js"];
 const settingsAssets = [...formAssets, "mero-layouts.css"];
 const workbenchAssets = [...formAssets, "mero-inventory.css", "mero-inventory.js"];
@@ -86,7 +88,7 @@ function startGuide() {
     <div><a class="mero-button mero-button-primary site-cta" href="/downloads/mero-ui.tar.gz" download>Download source ↓</a></div>
     <p>Extract the archive and run <code>npm start</code> with Node 22 or newer. The app runs at <a href="/">127.0.0.1:4173</a>. For just the editable table and its server routes, <a href="/downloads/studio-inventory.tar.gz" download>download Studio Inventory</a>.</p>
     <h2>Load the assets</h2>
-    <p>The sample serves these files from its <code>public/</code> directory. Use the same paths in your app, or point them to your own asset directory.</p>
+    <p>The sample serves these files from its <code>ui/</code> and <code>public/</code> directories. Use the same paths in your app, or point them to your own asset directory.</p>
     <div class="start-assets" aria-label="Download individual assets">
       <a href="/mero.css" download>mero.css ↓</a>
       <a href="/mero.js" download>mero.js ↓</a>
@@ -274,7 +276,8 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
       const type = types[extname(pathname)];
       if (serveFiles && method === "GET" && type && /^\/(?:fonts\/|vendor\/)?[a-z0-9.-]+$/i.test(pathname)) {
         const assetPath = pathname.slice(1);
-        const asset = await readFile(new URL("./public/" + assetPath, import.meta.url)).catch((error) => {
+        const directory = libraryAsset.test(assetPath) ? "./ui/" : "./public/";
+        const asset = await readFile(new URL(directory + assetPath, import.meta.url)).catch((error) => {
           if (error.code !== "ENOENT") throw error;
         });
         if (asset) return send(response, asset, { type });

@@ -1,4 +1,4 @@
-import { renderChart } from '../public/insight-charts.mjs';
+import { renderChart } from '../ui/insight-charts.mjs';
 import { escapeHtml as esc } from './html.mjs';
 
 export const businessAssets = ['mero-insights.css', 'business-layouts.css', 'mero-insights.js'];

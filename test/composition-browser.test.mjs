@@ -35,7 +35,7 @@ test("copied compositions align in both writing directions and retain their keyb
         <script defer src="/mero-composition.js"></script><main>${examples.map(item => `<section id="${item.id}">${item.code}</section>`).join("")}</main></html>`,
     });
     if (assets.has(path.slice(1))) return route.fulfill({
-      contentType: assets.get(path.slice(1)), body: await readFile(new URL("../public" + path, import.meta.url)),
+      contentType: assets.get(path.slice(1)), body: await readFile(new URL("../ui" + path, import.meta.url)),
     });
     return route.fulfill({ contentType: "text/html", body: "<main>Destination</main>" });
   });

@@ -1,6 +1,6 @@
 import {escapeHtml as esc} from './html.mjs';
-import {renderChart} from '../public/insight-charts.mjs';
-import {renderMarkdown} from '../public/insight-markdown.mjs';
+import {renderChart} from '../ui/insight-charts.mjs';
+import {renderMarkdown} from '../ui/insight-markdown.mjs';
 
 function item(id, name, description, markup, notes, serverHelper) {
   const demo = markup.trim();

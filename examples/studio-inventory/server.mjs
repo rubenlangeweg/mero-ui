@@ -4,9 +4,9 @@ import { extname } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createLabStore, renderWorkbench } from "../../site/lab.mjs";
 import { renderLayout } from "../../site/layouts.mjs";
-import { handleInventoryRequest, inventoryAssets } from "../../site/inventory-routes.mjs";
+import { handleInventoryRequest, inventoryAssetPath, inventoryAssets } from "../../site/inventory-routes.mjs";
 
-const files = new URL("../../public/", import.meta.url);
+const files = new URL("../../", import.meta.url);
 const types = { ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2", ".txt": "text/plain" };
 const navigation = [
   { id: "dashboard", href: "/", label: "Overview" },
@@ -44,7 +44,7 @@ export function createInventoryExample() {
       if (await handleInventoryRequest(req, res, url, tenantStore, { basePath: "/tenant/inventory" })) return;
       const name = url.pathname.slice(1);
       if (req.method === "GET" && inventoryAssets.includes(name)) {
-        const asset = await readFile(new URL(name, files));
+        const asset = await readFile(new URL(inventoryAssetPath(name), files));
         res.writeHead(200, { "Content-Type": types[extname(name)], "X-Content-Type-Options": "nosniff" });
         return res.end(asset);
       }

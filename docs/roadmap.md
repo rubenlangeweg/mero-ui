@@ -31,7 +31,7 @@ Give Mero and daisyUI plus stock HTMX the same edit endpoint, visual brief and d
 
 Use the existing inventory as the source. Expose the responsive table, search, category filter, sort, edit drawer and delete confirmation as a copyable block with scoped CSS, its HTML fragments and a runnable local reference server. Scope DOM IDs and targets so two blocks can coexist. Give consumers control over URLs, colors and navigation. Check the graphite theme, light theme and an Origo-style token override in a local fixture.
 
-Keep the API small. Create and edit open a form. Delete opens a confirmation. All three use ordinary HTMX requests and the existing `data-mero-form` behavior. The host owns validation and persistence. Mero owns pending feedback, error presentation and focus after a swap. [Form behavior](../public/mero-forms.js) · [Existing routes](../server.mjs)
+Keep the API small. Create and edit open a form. Delete opens a confirmation. All three use ordinary HTMX requests and the existing `data-mero-form` behavior. The host owns validation and persistence. Mero owns pending feedback, error presentation and focus after a swap. [Form behavior](../ui/mero-forms.js) · [Existing routes](../server.mjs)
 
 | Exchange | What the host returns | What the user sees |
 | --- | --- | --- |

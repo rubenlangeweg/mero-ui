@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {Readable} from 'node:stream';
 import {groups,handleInsightRequest} from '../site/insight-components.mjs';
-import {renderChart} from '../public/insight-charts.mjs';
-import {renderMarkdown} from '../public/insight-markdown.mjs';
+import {renderChart} from '../ui/insight-charts.mjs';
+import {renderMarkdown} from '../ui/insight-markdown.mjs';
 
 async function request(method, path, fields = {}) {
   const body = Buffer.from(new URLSearchParams(fields).toString());

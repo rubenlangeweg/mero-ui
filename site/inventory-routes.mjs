@@ -15,11 +15,14 @@ export const inventoryAssets = [
   "fonts/geist-LICENSE.txt", "fonts/geist-mono-LICENSE.txt",
 ];
 
+// Mero's own files ship from ui/. HTMX and the fonts stay in public/.
+export const inventoryAssetPath = name => (name.startsWith("mero") ? "ui/" : "public/") + name;
+
 export const inventoryArchiveEntries = [
   "LICENSE",
   "examples/studio-inventory/server.mjs", "examples/studio-inventory/README.md",
   "site/html.mjs", "site/lab.mjs", "site/layouts.mjs", "site/inventory-routes.mjs",
-  ...inventoryAssets.map(name => "public/" + name),
+  ...inventoryAssets.map(inventoryAssetPath),
 ];
 
 function send(response, body, status = 200, headers = {}) {

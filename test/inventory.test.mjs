@@ -106,6 +106,6 @@ test("downloaded archive contains a runnable application with local assets and s
   const script = join(directory, "examples/studio-inventory/server.mjs");
   const { createInventoryExample } = await import(pathToFileURL(script).href);
   assert.equal(typeof createInventoryExample, "function");
-  assert.deepEqual(await readFile(join(directory, "public/mero-inventory.css")), await readFile(new URL("../public/mero-inventory.css", import.meta.url)));
+  assert.deepEqual(await readFile(join(directory, "ui/mero-inventory.css")), await readFile(new URL("../ui/mero-inventory.css", import.meta.url)));
   assert.ok(await readFile(join(directory, "public/vendor/HTMX-LICENSE.txt"), "utf8"));
 });

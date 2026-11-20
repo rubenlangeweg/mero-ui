@@ -10,9 +10,9 @@ import {escapeHtml as esc} from '../../site/html.mjs';
 const labels = {mero:'Mero UI', daisyui:'daisyUI', heroui:'HeroUI CSS'};
 const publicFiles = {
   '/assets/htmx.js':new URL('../../public/vendor/htmx.min.js',import.meta.url),
-  '/assets/mero.css':new URL('../../public/mero.css',import.meta.url),
-  '/assets/mero.js':new URL('../../public/mero.js',import.meta.url),
-  '/assets/mero-forms.js':new URL('../../public/mero-forms.js',import.meta.url),
+  '/assets/mero.css':new URL('../../ui/mero.css',import.meta.url),
+  '/assets/mero.js':new URL('../../ui/mero.js',import.meta.url),
+  '/assets/mero-forms.js':new URL('../../ui/mero-forms.js',import.meta.url),
   '/assets/baseline.js':new URL('./baseline.js',import.meta.url),
   '/assets/comparison.css':new URL('./comparison.css',import.meta.url),
   '/assets/daisyui.css':join(styleCache,'daisyui.css'),

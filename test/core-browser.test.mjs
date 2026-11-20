@@ -17,7 +17,7 @@ const playwright = await import(browserConfig.playwrightModule || "playwright").
   throw error;
 });
 const examples = new Map(groups.flatMap(group => group.items.map(item => [item.id, item])));
-const source = new URL("../public/", import.meta.url);
+const source = new URL("../", import.meta.url);
 const browserName = browserConfig.engine || "chromium";
 const browserOptions = { skip: !playwright && "Install Playwright to run the browser regression" };
 
@@ -57,7 +57,7 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
     if (url.pathname.startsWith("/demo/catalog/")) {
       return route.fulfill({ contentType: "text/html", body: catalogFragment(url.pathname.split("/").at(-1), url.searchParams) });
     }
-    const filename = { "/htmx.js": "vendor/htmx.min.js", "/mero.js": "mero.js", "/mero.css": "mero.css" }[url.pathname];
+    const filename = { "/htmx.js": "public/vendor/htmx.min.js", "/mero.js": "ui/mero.js", "/mero.css": "ui/mero.css" }[url.pathname];
     if (!filename) return route.fulfill({ status: 404, body: "" });
     return route.fulfill({
       contentType: filename.endsWith(".css") ? "text/css" : "text/javascript",
