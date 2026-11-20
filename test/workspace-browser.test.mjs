@@ -76,7 +76,7 @@ test("workspace and gallery interactions survive hidden panels, resized viewport
   completeUpload();
   await page.waitForFunction(() => document.body.dataset.uploadSettled === "true");
   assert.equal(await page.locator("output").textContent(),"");
-  assert.equal(await page.locator(".rlw-file-name").textContent(),"B.png");
+  assert.equal(await page.locator(".mero-ws-file-name").textContent(),"B.png");
 
   await page.goto(base + "/preview/carousel");
   await page.evaluate(() => {
@@ -108,7 +108,7 @@ test("workspace control rows, icon buttons and disclosures keep their hit areas 
   const { page, base } = await fixture(t, {width:360,height:750});
   const open = id => page.goto(base + "/preview/" + id);
   await open("cell-switch");
-  const row = page.locator(".rlw-cell-row");
+  const row = page.locator(".mero-ws-cell-row");
   const toggle = page.getByRole("switch");
   const bounds = await row.boundingBox();
   const control = await toggle.boundingBox();
@@ -155,7 +155,7 @@ test("workspace control rows, icon buttons and disclosures keep their hit areas 
   assert.ok(Math.abs(bold.width - italic.width) < .1 && Math.abs(bold.height - italic.height) < .1);
   assert.ok(bold.width >= 36);
   await open("dock");
-  const widths = await page.locator(".rlw-dock a").evaluateAll(items => items.map(el => el.getBoundingClientRect().width));
+  const widths = await page.locator(".mero-ws-dock a").evaluateAll(items => items.map(el => el.getBoundingClientRect().width));
   assert.ok(Math.max(...widths) - Math.min(...widths) < 1);
   await page.getByRole("link",{name:"Inventory"}).click();
   assert.equal(page.url(), base + "/layouts/dashboard?view=inventory");
@@ -180,7 +180,7 @@ test("workspace control rows, icon buttons and disclosures keep their hit areas 
   assert.equal(new URL(page.url()).pathname, "/layouts/dashboard");
   await open("file-input");
   await page.locator('input[type=file]').setInputFiles({name:"sample.png",mimeType:"image/png",buffer:Buffer.from([137,80,78,71,13,10,26,10])});
-  assert.equal(await page.locator(".rlw-file-name").count(),0);
+  assert.equal(await page.locator(".mero-ws-file-name").count(),0);
   await page.getByRole("button",{name:"Check image"}).click();
   await page.locator("output").filter({hasText:"sample.png"}).waitFor();
 });

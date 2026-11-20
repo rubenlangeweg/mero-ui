@@ -25,13 +25,13 @@
 .comm-mast h1 { font-size:1.15rem; line-height:1.3; font-weight:640; letter-spacing:-.045em; }
 .comm-identity { font-size:.78rem; color:var(--mero-muted); }
 .comm-split { display:grid; grid-template-columns:minmax(13rem,.82fr) minmax(0,1.72fr); min-block-size:32rem; }
-.comm-mail-split > .rlw-split-handle { display:none; }
+.comm-mail-split > .mero-ws-split-handle { display:none; }
 @container communication (width > 40rem) {
-  .comm-mail-split[data-rlw-split-ready] {
-    grid-template-columns:minmax(0,var(--rlw-first,33%)) var(--mail-grip,1rem) minmax(0,1fr);
+  .comm-mail-split[data-mero-ws-split-ready] {
+    grid-template-columns:minmax(0,var(--mero-ws-first,33%)) var(--mail-grip,1rem) minmax(0,1fr);
   }
-  .comm-mail-split[data-rlw-split-ready] > .comm-list { border-inline-end:0; }
-  .comm-mail-split[data-rlw-split-ready] > .rlw-split-handle {
+  .comm-mail-split[data-mero-ws-split-ready] > .comm-list { border-inline-end:0; }
+  .comm-mail-split[data-mero-ws-split-ready] > .mero-ws-split-handle {
     display:block;
     background:linear-gradient(var(--mail-divider-direction,to right),
       var(--comm-soft) calc(50% - .5px), var(--mero-line) calc(50% - .5px) calc(50% + .5px), var(--mero-surface) calc(50% + .5px));

@@ -1,4 +1,4 @@
-import { field, item, section } from "./helpers.mjs"
+import { item, section } from "./helpers.mjs"
 
 export const workspaceNames = ["Atlas", "Beacon", "Cobalt", "Drift", "Iris", "Lumen", "Studio North"]
 

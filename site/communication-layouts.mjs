@@ -99,7 +99,7 @@ function mailScreen(state, params, options = {}) {
   const folders=[["inbox","Inbox",mail.length-state.archived.size],["archive","Archive",state.archived.size]];
   const sidebar=`<aside id="mail-message-list" class="comm-list" aria-label="Mail folders and messages"><nav class="comm-folders" aria-label="Mail folders">${folders.map(([id,name,count])=>`<a ${navigate("mail",{folder:id})}${folder===id?' aria-current="page"':""}>${icon(id)}${name}<span>${count}</span></a>`).join("")}</nav>
     <div class="comm-listing">${rows || '<p class="comm-list-empty">No messages in this folder.</p>'}</div></aside>`;
-  const divider = `<div class="rlw-split-handle" role="separator" tabindex="0"
+  const divider = `<div class="mero-ws-split-handle" role="separator" tabindex="0"
     aria-label="Resize message list" aria-controls="mail-message-list" aria-orientation="vertical"
     aria-valuemin="30" aria-valuemax="52" aria-valuenow="33"></div>`;
   let reader='<section class="comm-reader comm-empty"><p>Select a message to read it.</p></section>';
@@ -123,7 +123,7 @@ function mailScreen(state, params, options = {}) {
       </form></section>`;
   }
   return frame("mail","Studio mail","studio@north.example",Boolean(selected && params.has("thread")),
-    `<div class="comm-split comm-mail-split" data-rlw-split data-rlw-snap data-rlw-snap-key="mail-reader">${sidebar}${divider}${reader}</div>`,result,state.draftScope);
+    `<div class="comm-split comm-mail-split" data-mero-ws-split data-mero-ws-snap data-mero-ws-snap-key="mail-reader">${sidebar}${divider}${reader}</div>`,result,state.draftScope);
 }
 
 function chatScreen(state, params, options={}) {
