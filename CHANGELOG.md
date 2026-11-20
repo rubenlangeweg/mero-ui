@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Copied form dialogs now return focus to their own controls. The quality review includes screen-reader checks for seven admin interactions.
+
 - Pull requests and releases run the complete test suite in Chromium, Firefox and WebKit. Publishing waits for all three.
 - Remote comboboxes activate only options returned for the current query, including when Firefox restores a saved draft. Escape and empty results clear the active option.
 - Live Progress polls a status fragment while the tab is visible, keeps the last good status when a read fails and stops at the server’s terminal response.

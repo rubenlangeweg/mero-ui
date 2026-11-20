@@ -112,13 +112,14 @@
       }
       if (!aliases.size) continue;
       scopeAliases.set(scope, aliases);
-      const attributes = ["for", "aria-controls", "aria-labelledby", "aria-describedby", "aria-activedescendant", "popovertarget", "data-mero-open", "hx-target"];
+      const selectors = ["hx-target", "data-mero-return-focus", "data-mero-fallback-focus"];
+      const attributes = ["for", "aria-controls", "aria-labelledby", "aria-describedby", "aria-activedescendant", "popovertarget", "data-mero-open", ...selectors];
       for (const node of scope.querySelectorAll(attributes.map(attr => "[" + attr + "]").join(","))) {
         if (node.closest(selector) !== scope) continue;
         for (const attr of attributes) {
           const value = node.getAttribute(attr);
           if (!value) continue;
-          const updated = attr === "hx-target" ? (value[0] === "#" && aliases.has(value.slice(1)) ? "#" + aliases.get(value.slice(1)) : value)
+          const updated = selectors.includes(attr) ? (value[0] === "#" && aliases.has(value.slice(1)) ? "#" + aliases.get(value.slice(1)) : value)
             : value.split(/\s+/).map(id => aliases.get(id) ?? id).join(" ");
           if (updated !== value) node.setAttribute(attr, updated);
         }

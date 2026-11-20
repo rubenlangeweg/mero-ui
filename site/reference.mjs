@@ -53,7 +53,7 @@ const attributes = [
     ["data-mero-accordion", "On the parent of <code>&lt;details&gt;</code> elements. Only one stays open at a time."],
     ["data-mero-radio-group", "Around radios that sit outside a form. Repeated copies with the same <code>name</code> stay independent."],
     ["*data-mero-radio-owner", "On the hidden form Mero adds to own those radios."],
-    ["data-mero-scope", "On a repeated snippet or fragment. Mero renames duplicate IDs inside it and updates <code>for</code>, ARIA, <code>popovertarget</code>, <code>data-mero-open</code> and <code>hx-target</code> references to match."],
+    ["data-mero-scope", "On a repeated snippet or fragment. Mero renames duplicate IDs inside it and updates <code>for</code>, ARIA, <code>popovertarget</code>, <code>data-mero-open</code> and ID selectors in <code>hx-target</code>, <code>data-mero-return-focus</code> and <code>data-mero-fallback-focus</code> to match."],
     ["data-mero-listbox", "On a <code>role=\"listbox\"</code>. Adds arrow-key navigation and selection, and fires <code>mero:selection</code>."],
     ["data-mero-combo", "Root of a combobox. Wraps the <code>role=\"combobox\"</code> input and its options."],
     ["data-mero-combo-remote", "On the combobox root when the options come from your server. Mero then leaves filtering to the response."],
