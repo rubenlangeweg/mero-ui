@@ -21,10 +21,10 @@ When serving the site on a public domain, set `MERO_SITE_ORIGIN` to its full ori
 Install the UI assets from the [GitHub release](https://github.com/rubenlangeweg/mero-ui/releases) and HTMX from npm:
 
 ```sh
-npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.3.0/rubenlangeweg-mero-ui-0.3.0.tgz htmx.org@2
+npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.4.0/rubenlangeweg-mero-ui-0.4.0.tgz htmx.org@2
 ```
 
-To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.3.0/ui/mero.css`.
+To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.4.0/ui/mero.css`.
 
 Mero also runs on htmx 4: install `htmx.org@4` instead and read [Use htmx 4](#use-htmx-4). Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
 
