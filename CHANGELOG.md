@@ -1,0 +1,18 @@
+# Changelog
+
+## Unreleased
+
+- Import the server helpers as `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown`. Paths under `ui/` still work.
+- The docs list the `mero:*` events and the `window.MeroUI` functions under [Events and JavaScript](https://mero-ui.rubenlangeweg.com/docs/reference).
+
+## 0.3.0 · 20 November 2026
+
+- **Breaking:** the `rl-` prefix is now `mero-` in classes, `--mero-*` tokens and `data-mero-*` attributes. Workspace controls change from `rlw-` to `mero-ws-`, and `relay:*` events become `mero:*`.
+- **Breaking:** the package files moved from `public/` to `ui/`.
+- Mero runs on htmx 4 as well as htmx 2.
+
+To upgrade, replace the prefixes in your templates and stylesheets and update the copy path.
+
+## 0.2.0 · 20 November 2026
+
+- First release: HTML components and HTMX examples for server-rendered apps.
