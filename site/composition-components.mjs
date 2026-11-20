@@ -65,7 +65,7 @@ export const groups = [
         "indicator",
         "Indicator",
         "Anchor a quantity to an icon or action.",
-        `<a class="mero-indicator-anchor mero-button" href="/layouts/dashboard?view=inventory" aria-label="Inventory, 3 updates">Inventory<span class="mero-corner-count" aria-hidden="true">3</span></a>`,
+        `<a class="mero-indicator-anchor mero-button" href="/layouts/dashboard?view=inventory" aria-label="Inventory 3 updates">Inventory <span class="mero-corner-count" aria-hidden="true">3</span></a>`,
       ),
       example(
         "mask",

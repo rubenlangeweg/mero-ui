@@ -71,7 +71,7 @@ test("visitors can open each app from the layout gallery and return to the galle
   assert.equal(await showcase.getByRole("radio", { name: "Finance", exact: true }).isChecked(), true);
   await showcase.getByRole("link", { name: /open finance/i }).click();
   await page.waitForURL(url => url.pathname === "/layouts/finance");
-  await page.getByRole("link", { name: /^View .+ transaction$/i }).first().click();
+  await page.locator(".bu-posting").and(page.getByRole("link", { expanded: false })).first().click();
   await page.getByText("Reference", { exact: true }).waitFor();
   await page.waitForURL(url => url.searchParams.has("transaction"));
   await page.goBack();
@@ -161,7 +161,7 @@ test("the layout gallery downloads only matching viewport and theme captures", o
     await gallery.goto(new URL("/layouts", page.url()).href);
     assert.equal(art.size, 6);
     assert.ok([...art].every(path => path.endsWith("-" + suffix + ".webp")));
-    assert.equal(await gallery.getByRole("link", { name: "Mail", exact: true }).getAttribute("aria-describedby"), "layout-mail-description");
+    await gallery.getByRole("link", { name: /^Mail Read, reply to/ }).and(gallery.locator("#example-mail")).waitFor();
     await gallery.close();
   }
 });

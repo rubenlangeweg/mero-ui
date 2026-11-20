@@ -50,9 +50,9 @@ function destination(screen, params = {}) {
   const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value)).toString();
   return '/layouts/' + screen + (query ? '?' + query : '');
 }
-function link(href, label, { className = '', current = false, id = '', name = '' } = {}) {
+function link(href, label, { className = '', current = false, id = '', expanded, name = '' } = {}) {
   const safe = esc(href);
-  return `<a class="${className}" href="${safe}" hx-get="${safe}"${current ? ' aria-current="true"' : ''}${id ? ` id="${esc(id)}"` : ''}${name ? ` aria-label="${esc(name)}"` : ''}>${label}</a>`;
+  return `<a class="${className}" href="${safe}" hx-get="${safe}"${current ? ' aria-current="true"' : ''}${id ? ` id="${esc(id)}"` : ''}${expanded === undefined ? '' : ` aria-expanded="${expanded}"`}${name ? ` aria-label="${esc(name)}"` : ''}>${label}</a>`;
 }
 function dateLabel(iso) {
   return date(new Date(iso + 'T12:00:00Z'));
@@ -88,7 +88,7 @@ function crm(params) {
       <dl class="bu-forecast">${stat('Weighted forecast', money(weighted))}</dl></section>
     <div class="bu-filter-row"><h2>Opportunities</h2><nav class="bu-pills" aria-label="Filter deals by stage">${[{ id: '', name: 'All deals' }, ...stages].map(stage => link(destination('crm', { stage: stage.id }), esc(stage.name), { current: filter === stage.id, id: 'filter-' + (stage.id || 'all') })).join('')}</nav></div>
     <section class="bu-pipeline-list" aria-label="Opportunities and deal details"><div class="bu-list-count">${list.length} ${list.length === 1 ? 'opportunity' : 'opportunities'}<span>Value</span></div>
-    ${list.map(deal => link(destination('crm', { stage: filter, deal: deal.id }), `${mark(deal)}<span class="bu-company"><strong>${esc(deal.company)}</strong><small>${esc(deal.project)}</small></span><span class="bu-deal-cell">${stageText(deal.stage)}</span><b>${money(deal.amount)}</b>`, { className: 'bu-deal', current: selected === deal, id: 'deal-' + deal.id, name: `View ${deal.company} deal` }) + (selected === deal ? crmDetail(deal, list.length, params.get('deal') !== deal.id) : '')).join('')}</section>`;
+    ${list.map(deal => link(destination('crm', { stage: filter, deal: deal.id }), `${mark(deal)}<span class="bu-company"><strong>${esc(deal.company)}</strong><small>${esc(deal.project)}</small></span><span class="bu-deal-cell">${stageText(deal.stage)}</span><b>${money(deal.amount)}</b>`, { className: 'bu-deal', current: selected === deal, id: 'deal-' + deal.id }) + (selected === deal ? crmDetail(deal, list.length, params.get('deal') !== deal.id) : '')).join('')}</section>`;
 }
 function finance(params) {
   const period = periods.find(item => item.key === params.get('period')) || periods.at(-1);
@@ -100,7 +100,7 @@ function finance(params) {
   const incoming = entries.reduce((sum, item) => sum + Math.max(0, item.amount), 0);
   const data = [1, 8, 15, 22, period.end].map(day => ({ label: `${period.short} ${day}`, values: [entries.filter(item => Number(item.day.slice(-2)) <= day).reduce((sum, item) => sum + item.amount, opening)] }));
   const chart = renderChart({ type: 'area', title: 'Operating balance', series: ['Closing balance'], rows: data, numberFormat: { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }, axisNumberFormat: { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 0 } });
-  return `<header class="bu-head"><div><h1>Cash overview</h1><p>Operating account · USD</p></div><nav class="bu-pills" aria-label="Statement month">${periods.map(item => link(destination('finance', { period: item.key }), item.short, { current: item === period, id: 'period-' + item.key, name: `${item.name} 2026` })).join('')}</nav></header>
+  return `<header class="bu-head"><div><h1>Cash overview</h1><p>Operating account · USD</p></div><nav class="bu-pills" aria-label="Statement month">${periods.map(item => link(destination('finance', { period: item.key }), item.short, { current: item === period, id: 'period-' + item.key, name: `${item.short}, ${item.name} 2026` })).join('')}</nav></header>
     <div class="bu-finance-summary"><section class="bu-balance" aria-label="Monthly balance"><p>Closing balance</p><strong>${money(closing)}</strong><span>${esc(period.name)} ${period.end}, 2026</span>
       <dl class="bu-cash-movements">${stat('Opening balance', money(opening))}${stat('Money in', '+' + money(incoming), 'bu-income')}${stat('Money out', '−' + money(incoming - net))}</dl></section><div class="bu-chart">${chart}</div></div>
     <header class="bu-filter-row"><h2>Transactions</h2><span class="bu-meta">${period.name} 2026 · ${entries.length} entries</span></header>
@@ -108,7 +108,7 @@ function finance(params) {
       const isSelected = selected === item;
       const href = destination('finance', { period: period.key, transaction: isSelected ? '' : item.reference });
       const income = item.amount > 0;
-      return `<div class="bu-transaction${isSelected ? ' bu-expanded' : ''}">${link(href, `<span class="bu-transfer ${income ? 'bu-income' : ''}" aria-hidden="true">${income ? '↙' : '↗'}</span><span class="bu-company"><strong>${esc(item.name)}</strong><small>${esc(item.category)}</small></span><time datetime="${item.day}">${dateLabel(item.day)}</time><b class="${income ? 'bu-income' : ''}">${income ? '+' : '−'}${money(Math.abs(item.amount))}</b><span class="bu-chevron" aria-hidden="true"></span>`, { className: 'bu-posting', id: 'posting-' + item.reference, current: isSelected, name: `${isSelected ? 'Close' : 'View'} ${item.name} transaction` })}
+      return `<div class="bu-transaction${isSelected ? ' bu-expanded' : ''}">${link(href, `<span class="bu-transfer ${income ? 'bu-income' : ''}" aria-hidden="true">${income ? '↙' : '↗'}</span><span class="bu-company"><strong>${esc(item.name)}</strong><small>${esc(item.category)}</small></span><time datetime="${item.day}">${dateLabel(item.day)}</time><b class="${income ? 'bu-income' : ''}">${income ? '+' : '−'}${money(Math.abs(item.amount))}</b><span class="bu-chevron" aria-hidden="true"></span>`, { className: 'bu-posting', id: 'posting-' + item.reference, expanded: isSelected })}
       ${isSelected ? `<dl aria-label="Transaction details" class="bu-posting-details">${stat('Reference', item.reference)}${stat('Posted', dateLabel(item.day))}${stat('Direction', income ? 'Incoming transfer' : 'Outgoing transfer')}${stat('Status', 'Settled')}</dl>` : ''}</div>`;
     }).join('')}</div>`;
 }

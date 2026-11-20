@@ -40,9 +40,9 @@ function icon(path, size = 20) {
 
 function workflowNav(current) {
   return `<nav class="pg-workflows" aria-label="Playground workflows">${Object.entries(workflows).map(([id, item]) =>
-    `<a href="/playground${id === "inventory" ? "" : "?scenario=" + id}" aria-labelledby="pg-nav-${id}" aria-describedby="pg-nav-${id}-description"${id === current ? ' aria-current="page"' : ""}>
+    `<a href="/playground${id === "inventory" ? "" : "?scenario=" + id}"${id === current ? ' aria-current="page"' : ""}>
       <span class="pg-workflow-icon pg-icon-${id}">${icon(item.icon)}</span>
-      <span class="pg-workflow-copy"><strong id="pg-nav-${id}">${item.name}</strong><small id="pg-nav-${id}-description">${item.summary}</small></span>
+      <span class="pg-workflow-copy"><strong>${item.name}</strong><small>${item.summary}</small></span>
     </a>`).join("")}</nav>`;
 }
 

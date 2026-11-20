@@ -42,9 +42,9 @@ export function layoutGallery() {
       </div><a href="/layouts/dashboard" aria-label="Preview the Studio workspace">${artwork(studio.id)}</a>
     </article>
     <div class="app-gallery-grid">${examples.map(({ id, name, description }) => `
-      <a id="example-${id}" href="/layouts/${id}" class="app-gallery-card app-color-${id}" aria-labelledby="layout-${id}" aria-describedby="layout-${id}-description">
+      <a id="example-${id}" href="/layouts/${id}" class="app-gallery-card app-color-${id}">
         ${artwork(id)}
-        <div class="app-gallery-caption"><div><h2 id="layout-${id}">${name}</h2><p id="layout-${id}-description">${description}</p></div>
+        <div class="app-gallery-caption"><div><h2>${name}</h2><p>${description}</p></div>
           <span class="app-gallery-open">${icon("open")}</span></div>
       </a>`).join("")}</div>
     <a class="app-gallery-playground" href="/playground">Open the inventory playground ${icon("open")}</a>

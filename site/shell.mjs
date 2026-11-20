@@ -132,12 +132,12 @@ function homeLayouts(apps) {
         <input class="home-app-sr" type="radio" name="home-layout" id="home-layout-${id}" aria-controls="home-preview-${id}" ${index === 0 ? 'checked' : ''}>
         <label for="home-layout-${id}">${escape(name)}</label>
         <figure class="home-app-preview" id="home-preview-${id}">
-          <a href="/layouts/${id}" aria-label="Open ${escape(name)}" aria-describedby="home-description-${id}">
+          <a href="/layouts/${id}">
             <span class="home-app-mat"><span class="home-app-shot">${['dark','light'].map(mode => `<picture class="home-app-${mode}">
               <source media="(max-width: 38rem)" srcset="/example-${id}-${mode}-phone.webp" width="780" height="640">
               <img src="/example-${id}-${mode}.webp" width="1620" height="900" loading="lazy" decoding="async" alt="">
             </picture>`).join('')}</span></span>
-            <span class="home-app-caption"><span id="home-description-${id}">${escape(description)}</span><strong>Open ${escape(name)} <span aria-hidden="true">↗</span></strong></span>
+            <span class="home-app-caption"><span>${escape(description)}</span><strong>Open ${escape(name)} <span aria-hidden="true">↗</span></strong></span>
           </a>
         </figure>`).join('')}</div>
     </fieldset>

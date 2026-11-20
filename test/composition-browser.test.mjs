@@ -41,7 +41,7 @@ test("copied compositions align in both writing directions and retain their keyb
   });
   await page.goto(origin);
   const join = page.locator("#join");
-  const indicator = page.getByRole("link", { name: "Inventory, 3 updates" });
+  const indicator = page.getByRole("link", { name: "Inventory 3 updates" });
   for (const dir of ["ltr", "rtl"]) {
     await page.locator("html").evaluate((node, dir) => node.dir = dir, dir);
     const rounded = await join.evaluate(section => {

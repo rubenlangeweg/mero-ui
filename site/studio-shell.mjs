@@ -26,7 +26,7 @@ export function renderStudioShell(view, content, studio, { params = new URLSearc
   const counts = { companies: studio.companies.length, board: studio.tasks.length };
   return `<div id="studio-workspace" class="mero-app studio-workspace" hx-history="false" data-studio-view="${esc(view)}">
     <aside class="mero-app-nav studio-nav">
-      <a class="studio-identity" ${studioLink("overview", {}, params)} aria-label="${esc(brand)} workspace overview">
+      <a class="studio-identity" ${studioLink("overview", {}, params)}>
         <span class="studio-identity-mark">${icon("studio")}</span><span>${esc(brand)}<small>Team workspace</small></span>
       </a>
       <nav aria-label="Workspace">${navigation.map(([group, links]) => `<div class="studio-nav-group"><span class="studio-group-name">${group}</span>

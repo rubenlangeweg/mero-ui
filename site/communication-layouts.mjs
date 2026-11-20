@@ -71,8 +71,8 @@ function formAction(screen, action) {
 function hidden(name,value) { return `<input type="hidden" name="${name}" value="${esc(value)}">`; }
 function feedback(error) { return `<p class="comm-error" data-mero-form-error role="alert"${error?"":" hidden"}>${esc(error)}</p>`; }
 function coverAttachment() {
-  return `<a class="comm-attachment" href="/studio-lamp.webp" download="field-notes-cover.webp" aria-label="Download Field Notes cover photograph">
-    <img src="/studio-lamp.webp" alt="" width="72" height="52"><span><strong>Cover photograph</strong><small>WebP · 13 KB</small></span>${icon("download")}</a>`;
+  return `<a class="comm-attachment" href="/studio-lamp.webp" download="field-notes-cover.webp" aria-label="Cover photograph WebP · 13 KB, download Field Notes cover">
+    <img src="/studio-lamp.webp" alt="" width="72" height="52"><span><strong>Cover photograph</strong> <small>WebP · 13 KB</small></span>${icon("download")}</a>`;
 }
 function formState(options) {
   return { notice:"", focus:"", error:"", draft:"", ...options };
