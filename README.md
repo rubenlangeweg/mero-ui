@@ -18,13 +18,21 @@ When serving the site on a public domain, set `MERO_SITE_ORIGIN` to its full ori
 
 ## Use a component
 
-Install the UI assets and HTMX with `npm install @rubenlangeweg/mero-ui htmx.org@2`. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
+Install the UI assets from the [GitHub release](https://github.com/rubenlangeweg/mero-ui/releases) and HTMX from npm:
 
-Serve `ui/mero.css` and `ui/mero.js` from your app. Include HTMX 2.x for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. A sortable table sorts on the server through plain `?sort=` header links, so it works without JavaScript. Filter chips work the same way: each chip, the "+ Filter" menu items and "Clear all filters" are links to the URL with that query parameter changed. A `role="menu"` popover gets arrow-key, Home, End, typeahead, Escape and Tab handling from `mero.js`. A `dialog[data-mero-command]` holding a remote combobox opens on Cmd or Ctrl K and runs the chosen server option; use one per page, and not alongside the workspace Command.
+```sh
+npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.3.0/rubenlangeweg-mero-ui-0.3.0.tgz htmx.org@2
+```
+
+To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.3.0/ui/mero.css`.
+
+Mero also runs on htmx 4: install `htmx.org@4` instead and read [Use htmx 4](#use-htmx-4). Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
+
+Serve `ui/mero.css` and `ui/mero.js` from your app. Include HTMX 2.x or 4.x for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. A sortable table sorts on the server through plain `?sort=` header links, so it works without JavaScript. Filter chips work the same way: each chip, the "+ Filter" menu items and "Clear all filters" are links to the URL with that query parameter changed. A `role="menu"` popover gets arrow-key, Home, End, typeahead, Escape and Tab handling from `mero.js`. A `dialog[data-mero-command]` holding a remote combobox opens on Cmd or Ctrl K and runs the chosen server option; use one per page, and not alongside the workspace Command. The local catalog includes HTMX 2.0.11, HTMX 4.0.2 and Geist with their license notices.
 
 ### Return focus after Back
 
-Add `data-mero-restore-focus` to a list container. When someone opens a link in it and then presses Back, `mero.js` focuses that link again. This works after a full page load and after an HTMX history restore. Links are matched by their `href`, so keep row hrefs unique on the page. Mark one control in the container with `data-mero-focus-fallback`. It gets focus when an HTMX swap removes the focused element. The local catalog includes HTMX 2.0.11 and Geist with their license notices.
+Add `data-mero-restore-focus` to a list container. When someone opens a link in it and then presses Back, `mero.js` focuses that link again. This works after a full page load and after an HTMX history restore. Links are matched by their `href`, so keep row hrefs unique on the page. Mark one control in the container with `data-mero-focus-fallback`. It gets focus when an HTMX swap removes the focused element.
 
 ```html
 <link rel="stylesheet" href="/mero.css">
@@ -35,6 +43,18 @@ Add `data-mero-restore-focus` to a list container. When someone opens a link in 
 Use the [theme studio](http://127.0.0.1:4173/themes) to try colors, fonts and radii on real components or an app layout. Export the CSS, load it after `mero.css` and set `data-theme="light"` or `data-theme="dark"` on a document or section.
 
 Media uses `mero-gallery` assets. Collections use `mero-collections`. Workspace controls use `mero-workspace`. Charts and conversation examples use `mero-insights`. Presentation utilities use `mero-composition`. Each pair comprises a stylesheet and a deferred script. The two optional server helpers in `ui/insight-*.mjs` render charts and a small Markdown subset.
+
+## Use htmx 4
+
+The Mero scripts run on htmx 2.x and htmx 4.x. htmx 4 renamed its events and replaced the XHR in their detail with a fetch context. `mero.js` relays each htmx 4 event under its htmx 2 name and shape, so the other Mero scripts keep working. Load `mero.js` on every page that uses a Mero script.
+
+Three things differ on htmx 4:
+
+- **Inheritance.** The copyable markup sets `hx-target`, `hx-swap`, `hx-sync` and `hx-include` on a wrapper. htmx 4 only inherits attributes marked `:inherited`. Either add `<meta name="htmx-config" content='{"implicitInheritance":true}'>` or rename those wrapper attributes to `hx-target:inherited` and so on.
+- **Server responses.** Keep sending `HX-Trigger-After-Settle` for `mero:form-saved`. htmx 4 dropped that header and `mero.js` handles it. Read the `HX-Target` request header as `tag#id` (htmx 2 sends the bare id). An error response other than the documented 422, 409 or 413 is never swapped into a Mero component, although htmx 4 swaps error responses by default.
+- **The compatibility extension.** Do not load `htmx-2-compat` on a page with Mero scripts. It dispatches the old event names with the new detail, which the Mero handlers cannot read.
+
+Run the catalog and its tests on htmx 4 with `MERO_HTMX=4 npm start` and `MERO_HTMX=4 npm test`. CI runs both versions.
 
 ## Upgrade from 0.2
 

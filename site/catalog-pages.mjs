@@ -52,7 +52,7 @@ export function standalonePage(item, search) {
   const embedded = search.has("embed");
   const theme = search.get("theme");
   return `<!doctype html><html lang="en" data-theme="${theme === "light" || theme === "brand" ? "light" : "dark"}"${theme === "brand" ? " data-tenant-preview" : ""}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false}'>
+    <meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false,"includeIndicatorCSS":false,"implicitInheritance":true}'>
     <title>${esc(item.name)} · Mero UI</title>
     <meta name="robots" content="noindex">
     ${assetStyles(["site-fonts.css",...assets, "preview.css"])}

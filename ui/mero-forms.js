@@ -6,6 +6,7 @@
  * pending|succeeded|rejected|unknown: 2xx succeeded, 4xx (not 408) rejected,
  * anything else unknown. Mero-Action-Outcome and Mero-Action-Message headers
  * override the state and text; a bubbling mero:action event reports each step.
+ * Runs on htmx 2 and htmx 4: mero.js relays the htmx 4 events and that header.
  */
 (() => {
   const formSelector = "form[data-mero-form]";
@@ -37,9 +38,11 @@
   });
 
   document.addEventListener("htmx:beforeSwap", (event) => {
-    if (event.detail.xhr.status !== 422 || !requestForm(event)) return;
-    event.detail.shouldSwap = true;
-    event.detail.isError = false;
+    const status = event.detail.xhr.status;
+    if (status < 400 || !requestForm(event)) return;
+    // htmx 4 swaps every error response. Only a 422 carries a replacement form.
+    event.detail.shouldSwap = status === 422;
+    if (status === 422) event.detail.isError = false;
   });
 
   document.addEventListener("htmx:afterSettle", (event) => {
@@ -99,7 +102,8 @@
 
   // htmx queues a click made during a request and sends it later, so the guard runs before its sync logic.
   // aria-disabled instead of disabled keeps focus on the button.
-  document.addEventListener("htmx:confirm", (event) => {
+  // htmx 4 fires confirm only with hx-confirm, but its configRequest also precedes the sync queue.
+  for (const name of ["htmx:confirm", "htmx:configRequest"]) document.addEventListener(name, (event) => {
     if (actionOf(event)?.dataset.meroActionState === "pending") event.preventDefault();
   });
 
