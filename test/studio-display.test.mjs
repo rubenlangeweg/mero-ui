@@ -48,7 +48,7 @@ test('Studio resolves the host, saved choice and direct link without adding a Ba
   const calendarPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
   const calendar = calendarPage.getByRole('navigation', { name: 'Calendar view' });
   let initialRequests = 0;
-  const countRequest = request => { if (request.resourceType() === 'xhr') initialRequests++; };
+  const countRequest = request => { if (/xhr|fetch/.test(request.resourceType())) initialRequests++; };
   calendarPage.on('request', countRequest);
   await calendarPage.goto(base + '&view=calendar');
   await calendar.getByRole('link', { name: 'Week', current: 'page' }).waitFor();
@@ -64,7 +64,7 @@ test('Studio resolves the host, saved choice and direct link without adding a Ba
   await calendarPage.goto(base + '&view=calendar');
   await calendar.getByRole('link', { name: 'Agenda', current: 'page' }).waitFor();
   const currentLength = await calendarPage.evaluate(() => history.length);
-  const repeated = calendarPage.waitForResponse(response => response.request().resourceType() === 'xhr' && new URL(response.url()).searchParams.get('display') === 'agenda');
+  const repeated = calendarPage.waitForResponse(response => /xhr|fetch/.test(response.request().resourceType()) && new URL(response.url()).searchParams.get('display') === 'agenda');
   await calendar.getByRole('link', { name: 'Agenda', current: 'page' }).click();
   await repeated;
   await calendarPage.waitForFunction(() => !document.querySelector('#studio-workspace.htmx-settling'));
@@ -84,7 +84,7 @@ test('Studio resolves the host, saved choice and direct link without adding a Ba
   await page.evaluate(() => localStorage.clear());
   const held = Promise.withResolvers();
   t.after(() => held.resolve());
-  const isAlternate = request => request.resourceType() === 'xhr' &&
+  const isAlternate = request => /xhr|fetch/.test(request.resourceType()) &&
     new URL(request.url()).searchParams.get('display') === 'list';
   await page.route('**/layouts/dashboard?**', async route => {
     if (isAlternate(route.request())) await held.promise;

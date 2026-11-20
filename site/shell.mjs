@@ -57,7 +57,7 @@ export function embeddedLayout({title, content, assets, mode, tokens}) {
   });
   return `<!doctype html><html lang="en" data-theme="${theme === 'dark' ? 'dark' : 'light'}"${theme === 'brand' ? ' data-tenant-preview' : ''}${style}><head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false}'>
+    <meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false,"includeIndicatorCSS":false,"implicitInheritance":true}'>
     <title>${escape(title)} · Mero UI preview</title>
     <meta name="robots" content="noindex">
     ${assetStyles([...new Set(['site-fonts.css','mero.css', ...assets, 'site.css','lab.css', ...(theme === 'brand' ? ['preview.css'] : [])])])}
@@ -73,7 +73,7 @@ export function shell({ title = 'Mero UI', description, path = '/', origin, inde
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#09090a">
   <script>try { if (localStorage.getItem("mero-theme") === "light") document.documentElement.dataset.theme = "light" } catch {}</script>
-  <meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false}'>
+  <meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false,"includeIndicatorCSS":false,"implicitInheritance":true}'>
   ${seoHead({ title, description, path, origin, indexable })}
   <link rel="stylesheet" href="/site-fonts.css">
   ${assetStyles([...new Set(['mero.css', ...assets])])}

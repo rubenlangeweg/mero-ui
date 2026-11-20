@@ -76,6 +76,13 @@ test("settings and inventory recover visibly from validation, offline requests a
   assert.equal(await productName.inputValue(), "Offline draft");
   assert.equal(await saveProduct.isEnabled(), true);
   await page.unroute("**/demo/products/6");
+  // htmx 4 swaps error responses by default. A server error page must not replace the form.
+  await page.route("**/demo/products/6", route => route.fulfill({ status: 500, contentType: "text/html", body: "<p>Server exploded</p>" }));
+  await saveProduct.click();
+  await drawer.getByRole("alert").filter({ hasText: /could not be completed/ }).waitFor();
+  assert.equal(await drawer.getByText("Server exploded").count(), 0);
+  assert.equal(await productName.inputValue(), "Offline draft");
+  await page.unroute("**/demo/products/6");
   await saveProduct.click();
   await drawer.waitFor({ state: "hidden" });
   await page.getByRole("button", { name: "Edit Offline draft" }).waitFor();

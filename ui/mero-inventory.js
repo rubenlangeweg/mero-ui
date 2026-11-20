@@ -27,6 +27,11 @@
   document.addEventListener("htmx:beforeSwap", event => {
     const version = event.detail.xhr.getResponseHeader("Inventory-Revision");
     const lab = workbench(event);
+    // htmx 4 would swap a failed load into the results. Forms handle their own errors.
+    if (lab && event.detail.xhr.status >= 400 && !event.detail.requestConfig?.elt?.closest("[data-mero-form]")) {
+      event.detail.shouldSwap = false;
+      return;
+    }
     if (version === null || !lab) return;
     const request = event.detail.requestConfig;
     if (request?.verb === "get") {

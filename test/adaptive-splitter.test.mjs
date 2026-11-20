@@ -110,7 +110,7 @@ test("Mail keeps its pane width and snap point through an HTMX message change an
   for (const offset of [0, 1, -1]) await dropAtWidth(page, split, preferred + offset);
   const beforeSwap = await firstPaneWidth(split);
   const swapped = page.waitForResponse(response =>
-    response.request().resourceType() === "xhr" && new URL(response.url()).pathname === "/demo/layouts/mail");
+    ["xhr", "fetch"].includes(response.request().resourceType()) && new URL(response.url()).pathname === "/demo/layouts/mail");
   await mail.getByRole("link", { name: /Julian Park/ }).click();
   assert.equal((await swapped).status(), 200);
   await mail.getByLabel("Reply to Julian").waitFor();
