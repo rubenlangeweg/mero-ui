@@ -2,6 +2,7 @@
  * Optional HTMX form behavior. Server responses:
  * 422 + replacement form for validation, or HX-Trigger-After-Settle:
  * {"mero:form-saved":{"message":"Saved"}} after any successful swap.
+ * Runs on htmx 2 and htmx 4: mero.js relays the htmx 4 events and that header.
  */
 (() => {
   const formSelector = "form[data-mero-form]";
@@ -33,9 +34,11 @@
   });
 
   document.addEventListener("htmx:beforeSwap", (event) => {
-    if (event.detail.xhr.status !== 422 || !requestForm(event)) return;
-    event.detail.shouldSwap = true;
-    event.detail.isError = false;
+    const status = event.detail.xhr.status;
+    if (status < 400 || !requestForm(event)) return;
+    // htmx 4 swaps every error response. Only a 422 carries a replacement form.
+    event.detail.shouldSwap = status === 422;
+    if (status === 422) event.detail.isError = false;
   });
 
   document.addEventListener("htmx:afterSettle", (event) => {

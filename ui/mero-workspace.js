@@ -573,7 +573,8 @@
     if ([413,422].includes(event.detail.xhr.status)) {
       event.detail.shouldSwap = true;
       event.detail.isError = false;
-    }
+    // htmx 4 swaps every error response. Only the two above carry a replacement.
+    } else if (event.detail.xhr.status >= 400) event.detail.shouldSwap = false;
   });
   document.addEventListener("htmx:afterRequest", event => {
     const form = event.detail.requestConfig?.elt?.closest("form");

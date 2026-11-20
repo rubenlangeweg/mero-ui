@@ -53,9 +53,11 @@
       event.detail.shouldSwap = false;
       return;
     }
-    if (event.detail.target.matches?.('[data-mero-agenda]') && event.detail.xhr.status === 422) {
-      event.detail.shouldSwap = true;
-      event.detail.isError = false;
+    const status = event.detail.xhr.status;
+    if (event.detail.target.matches?.('[data-mero-agenda]') && status >= 400) {
+      // htmx 4 swaps every error response. Only these carry a replacement.
+      event.detail.shouldSwap = status === 422;
+      if (status === 422) event.detail.isError = false;
       return;
     }
     if (!event.detail.target.matches?.(gridSelector)) return;
@@ -64,10 +66,10 @@
       event.detail.shouldSwap = false;
       return;
     }
-    if (event.detail.xhr.status === 422 || event.detail.xhr.status === 409) {
+    if (status === 422 || status === 409) {
       event.detail.shouldSwap = true;
       event.detail.isError = false;
-    }
+    } else if (status >= 400) event.detail.shouldSwap = false;
   });
   document.addEventListener('htmx:afterRequest', event => {
     if (!event.detail.failed) return;
