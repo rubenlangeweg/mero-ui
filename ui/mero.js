@@ -614,15 +614,34 @@
       for (const task of tasks) swapRequests.set(task, ctx);
       const detail = { ...legacyRequest(ctx), shouldSwap: true, isError: ctx.response?.status >= 400, serverResponse: ctx.text };
       relay(event, "htmx:beforeSwap", detail.target, detail);
+      // As in htmx 2, a handler that accepts an error response also clears its failure.
+      legacyRequests.get(ctx).failed = detail.isError;
       if (!detail.shouldSwap) event.preventDefault();
     },
+    // htmx 4 settles each task before after:swap. htmx 2 settles afterwards, so hold these back.
     "htmx:after:settle": event => {
       const ctx = swapRequests.get(event.detail.task);
-      relay(event, "htmx:afterSettle", event.target, ctx ? legacyRequest(ctx) : {});
+      const settle = () => relay(event, "htmx:afterSettle", event.detail.task.target ?? document, ctx ? legacyRequest(ctx) : {});
+      const info = ctx && legacyRequests.get(ctx);
+      if (info) (info.settles ??= []).push(settle);
+      else settle();
+    },
+    "htmx:finally:swap": event => {
+      const { ctx } = event.detail;
+      const info = legacyRequests.get(ctx);
+      if (!info) return;
+      const source = info.requestConfig.elt;
+      // htmx 4 dropped these two headers. Mero keeps one server contract for both
+      // versions, and like htmx 2 only honours them once a swap was accepted.
+      if (info.swapped) triggerHeader(ctx, "HX-Trigger-After-Swap", source);
+      for (const settle of info.settles?.splice(0) ?? []) settle();
+      if (info.swapped) triggerHeader(ctx, "HX-Trigger-After-Settle", source);
     },
     "htmx:after:swap": event => {
       const { ctx } = event.detail;
-      relay(event, "htmx:afterSwap", event.target, legacyRequest(ctx));
+      const detail = legacyRequest(ctx);
+      legacyRequests.get(ctx).swapped = true;
+      relay(event, "htmx:afterSwap", event.target, detail);
       if (!ctx.request?.headers?.["HX-History-Restore-Request"]) return;
       // htmx 4 restores inside a Navigation API transition. The browser resets focus
       // and scroll when that ends, so a restore handler has to run afterwards.
@@ -639,11 +658,9 @@
       if (!ctx.response && !String(ctx.status).startsWith("error")) return;
       const detail = legacyRequest(ctx);
       const source = detail.requestConfig.elt;
-      const successful = ctx.response?.status >= 200 && ctx.response.status < 400;
-      // htmx 4 dropped these two headers. Mero keeps one server contract for both versions.
-      triggerHeader(ctx, "HX-Trigger-After-Swap", source);
-      triggerHeader(ctx, "HX-Trigger-After-Settle", source);
-      relay(event, "htmx:afterRequest", source, { ...detail, successful, failed: !successful });
+      const failed = !ctx.response || (legacyRequests.get(ctx).failed ?? ctx.response.status >= 400);
+      const successful = !failed;
+      relay(event, "htmx:afterRequest", source, { ...detail, successful, failed });
       // As in htmx 2, the cause of a missing response follows afterRequest.
       const signal = ctx.request.signal;
       if (!ctx.response) relay(event, signal?.reason === "timeout" ? "htmx:timeout" : signal?.aborted ? "htmx:sendAbort" : "htmx:sendError", source, { ...detail });

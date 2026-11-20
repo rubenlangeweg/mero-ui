@@ -564,6 +564,8 @@
   }
   document.addEventListener("htmx:beforeSwap", event => {
     const form = event.detail.requestConfig?.elt?.closest("form");
+    // A filter has no error replacement. htmx 4 would swap the error into its results.
+    if (form?.matches(".mero-ws-filter") && event.detail.xhr.status >= 400) event.detail.shouldSwap = false;
     if (!form?.matches("[data-mero-ws-upload],[data-mero-ws-editor],[data-mero-ws-wizard],.mero-ws-cell")) return;
     if (staleUpload(form,event.detail.xhr)) {
       event.detail.shouldSwap = false;
