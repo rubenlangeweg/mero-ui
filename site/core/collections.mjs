@@ -9,7 +9,31 @@ export const groups = [
         <a class="mero-menu-item" href="/playground">Run the playground</a>
         <a class="mero-menu-item" href="/start">Read the quickstart</a>
       </div>`,
-      "These destinations are ordinary links. Tab moves through the popup and Escape closes it."),
+      "These destinations are ordinary links. Tab moves through the popup and Escape closes it. For actions with arrow-key navigation, use Menu Button."),
+    item("menu-button", "Menu Button", "Open row actions and move through them with the arrow keys.", `
+      <ul class="mero-stack">
+        <li class="mero-row">
+          <span>Arc Task Lamp</span>
+          <button class="mero-button mero-button-ghost mero-button-sm" type="button" popovertarget="row-1-actions" aria-haspopup="menu" aria-expanded="false" aria-label="Actions for Arc Task Lamp">Actions</button>
+          <div class="mero-popover mero-menu" id="row-1-actions" popover role="menu" aria-label="Arc Task Lamp actions">
+            <a class="mero-menu-item" role="menuitem" href="/components/sortable-table">Open details</a>
+            <button class="mero-menu-item" role="menuitem" type="button" data-mero-toast="Arc Task Lamp duplicated">Duplicate</button>
+            <button class="mero-menu-item" role="menuitem" type="button" data-mero-toast="Arc Task Lamp archived">Archive</button>
+            <button class="mero-menu-item" role="menuitem" type="button" aria-disabled="true">Delete</button>
+          </div>
+        </li>
+        <li class="mero-row">
+          <span>Halo Pendant</span>
+          <button class="mero-button mero-button-ghost mero-button-sm" type="button" popovertarget="row-2-actions" aria-haspopup="menu" aria-expanded="false" aria-label="Actions for Halo Pendant">Actions</button>
+          <div class="mero-popover mero-menu" id="row-2-actions" popover role="menu" aria-label="Halo Pendant actions">
+            <a class="mero-menu-item" role="menuitem" href="/components/sortable-table">Open details</a>
+            <button class="mero-menu-item" role="menuitem" type="button" data-mero-toast="Halo Pendant duplicated">Duplicate</button>
+            <button class="mero-menu-item" role="menuitem" type="button" data-mero-toast="Halo Pendant archived">Archive</button>
+            <button class="mero-menu-item" role="menuitem" type="button" aria-disabled="true">Delete</button>
+          </div>
+        </li>
+      </ul>`,
+      "Enter, Space or Down Arrow opens the menu on its first item, and Up Arrow on its last. Arrow keys, Home, End and a typed letter move between items. Escape closes the menu and returns focus to the button. Tab closes it and moves on."),
     item("list-box", "List Box", "Present a selectable collection with arrow-key navigation.", `
       <ul class="mero-listbox" role="listbox" aria-label="Workspace" data-mero-listbox>
         <li class="mero-option" id="listbox-atlas" role="option" aria-selected="true" tabindex="0">Atlas</li>

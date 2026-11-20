@@ -62,7 +62,7 @@ export function interactiveExample({
 export function selectVariant(item, search) {
   const requested = search.get("variant");
   const variants = [
-    { name: "Default", demo: item.demo, code: item.code ?? item.demo },
+    { name: "Default", demo: item.render ? item.render(search) : item.demo, code: item.code ?? item.demo },
     ...(item.variants ?? []),
   ];
   const index = variants.findIndex((variant) => variant.name === requested);

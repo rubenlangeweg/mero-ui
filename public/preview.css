@@ -1,7 +1,8 @@
 .doc-standalone { margin:0; min-height:100svh; display:grid; place-items:safe center; padding:clamp(12px,4vw,40px); background:var(--mero-bg); color:var(--mero-text); font:15px/1.5 var(--mero-font); }
 .doc-standalone > main { width:min(100%,70rem); min-width:0; display:grid; justify-items:safe center; }
 @layer mero-preview-defaults {
-  .doc-standalone > main > *, .docs-preview > * { max-width:100%; min-width:0; }
+  /* .mero-scope is display: contents, so its children are the grid items. */
+  .doc-standalone > main > *, .docs-preview > *, :is(.doc-standalone > main, .docs-preview) > .mero-scope > * { max-width:100%; min-width:0; }
   .doc-standalone, .doc-standalone :where(*, *::before, *::after) { box-sizing:border-box; }
 }
 .doc-standalone.is-embedded{padding:14px;font-size:14px;overflow-x:hidden}
