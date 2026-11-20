@@ -96,8 +96,8 @@ test("resize the directory, select with the keyboard and restore its previous re
   await native.goto(base);
   const compact = native.locator("#guide-preview");
   await compact.getByRole("link", { name: /Arc & Field/ }).click();
-  assert.ok(await compact.getByRole("heading", { name: "Arc & Field" }).isVisible());
+  await compact.getByRole("heading", { name: "Arc & Field" }).waitFor();
   await compact.getByRole("link", { name: "Company directory" }).click();
-  assert.ok(await compact.getByRole("navigation", { name: "Company directory" }).isVisible());
+  await compact.getByRole("navigation", { name: "Company directory" }).waitFor();
   assert.ok(await native.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
 });

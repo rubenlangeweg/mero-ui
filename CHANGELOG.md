@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 · 20 November 2026
+
+- Sortable Table and Filter Chips show labelled cards below 768 px. Sorting, row actions and focus on Back work in both layouts.
+- Remote comboboxes activate only options returned for the current query, including when Firefox restores a saved draft. Escape and empty results clear the active option.
+- Pull requests and releases run the complete test suite in Chromium, Firefox and WebKit. Publishing waits for all three.
+- The command menu accepts named result groups. Arrow keys cross groups, Home and End reach the first and last result, and the live status counts selectable options.
+- Live Progress polls a status fragment while the tab is visible, keeps the last good status when a read fails and stops at the server’s terminal response.
+- Typed Confirmation gates destructive forms on an exact phrase and an optional required reason. It keeps the dialog open on validation errors, rejection and unknown outcomes.
+- Copied form dialogs now return focus to their own controls. The quality review includes screen-reader checks for seven admin interactions.
+
 ## 0.5.1 · 20 November 2026
 
 - A failed Studio view switch no longer replaces the workspace with the error response. htmx 4 swaps error responses by default.

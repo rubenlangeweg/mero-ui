@@ -1,4 +1,23 @@
+import { escapeHtml } from "../html.mjs"
 import { item, section } from "./helpers.mjs"
+import { typedConfirmation } from "./typed-confirmation.mjs"
+
+export function commandResults(query, pages) {
+  const matches = name => name.toLowerCase().includes(query)
+  const actions = matches("Export catalog")
+    ? ['<div class="mero-option" role="option" aria-selected="false" id="cmd-export" data-mero-toast="Export requested">Export catalog</div>']
+    : []
+  const links = pages.filter(({ name }) => matches(name)).slice(0, query ? 6 - actions.length : 4).map(({ id, name }) =>
+    `<a class="mero-option" role="option" aria-selected="false" tabindex="-1" id="cmd-${id}" href="/components/${id}">${escapeHtml(name)}</a>`)
+  return [["Pages", links], ["Actions", actions]].filter(([, options]) => options.length).map(([name, options]) => {
+    // aria-labelledby exposes the visible heading as the group name. Only options belong in its accessible children.
+    const heading = `cmd-group-${name.toLowerCase()}`
+    return `<div role="group" aria-labelledby="${heading}">
+  <h3 class="mero-command-heading" aria-hidden="true" id="${heading}">${name}</h3>
+  ${options.join("\n  ")}
+</div>`
+  }).join("\n") || '<div class="mero-option" role="option" aria-disabled="true" id="cmd-empty">No results</div>'
+}
 
 function overlay(id, name, intro, options = {}) {
   const { variant = "", trigger = name, action, role = "" } = options
@@ -22,6 +41,7 @@ export const groups = [
     item("alert-dialog", "Alert Dialog", "Ask for confirmation on a decision that calls for attention.",
       overlay("demo-alert-dialog", "Archive project?", "This removes the project from active views.", { trigger: "Archive project", action: "Archive", role: "alertdialog" }),
       "Focus starts on Cancel. Connect the confirmation to a form action in your application."),
+    typedConfirmation,
     item("drawer", "Drawer", "Open a full-height edge panel for work that benefits from more room.",
       overlay("demo-drawer", "Review deployment", "The staging build is ready to review.", { variant: "drawer", trigger: "Open drawer" })),
     item("modal", "Modal", "Open a centered, named dialog with native focus containment.",
@@ -34,11 +54,13 @@ export const groups = [
             aria-controls="demo-command-options" aria-autocomplete="list" autocomplete="off" placeholder="Search pages and actions…" autofocus
             hx-get="/demo/catalog/command-menu" hx-trigger="input changed delay:150ms, mero:query"
             hx-target="next [role=listbox]" hx-swap="innerHTML" hx-sync="this:replace">
-          <div class="mero-listbox mero-combo-list" id="demo-command-options" role="listbox" aria-label="Commands" hidden></div>
+          <div class="mero-listbox mero-combo-list" id="demo-command-options" role="listbox" aria-label="Commands" hidden>
+            ${commandResults("", [{ id: "button", name: "Button" }]).replaceAll("\n", "\n            ")}
+          </div>
           <span class="mero-description" data-mero-combo-status role="status"></span>
         </div>
       </dialog>`,
-      "The input requests matching options from your server as you type. Arrow keys move through results, Enter opens a link or runs an action, and Escape closes the list and then the dialog, returning focus to where you were. Link the trigger to a search page for visitors without JavaScript. Use either this or the workspace Command on a page, not both."),
+      "Return each group with a visible heading and a unique ID for every option. Omit empty groups. For an empty search result, return one disabled option with the text “No results”. Arrow keys move across groups. Home and End reach the first and last result. Enter follows the link or runs the action. Escape closes the results, then the dialog, and returns focus to the opener. Give the shortcut to one command menu per page."),
     item("popover", "Popover", "Display contextual information using the browser’s top layer.", `
       <button class="mero-button mero-button-outline" type="button" popovertarget="demo-popover">Deployment info</button>
       <div class="mero-popover" id="demo-popover" popover>

@@ -3,8 +3,16 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_call:
 jobs:
   test:
+    name: Test (${{ matrix.browser }})
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    env:
+      MERO_BROWSER: ${{ matrix.browser }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -14,6 +22,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps "${{ matrix.browser }}"
       - run: npm test
-      - run: npm run pack:ui
+      - if: matrix.browser == 'chromium'
+        run: npm run pack:ui

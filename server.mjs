@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { pathToFileURL } from "node:url";
+import { confirmationResponse } from "./site/core/typed-confirmation.mjs";
 import { catalogFragment } from "./site/core-components.mjs";
 import { groups, components, moduleAssets } from "./site/catalog.mjs";
 import { catalogIndex, componentPage, exampleAssets, standalonePage } from "./site/catalog-pages.mjs";
@@ -261,6 +262,17 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     });
   }
 
+  // The demo carries its start time in the fragment so independent previews run independently.
+  function liveProgressDemo({ response, searchParams }) {
+    const now = Date.now();
+    const since = Number(searchParams.get("started"));
+    const started = since > 0 && since <= now ? since : now;
+    const done = now - started >= 5000;
+    const body = `<span class="mero-badge mero-badge-dot">${done ? "Succeeded" : "Running"}</span>
+      <input type="hidden" name="started" value="${started}">`;
+    return send(response, body, { headers: { "Cache-Control": "no-store", ...(done ? { "Mero-Live": "done" } : {}) } });
+  }
+
   function catalogDemo({ response, pathname, searchParams }) {
     const html = catalogFragment(pathname.slice("/demo/catalog/".length), searchParams);
     if (html == null) return false;
@@ -275,6 +287,15 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     return send(response, renderSettingsForm(settings), { headers: {
       "HX-Trigger": JSON.stringify({ "mero:form-saved": { target: "#layout-settings", message: "Settings saved" } }),
     } });
+  }
+
+  async function typedConfirmationDemo({ request, response, searchParams }) {
+    const params = await formBody(request);
+    if (!params) return send(response, "Form is too large.", { status: 413 });
+    const requested = searchParams.get("outcome");
+    const outcome = ["rejected", "unknown"].includes(requested) ? requested : undefined;
+    const { body = "", status, headers } = confirmationResponse(params, outcome);
+    return send(response, body, { status, headers });
   }
 
   function actionDemo({ response, searchParams }) {
@@ -336,9 +357,11 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     ["*", /^\/demo\/collections\//, ({ request, response, url }) => handleCollectionRequest(request, response, url, store)],
     ["*", /^\/demo\/insights\//, ({ request, response, url }) => handleInsightRequest(request, response, url)],
     ["*", /^\/demo\/workspace\//, ({ request, response, url }) => handleWorkspaceRequest(request, response, url)],
+    ["GET", "/demo/catalog/live-progress", liveProgressDemo],
     ["GET", /^\/demo\/catalog\//, catalogDemo],
     ["POST", "/demo/settings", saveSettings],
     ["POST", "/demo/catalog/action-button", actionDemo],
+    ["POST", "/demo/catalog/typed-confirmation", typedConfirmationDemo],
     ["*", /^\/demo\//, demoNotFound],
     ...(serveFiles ? [["GET", /^\/(?:fonts\/|vendor\/)?[a-z0-9.-]+$/i, staticAsset]] : []),
   ];

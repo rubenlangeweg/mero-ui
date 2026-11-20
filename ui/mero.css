@@ -398,6 +398,10 @@
 :where(.mero-alert-title) { font-weight: 650; }
 :where(.mero-alert p) { margin: 0; }
 
+:where(.mero-live) { inline-size: min(100%, 22rem); }
+:where(.mero-live-status) { margin-block-start: .75rem; }
+:where(.mero-live [data-mero-live-retry][hidden]) { display: none; }
+
 :where(.mero-progress, .mero-meter) { appearance: none; display: block; inline-size: 100%; block-size: .5rem; border: 0; border-radius: 99rem; background: var(--mero-hover); overflow: hidden; }
 :where(.mero-field:has(> .mero-meter, > .mero-progress)) { inline-size: min(100%, 16rem); }
 :where(.mero-measure-label) { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; }
@@ -477,6 +481,43 @@
 :where(.mero-table tr:has(.mero-row-link)) :where(a, button, input, select):not(.mero-row-link) { position: relative; z-index: 1; }
 :where(.mero-row-link):focus-visible { outline: none; }
 :where(.mero-table tr:has(.mero-row-link:focus-visible)) { outline: 2px solid var(--mero-accent); outline-offset: -2px; }
+
+/* Give size-contained cards an intrinsic width in centered grids and other shrink-to-fit layouts. */
+:where(.mero-table-cards, .mero-table-cards-wide) { contain-intrinsic-inline-size: 25rem; }
+:where([data-mero-cell-label], .mero-table-sort-label) { display: none; }
+@media (width < 48rem) {
+  :where(.mero-table-cards) { container: mero-table-cards / inline-size; overflow: visible; }
+}
+@media (width < 64rem) {
+  :where(.mero-table-cards-wide) { container: mero-table-cards / inline-size; overflow: visible; }
+}
+@container mero-table-cards (min-width: 0px) {
+  :where(.mero-table, .mero-table caption, .mero-table thead) { display: block; }
+  :where(.mero-table-sort-label) { display: block; margin-block-start: .75rem; font-weight: 600; }
+  :where(.mero-table thead tr) { display: flex; flex-wrap: wrap; gap: .4rem; margin-block-end: .75rem; }
+  :where(.mero-table thead th) { padding: 0; background: none; border: 0; }
+  :where(.mero-table thead th:not(:has(a))) {
+    position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%);
+  }
+  :where(.mero-table thead a) {
+    align-items: center; min-block-size: 2rem; padding-inline: .65rem;
+    border: 1px solid var(--mero-line); border-radius: var(--mero-radius);
+  }
+  :where(.mero-table thead [aria-sort] a) { background: var(--mero-raised); color: var(--mero-text); }
+  :where(.mero-table tbody) { display: grid; gap: .65rem; }
+  :where(.mero-table tbody tr) {
+    display: grid; min-inline-size: 0; padding: .55rem .8rem;
+    border: 1px solid var(--mero-line); border-radius: var(--mero-radius);
+    background: var(--mero-surface);
+  }
+  :where(.mero-table tbody :is(th, td)) {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: center;
+    justify-items: start; gap: .6rem; padding: .28rem 0; border: 0; white-space: normal; overflow-wrap: anywhere;
+  }
+  :where(.mero-table td[colspan]) { display: block; }
+  :where(.mero-table [data-mero-cell-label]) { display: inline; color: var(--mero-muted); font-size: .76rem; }
+  :where(.mero-table .mero-row-link) { font-weight: 600; }
+}
 
 :where(.mero-calendar) { inline-size: min(100%, 20rem); }
 :where(.mero-calendar-table) { border-collapse: collapse; inline-size: 100%; margin-block-start: .55rem; table-layout: fixed; text-align: center; }
@@ -615,6 +656,11 @@
 :where(.mero-dialog-body) { padding: 1.2rem; }
 :where(.mero-dialog-title, .mero-dialog h2) { margin: 0; color: var(--mero-text); font: 660 1.18rem/1.25 var(--mero-font); }
 :where(.mero-dialog-title + .mero-description) { margin-block-start: .4rem; }
+:where(.mero-confirm-phrase) {
+  color: var(--mero-text);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
 :where(.mero-dialog-header) { display: flex; align-items: center; justify-content: space-between; gap: .7rem; margin-block-end: .9rem; }
 :where(.mero-dialog-footer) { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .5rem; margin-block-start: .9rem; }
 
@@ -660,10 +706,13 @@
   }
   :where(.mero-dialog[open])::backdrop { background: #12141965; backdrop-filter: blur(3px); }
   @starting-style {
-    :where(.mero-dialog[open]) { opacity: 0; translate: var(--mero-offset-x) var(--mero-offset-y); }
+    :where(.mero-dialog[open]) { opacity: var(--mero-enter-opacity, 0); translate: var(--mero-offset-x) var(--mero-offset-y); }
     :where(.mero-dialog[open])::backdrop { background: transparent; backdrop-filter: none; }
   }
 }
+
+/* A full-height drawer over a dense page can stall WebKit's software renderer when it blurs the entire backdrop. */
+:where(.mero-drawer)::backdrop { backdrop-filter: none; }
 
 :where(.mero-popover, .mero-tooltip-content, .mero-menu, .mero-listbox, .mero-list-box) {
   box-sizing: border-box;
@@ -746,8 +795,11 @@
   max-block-size: 12rem;
   overflow: auto;
 }
-:where(.mero-command) { inline-size: min(36rem, calc(100% - 2rem)); margin-block-start: 12vh; padding: .5rem; }
+/* Command results accept keyboard input immediately, including during entry. */
+:where(.mero-command) { --mero-enter-opacity: 1; inline-size: min(36rem, calc(100% - 2rem)); margin-block-start: 12vh; padding: .5rem; }
 :where(.mero-command .mero-combo-list:not([hidden])) { position: static; max-block-size: min(50vh, 24rem); margin-block-start: .35rem; box-shadow: none; }
+:where(.mero-command-heading) { margin: 0; padding: .55rem .56rem .15rem; color: var(--mero-muted); font-size: .78rem; font-weight: 600; }
+:where(.mero-command [role="group"] + [role="group"]) { margin-block-start: .3rem; border-block-start: 1px solid var(--mero-line); }
 :where(.mero-option small) { margin-inline-start: auto; color: var(--mero-muted); }
 :where(.mero-scroll-shadow) {
   max-block-size: var(--mero-scroll-height, 10rem);
@@ -813,8 +865,8 @@
 :where(.mero-button > .mero-button-label, .mero-button > .mero-button-label ~ .mero-indicator) { grid-area: 1 / 1; }
 :where(.htmx-request, [data-mero-pending]) :where(.mero-button-label:has(~ .mero-indicator)) { opacity: 0; }
 
-@keyframes mero-panel-in { from { opacity: 0; transform: translateY(.24rem); } }
-@keyframes mero-overlay-in { from { opacity: 0; transform: translate(var(--mero-offset-x, 0), var(--mero-offset-y, .5rem)); } }
+@keyframes mero-panel-in { from { opacity: var(--mero-enter-opacity, 0); transform: translateY(.24rem); } }
+@keyframes mero-overlay-in { from { opacity: var(--mero-enter-opacity, 0); transform: translate(var(--mero-offset-x, 0), var(--mero-offset-y, .5rem)); } }
 @keyframes mero-fade-in { from { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {

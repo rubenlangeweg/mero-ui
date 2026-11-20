@@ -45,6 +45,8 @@ test("catalog discovery, exported previews and the HTTP inspector", options, asy
   await family.selectOption({ label: "Media galleries" });
   assert.equal(await page.locator(".catalog-category:visible").count(), 1);
   await search.fill("thumbnails");
+  // Reload the committed filter URL. Chromium can acknowledge the input before its history update arrives.
+  await page.waitForURL(url => url.searchParams.get("q") === "thumbnails" && url.searchParams.get("family") === "group-media-galleries");
   await page.reload();
   assert.equal(await cards.count(), 1);
   assert.match(await family.inputValue(), /media-galleries/);

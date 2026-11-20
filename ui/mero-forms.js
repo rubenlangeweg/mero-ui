@@ -9,6 +9,7 @@
  */
 (() => {
   const formSelector = "form[data-mero-form]";
+  const confirmSelector = "form[data-mero-form][data-mero-confirm]";
   const requesting = new WeakMap();
   const formRequests = new WeakMap();
   // htmx 4 also reports requests a before:request listener cancelled: no response, still "issuing".
@@ -24,6 +25,47 @@
     }
   }
 
+  function checkConfirmation(form) {
+    const expected = form.querySelector("[data-mero-confirm-phrase]")?.textContent.trim();
+    const typed = form.querySelector("[data-mero-confirm-input]")?.value.trim();
+    const reason = form.querySelector("[data-mero-confirm-reason][required]");
+    const matches = Boolean(expected && typed === expected);
+    const ready = matches && (!reason || Boolean(reason.value.trim()));
+    for (const button of form.querySelectorAll("[data-mero-confirm-submit]")) {
+      button.disabled = !ready || requesting.has(form);
+    }
+    const hint = form.querySelector("[data-mero-confirm-hint]");
+    const message = !matches ? "Type the phrase exactly to enable confirmation."
+      : !ready ? "Phrase matches. Enter a reason to enable confirmation." : "Ready to confirm.";
+    if (hint && hint.textContent !== message) hint.textContent = message;
+    return ready;
+  }
+
+  document.addEventListener("input", event => {
+    const form = event.target.closest?.(confirmSelector);
+    if (form) checkConfirmation(form);
+  });
+  document.addEventListener("htmx:after:init", event => {
+    if (event.target.matches?.(confirmSelector)) checkConfirmation(event.target);
+  });
+  document.addEventListener("reset", event => {
+    if (event.target.matches(confirmSelector)) queueMicrotask(() => checkConfirmation(event.target));
+  });
+  document.addEventListener("close", event => {
+    if (!event.target.matches?.("dialog") || event.target.open) return;
+    for (const form of event.target.querySelectorAll(confirmSelector)) {
+      const input = form.querySelector("[data-mero-confirm-input]");
+      if (input) input.value = "";
+      checkConfirmation(form);
+    }
+  }, true);
+
+  // Guard implicit and scripted submissions too, before htmx can queue a duplicate.
+  document.addEventListener("htmx:config:request", event => {
+    const form = requestForm(event);
+    if (form?.matches(confirmSelector) && (!checkConfirmation(form) || requesting.has(form))) event.preventDefault();
+  });
+
   document.addEventListener("htmx:before:request", (event) => {
     const form = requestForm(event);
     if (!form) return;
@@ -33,7 +75,7 @@
     }
     formRequests.set(event.detail.ctx, form);
     const buttons = [...form.elements].filter(control => !control.disabled && (control.type === "submit" || control.type === "image"));
-    requesting.set(form, buttons);
+    requesting.set(form, { buttons, ctx: event.detail.ctx });
     form.setAttribute("aria-busy", "true");
     buttons.forEach((button) => { button.disabled = true; });
     const error = form.querySelector("[data-mero-form-error]");
@@ -70,10 +112,20 @@
     // A cancelled duplicate has no entry, so it never releases the request still in flight.
     if (!form) return;
     form.removeAttribute("aria-busy");
-    requesting.get(form)?.forEach((button) => { button.disabled = false; });
+    requesting.get(form)?.buttons.forEach((button) => { button.disabled = false; });
     requesting.delete(form);
+    const typed = form.matches(confirmSelector);
+    if (typed) checkConfirmation(form);
     if (cancelled(ctx)) return;
     const status = ctx.response?.status;
+    if (typed) {
+      if (!status || status >= 500 || String(ctx.status).startsWith("error")) {
+        showError(form, "Outcome unknown. Check the current state before retrying.");
+      } else if (status >= 400 && status !== 422) {
+        showError(form, ctx.response.headers.get("Mero-Form-Error") || "The server rejected this action.");
+      }
+      return;
+    }
     const signal = ctx.request.signal;
     if (!ctx.response && (signal?.reason === "timeout" || !signal?.aborted)) {
       showError(form, "The server could not be reached. Check whether the change was saved before retrying.");
@@ -85,6 +137,12 @@
   document.addEventListener("mero:form-saved", (event) => {
     const form = event.target.closest?.(formSelector);
     if (!form) return;
+    // Typed confirmations keep their form on success (HX-Reswap: none). An
+    // error response carrying a stray success trigger must never dismiss it.
+    if (form.matches(confirmSelector)) {
+      const ctx = requesting.get(form)?.ctx;
+      if (!ctx?.response || ctx.response.status < 200 || ctx.response.status >= 300 || String(ctx.status).startsWith("error")) return;
+    }
     const focus = [form.dataset.meroReturnFocus, form.dataset.meroFallbackFocus]
       .filter(Boolean).map((selector) => document.querySelector(selector)).find(Boolean);
     let dialog = form.closest("dialog");

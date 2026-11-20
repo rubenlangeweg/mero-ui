@@ -14,7 +14,7 @@ export const groups = [
       <ul class="mero-stack">
         <li class="mero-row">
           <span>Arc Task Lamp</span>
-          <button class="mero-button mero-button-ghost mero-button-sm" type="button" popovertarget="row-1-actions" aria-haspopup="menu" aria-expanded="false" aria-label="Actions for Arc Task Lamp">Actions</button>
+          <button class="mero-button mero-button-ghost mero-button-sm" type="button" popovertarget="row-1-actions" aria-haspopup="menu" aria-controls="row-1-actions" aria-expanded="false" aria-label="Actions for Arc Task Lamp">Actions</button>
           <div class="mero-popover mero-menu" id="row-1-actions" popover role="menu" aria-label="Arc Task Lamp actions">
             <a class="mero-menu-item" role="menuitem" href="/components/sortable-table">Open details</a>
             <button class="mero-menu-item" role="menuitem" type="button" data-mero-toast="Arc Task Lamp duplicated">Duplicate</button>
@@ -24,7 +24,7 @@ export const groups = [
         </li>
         <li class="mero-row">
           <span>Halo Pendant</span>
-          <button class="mero-button mero-button-ghost mero-button-sm" type="button" popovertarget="row-2-actions" aria-haspopup="menu" aria-expanded="false" aria-label="Actions for Halo Pendant">Actions</button>
+          <button class="mero-button mero-button-ghost mero-button-sm" type="button" popovertarget="row-2-actions" aria-haspopup="menu" aria-controls="row-2-actions" aria-expanded="false" aria-label="Actions for Halo Pendant">Actions</button>
           <div class="mero-popover mero-menu" id="row-2-actions" popover role="menu" aria-label="Halo Pendant actions">
             <a class="mero-menu-item" role="menuitem" href="/components/sortable-table">Open details</a>
             <button class="mero-menu-item" role="menuitem" type="button" data-mero-toast="Halo Pendant duplicated">Duplicate</button>
@@ -33,7 +33,7 @@ export const groups = [
           </div>
         </li>
       </ul>`,
-      "Enter, Space or Down Arrow opens the menu on its first item, and Up Arrow on its last. Arrow keys, Home, End and a typed letter move between items. Escape closes the menu and returns focus to the button. Tab closes it and moves on."),
+      "Each Actions button names its record and identifies its menu with aria-controls. Enter, Space or Down Arrow opens the menu on its first item, and Up Arrow on its last. Arrow keys, Home, End and a typed letter move between items. Escape closes the menu and returns focus to the button. Tab and Shift+Tab close it and continue in the browser’s tab order."),
     item("list-box", "List Box", "Present a selectable collection with arrow-key navigation.", `
       <ul class="mero-listbox" role="listbox" aria-label="Workspace" data-mero-listbox>
         <li class="mero-option" id="listbox-atlas" role="option" aria-selected="true" tabindex="0">Atlas</li>

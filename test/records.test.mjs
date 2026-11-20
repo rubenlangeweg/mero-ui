@@ -12,7 +12,7 @@ test("sort=-name orders Z to A and marks only that header", () => {
   const list = names(html);
   assert.deepEqual(list, [...list].sort().reverse());
   assert.equal(html.match(/aria-sort=/g).length, 1);
-  assert.match(html, /<th scope="col" aria-sort="descending"><a id="records-sort-name"/);
+  assert.match(html, /<th role="columnheader" scope="col" aria-sort="descending"><a id="records-sort-name"/);
 });
 
 test("an invalid sort falls back to name ascending and is escaped", () => {

@@ -39,13 +39,17 @@ test("action buttons report pending, succeeded, rejected and unknown outcomes",
       await held;
       await route.continue();
     });
-    const before = await retry.boundingBox();
-    await retry.click();
+    // Measure layout independently of the pressed-button transform.
+    const size = () => retry.evaluate(button => [button.offsetWidth, button.offsetHeight]);
+    const before = await size();
+    // Start with keyboard focus. WebKit follows macOS preferences for pointer focus.
+    await retry.focus();
+    await retry.press("Enter");
     await page.waitForFunction(() => document.querySelector("[data-mero-action-state=pending]"));
     assert.equal(await retry.getAttribute("aria-busy"), "true");
     assert.equal(await retry.getAttribute("aria-disabled"), "true");
     assert.equal(await retry.evaluate(node => node === document.activeElement), true, "focus stays on the pending button");
-    assert.deepEqual(await retry.boundingBox(), before, "the spinner overlay keeps the button size");
+    assert.deepEqual(await size(), before, "the spinner overlay keeps the button size");
     // aria-disabled reads as disabled to Playwright, so force a real second click.
     await retry.click({ force: true });
     await page.waitForTimeout(100);

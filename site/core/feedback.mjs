@@ -13,6 +13,19 @@ export const groups = [
         <meter class="mero-meter" id="demo-meter" min="0" max="100" value="64" high="80">64%</meter>
         <p class="mero-description">64 GB of 100 GB</p>
       </div>`),
+    item("live-progress", "Live Progress", "Follow a deployment through to its final status.", `
+      <section class="mero-card mero-live" aria-labelledby="deployment-title" tabindex="-1" data-mero-live="3000"
+        hx-get="/demo/catalog/live-progress" hx-trigger="mero:refresh"
+        hx-target="find [data-mero-live-status]" hx-swap="innerHTML" hx-include="find input">
+        <h2 class="mero-card-title" id="deployment-title">Production deployment</h2>
+        <div class="mero-live-status" data-mero-live-status role="status" aria-atomic="true">
+          <span class="mero-badge mero-badge-dot">Queued</span>
+          <input type="hidden" name="started" value="">
+        </div>
+        <p class="mero-form-status" role="status" data-mero-live-error></p>
+        <button type="button" class="mero-button mero-button-secondary" data-mero-live-retry hidden>Retry now</button>
+      </section>`,
+      "Return an HTML fragment with the current status. Send Mero-Live: done with the final status to stop polling. A failed read keeps the last status and offers a retry. Polling pauses in background tabs and refreshes when the tab becomes visible. The hidden started field drives this demo. In your app, point hx-get at the operation and omit that field and hx-include."),
     item("progress-bar", "Progress Bar", "Report measurable progress toward completion.", `
       <div class="mero-field">
         <div class="mero-measure-label"><label class="mero-label" for="demo-progress">Uploading assets</label><span class="mero-description" aria-hidden="true">68%</span></div>

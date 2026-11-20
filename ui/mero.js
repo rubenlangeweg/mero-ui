@@ -5,6 +5,7 @@
   const dialogFocus = new WeakMap();
   const autoOpened = new WeakSet();
   const menuFocusLast = new WeakSet();
+  const tabbedMenus = new WeakSet();
   const swappedFocus = new WeakMap();
   const remoteQueries = new WeakMap();
   const currentQueries = new WeakMap();
@@ -25,7 +26,7 @@
   function open(ref, { trigger = document.activeElement } = {}) {
     const dialog = element(ref);
     if (!(dialog instanceof HTMLDialogElement) || dialog.open || !dialog.isConnected) return;
-    dialogOpeners.set(dialog, trigger);
+    dialogOpeners.set(dialog, { trigger, previouslyFocused: document.activeElement });
     dialog.showModal();
     const input = dialog.matches("[data-mero-command]") && dialog.querySelector('[role="combobox"]');
     if (input) {
@@ -45,13 +46,19 @@
   }
 
   function returnFocus(dialog) {
-    const focus = element(dialogFocus.get(dialog) ?? dialogOpeners.get(dialog));
+    const opener = dialogOpeners.get(dialog);
+    const focus = element(dialogFocus.get(dialog) ?? opener?.trigger);
     dialogFocus.delete(dialog);
     dialogOpeners.delete(dialog);
     if (!focus?.isConnected || focus.matches(":disabled") || dialog.contains(focus)) return;
-    // Native dialog restoration also runs on close. Refocus after it completes.
+    // Let native restoration finish. If the user already moved to another
+    // field, taking focus back would also dismiss that field's suggestions.
     requestAnimationFrame(() => {
-      if (focus.isConnected && !dialog.open) focus.focus({ preventScroll: true });
+      const active = document.activeElement;
+      if (focus.isConnected && !dialog.open && active !== focus &&
+        (active === document.body || active === opener?.previouslyFocused || active === element(opener?.trigger) || dialog.contains(active))) {
+        focus.focus({ preventScroll: true });
+      }
     });
   }
 
@@ -105,13 +112,14 @@
       }
       if (!aliases.size) continue;
       scopeAliases.set(scope, aliases);
-      const attributes = ["for", "aria-controls", "aria-labelledby", "aria-describedby", "aria-activedescendant", "popovertarget", "data-mero-open", "hx-target"];
+      const selectors = ["hx-target", "data-mero-return-focus", "data-mero-fallback-focus"];
+      const attributes = ["for", "aria-controls", "aria-labelledby", "aria-describedby", "aria-activedescendant", "popovertarget", "data-mero-open", ...selectors];
       for (const node of scope.querySelectorAll(attributes.map(attr => "[" + attr + "]").join(","))) {
         if (node.closest(selector) !== scope) continue;
         for (const attr of attributes) {
           const value = node.getAttribute(attr);
           if (!value) continue;
-          const updated = attr === "hx-target" ? (value[0] === "#" && aliases.has(value.slice(1)) ? "#" + aliases.get(value.slice(1)) : value)
+          const updated = selectors.includes(attr) ? (value[0] === "#" && aliases.has(value.slice(1)) ? "#" + aliases.get(value.slice(1)) : value)
             : value.split(/\s+/).map(id => aliases.get(id) ?? id).join(" ");
           if (updated !== value) node.setAttribute(attr, updated);
         }
@@ -197,7 +205,7 @@
   }
 
   function optionsFor(list) {
-    return [...(list?.querySelectorAll(optionSelector) ?? [])].filter(option => !option.hidden && !disabled(option));
+    return [...(list?.querySelectorAll(optionSelector) ?? [])].filter(option => !option.hidden && !option.closest('[role="group"][hidden]') && !disabled(option));
   }
 
   function chooseOption(list, option) {
@@ -227,9 +235,13 @@
     list.hidden = !isOpen;
     input.setAttribute("aria-expanded", String(isOpen));
     if (!isOpen) {
-      input.removeAttribute("aria-activedescendant");
-      list.querySelector("[data-mero-active]")?.removeAttribute("data-mero-active");
+      clearComboActive(input, list);
     }
+  }
+
+  function clearComboActive(input, list) {
+    input.removeAttribute("aria-activedescendant");
+    for (const item of list.querySelectorAll("[data-mero-active]")) item.removeAttribute("data-mero-active");
   }
 
   function comboStatus(input, message, error = false) {
@@ -251,15 +263,14 @@
       const empty = list.querySelector("[data-mero-empty-option]");
       if (empty) empty.hidden = optionsFor(list).length > 0;
     }
+    const options = optionsFor(list);
     const current = element(input.getAttribute("aria-activedescendant"));
-    if (current?.hidden) {
-      current.removeAttribute("data-mero-active");
-      input.removeAttribute("aria-activedescendant");
-    }
-    const count = optionsFor(list).length;
+    if (!options.includes(current)) clearComboActive(input, list);
+    const count = options.length;
     const empty = list.querySelector('[aria-disabled="true"]:not([hidden])');
     setComboOpen(input, Boolean(count || empty));
-    comboStatus(input, count ? count + (count === 1 ? " suggestion" : " suggestions") : empty?.textContent ?? "No matching options");
+    const unit = input.closest("[data-mero-command]") ? "result" : "suggestion";
+    comboStatus(input, count ? count + " " + unit + (count === 1 ? "" : "s") : empty?.textContent ?? "No matching options");
   }
 
   function activateCombo(input, list, option) {
@@ -296,6 +307,14 @@
     return currentQueries.get(query.input) === query && query.input.value === query.value && query.input.isConnected;
   }
 
+  function showComboResults(input) {
+    if (input !== document.activeElement) return;
+    const list = element(input.getAttribute("aria-controls"));
+    if (!list) return;
+    filterCombo(input);
+    if (input.closest("[data-mero-command]") && !input.hasAttribute("aria-activedescendant")) activateCombo(input, list, optionsFor(list)[0]);
+  }
+
   function reconcileCombos(root, request) {
     const selector = '[data-mero-combo] [role="combobox"]';
     const inputs = matching(root, selector);
@@ -310,13 +329,7 @@
         input.removeAttribute("data-mero-combo-pending");
         input.removeAttribute("aria-busy");
       }
-      if (input !== document.activeElement) continue;
-      const list = element(input.getAttribute("aria-controls"));
-      if (!list || !list.contains(element(input.getAttribute("aria-activedescendant")))) {
-        input.removeAttribute("aria-activedescendant");
-      }
-      filterCombo(input);
-      if (input.closest("[data-mero-command]") && !input.hasAttribute("aria-activedescendant")) activateCombo(input, list, optionsFor(list)[0]);
+      showComboResults(input);
     }
   }
 
@@ -411,7 +424,8 @@
     if (event.newState === "open") {
       menuItems(menu).at(menuFocusLast.has(menu) ? -1 : 0)?.focus();
       menuFocusLast.delete(menu);
-    } else if ((document.activeElement === document.body || menu.contains(document.activeElement)) && button?.isConnected) {
+      tabbedMenus.delete(menu);
+    } else if (!tabbedMenus.delete(menu) && (document.activeElement === document.body || menu.contains(document.activeElement)) && button?.isConnected) {
       button.focus({ preventScroll: true });
     }
   }, true);
@@ -528,6 +542,8 @@
         event.preventDefault();
         target.click();
       } else if (event.key === "Tab") {
+        // Let native Tab leave the menu, including when focus moves to browser chrome.
+        tabbedMenus.add(menu);
         menu.hidePopover();
         menuButton(menu)?.focus();
       }
@@ -549,11 +565,12 @@
         event.preventDefault();
         if (target.closest("[data-mero-command]")) active.click();
         else selectCombo(target, active);
-      } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      } else if (event.key === "ArrowUp" || event.key === "ArrowDown" ||
+        (!list.hidden && target.closest("[data-mero-command]") && (event.key === "Home" || event.key === "End"))) {
         event.preventDefault();
         if (target.hasAttribute("data-mero-combo-pending")) return;
         if (target.closest("[data-mero-combo-remote]") && (target.hasAttribute("data-mero-combo-error") ||
-          target.value !== (displayedQueries.get(target) ?? target.defaultValue))) {
+          target.value !== displayedQueries.get(target))) {
           target.removeAttribute("data-mero-combo-dismissed");
           target.dispatchEvent(new CustomEvent("mero:query", { bubbles: true }));
           return;
@@ -580,9 +597,19 @@
     const input = event.target;
     if (!input.matches?.('[data-mero-combo] [role="combobox"]')) return;
     if (input.closest("[data-mero-combo-remote]")) {
+      const query = currentQueries.get(input);
+      if (query?.value === input.value && input.hasAttribute("data-mero-combo-pending")) return;
       currentQueries.delete(input);
       input.removeAttribute("data-mero-combo-dismissed");
       input.removeAttribute("data-mero-combo-error");
+      // htmx's changed modifier suppresses the request if the user returns
+      // to the same query before the debounce expires. Its results are still here.
+      if (displayedQueries.get(input) === input.value) {
+        input.removeAttribute("data-mero-combo-pending");
+        input.removeAttribute("aria-busy");
+        showComboResults(input);
+        return;
+      }
       input.setAttribute("data-mero-combo-pending", "");
       input.setAttribute("aria-busy", "true");
       comboStatus(input, "Loading…");
@@ -660,7 +687,10 @@
     for (const task of tasks) taskRequests.set(task, ctx);
     const query = remoteQueries.get(ctx);
     // htmx 4 would swap an error page into the list of suggestions.
-    if (query && (!isCurrentQuery(query) || ctx.response?.status >= 400)) event.preventDefault();
+    if (query) {
+      if (!isCurrentQuery(query) || ctx.response?.status >= 400) event.preventDefault();
+      else displayedQueries.delete(query.input);
+    }
     const active = document.activeElement;
     const scope = active?.closest("[data-mero-scope]");
     if (scope && active.id && scopeAliases.has(scope) && !event.defaultPrevented && swapTarget(ctx)?.contains(active)) {
@@ -693,7 +723,10 @@
     // The detached opener still answers closest() through its old subtree.
     const region = event.target.closest?.("[data-mero-restore-focus]");
     if (region && document.activeElement === document.body && opener?.closest?.("[data-mero-restore-focus]")) {
-      region.querySelector("[data-mero-focus-fallback]")?.focus({ preventScroll: true });
+      // Some browsers leave pointer-activated links unfocused. Keep the triggering
+      // control when its ID survives the swap, then use the designated fallback.
+      if (opener.id) region.querySelector("#" + CSS.escape(opener.id))?.focus({ preventScroll: true });
+      if (document.activeElement === document.body) region.querySelector("[data-mero-focus-fallback]")?.focus({ preventScroll: true });
     }
   });
 
