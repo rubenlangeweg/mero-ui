@@ -29,33 +29,75 @@ test('collection interactions preserve drafts, keyboard focus and access to popo
     const focused = selector => page.waitForFunction(selector => document.activeElement?.matches(selector),selector);
 
     await open('data-grid','/demo/collections/grid');
-    await page.getByRole('button',{name:'Edit Arc Task Lamp'}).click();
+    const header = name => page.getByRole('columnheader',{name,exact:true});
+    assert.equal(await header('Product').getAttribute('aria-sort'),'ascending');
+    await page.getByRole('checkbox',{name:'Select Halo Pendant',exact:true}).check();
+    const sorted = page.waitForRequest(req => new URL(req.url()).pathname === '/demo/collections/grid');
+    await page.getByRole('link',{name:'Product'}).focus();
+    await page.keyboard.press('Enter');
+    const sortSearch = new URL((await sorted).url()).searchParams;
+    assert.equal(sortSearch.get('sort'),'name-desc');
+    assert.ok(!sortSearch.has('row'),'sort links leave row selection out');
+    await page.locator('th[aria-sort=descending]').waitFor();
+    await focused('[data-grid-sort=name]');
+
+    await page.getByRole('button',{name:'Add filter'}).focus();
+    await page.keyboard.press('Enter');
+    await focused('[role=menuitem]');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Enter');
+    await page.getByRole('list',{name:'Applied filters'}).getByText('Status is Active').waitFor();
+    await focused('[data-grid-filter]');
+    assert.equal(await header('Product').getAttribute('aria-sort'),'descending','the filter keeps the sort');
+    assert.equal(await page.getByRole('row',{name:/Halo Pendant/}).count(),0);
+    await page.getByRole('link',{name:'Remove filter: Status is Active'}).focus();
+    await page.keyboard.press('Enter');
+    await page.getByRole('row',{name:/Halo Pendant/}).waitFor();
+    await focused('[data-grid-filter]');
+
+    await page.getByRole('button',{name:'Actions for Arc Task Lamp'}).click();
+    await page.getByRole('menuitem',{name:'Edit'}).click();
     await focused('input[name=name]');
     await page.getByLabel('Product name').fill('Unsubmitted private draft');
     const cancel = page.waitForRequest(req => new URL(req.url()).pathname === '/demo/collections/grid');
     await page.getByRole('button',{name:'Cancel'}).click();
     const search = new URL((await cancel).url()).searchParams;
     assert.equal(search.get('returnFocus'),'edit-6');
+    assert.equal(search.get('sort'),'name-desc');
     for (const key of ['id','name','sku','category','status','revision','next']) assert.ok(!search.has(key),key);
-    await focused('[data-grid-edit="6"]');
-    await page.getByRole('button',{name:'Delete Arc Task Lamp'}).click();
+    await focused('[data-grid-actions="6"]');
+    await page.keyboard.press('Enter');
+    await focused('[role=menuitem]');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
     await focused('[data-grid-cancel]');
     await page.keyboard.press('Enter');
-    await focused('[data-grid-delete="6"]');
+    await focused('[data-grid-actions="6"]');
     assert.ok(await page.locator('.mero-collection-scroll').evaluate(el => el.scrollWidth <= el.clientWidth+1));
 
     await page.locator('[data-mero-grid]').evaluate(first => {
       const copy = first.cloneNode(true);
       first.after(copy);
+      window.MeroUI.init(copy);
       window.htmx.process(copy);
     });
     const grids = page.locator('[data-mero-grid]');
     await grids.nth(1).getByRole('checkbox',{name:'Select Arc Task Lamp',exact:true}).check();
-    await grids.nth(1).getByRole('button',{name:'Edit Arc Task Lamp'}).click();
+    await grids.nth(1).getByRole('button',{name:'Actions for Arc Task Lamp'}).click();
+    await grids.nth(1).getByRole('menuitem',{name:'Edit'}).click();
     await focused('input[name=name]');
     assert.equal(await grids.nth(1).locator('[data-grid-count]').textContent(),'1 selected');
     assert.equal(await grids.first().locator('.mero-collection-editor').count(),0);
     assert.ok(await grids.first().locator('[data-grid-bar]').isHidden());
+
+    const plain = await browser.newPage({javaScriptEnabled:false});
+    t.after(() => plain.close());
+    await plain.goto(base+'/preview/data-grid?filter=Draft');
+    await plain.getByRole('link',{name:'Product'}).click();
+    await plain.waitForURL(url => url.searchParams.get('sort') === 'name-desc' && url.searchParams.get('filter') === 'Draft');
+    assert.equal(await plain.getByRole('columnheader',{name:'Product',exact:true}).getAttribute('aria-sort'),'descending');
+    assert.equal(await plain.getByRole('row',{name:/Arc Task Lamp/}).count(),0);
 
     let finishInitialRefresh;
     const held = new Promise(resolve => { finishInitialRefresh = resolve; });

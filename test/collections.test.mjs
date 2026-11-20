@@ -33,6 +33,22 @@ test('bulk actions apply atomically and render the active server filter',async (
   assert.match(updated.html,/2 products updated/);
 });
 
+test('grid header sort links, filter chips and row menus carry the view but not row drafts',async () => {
+  const {html} = await request(createLabStore(),`${grid}?q=a&filter=Draft&sort=name-desc&row=2`);
+  assert.match(html,/<th scope="col" aria-sort="descending"><a href="\?q=a&amp;filter=Draft&amp;sort=name" hx-get="\/demo\/collections\/grid\?q=a&amp;filter=Draft&amp;sort=name&amp;returnFocus=sort-name" hx-params="none" data-grid-sort="name">Product/);
+  assert.match(html,/<th scope="col"><a href="\?q=a&amp;filter=Draft&amp;sort=status"/);
+  assert.match(html,/aria-label="Remove filter: Status is Draft"/);
+  assert.match(html,/role="menuitem">Status is Active</);
+  assert.doesNotMatch(html,/role="menuitem">Status is Draft</);
+  assert.doesNotMatch(html,/<select[^>]+name="(?:filter|sort)"/);
+  assert.doesNotMatch(html,/href="[^"]*row=/);
+  assert.match(html,/aria-label="Actions for Halo Pendant" data-grid-actions="2"/);
+  assert.match(html,/role="menuitem" hx-params="q,filter,sort,row,returnFocus" hx-get="\/demo\/collections\/grid\/2\/edit">Edit</);
+  const unfiltered = (await request(createLabStore(),`${grid}?sort=status`)).html;
+  assert.match(unfiltered,/aria-sort="ascending"><a href="\?sort=status"/);
+  assert.doesNotMatch(unfiltered,/Applied filters|Clear all filters/);
+});
+
 test('inline editor keeps an invalid draft and creates and deletes a valid product',async () => {
   const store=createLabStore();
   const draft = {name:'Graphite <Lamp>',sku:store.products[0].sku,category:'Lighting',status:'Draft'};

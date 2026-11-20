@@ -91,7 +91,7 @@ const attributes = [
   ]],
   ["Collections", "mero-collections.js", [
     ["data-mero-grid", "Root of a data grid. Keeps the select-all checkbox, the selection count and the bulk action bar in step with the row checkboxes."],
-    ["data-mero-grid-focus", "On the grid in a server response. Names what to focus after the swap: <code>field</code>, <code>cancel</code>, <code>invalid</code>, <code>add</code>, <code>search</code>, <code>edit-ID</code> or <code>delete-ID</code>. Mero removes it once used."],
+    ["data-mero-grid-focus", "On the grid in a server response. Names what to focus after the swap: <code>field</code>, <code>cancel</code>, <code>invalid</code>, <code>add</code>, <code>search</code>, <code>filter</code>, <code>sort-name</code>, <code>sort-status</code>, or <code>edit-ID</code> and <code>delete-ID</code> for that row’s Actions button. Mero removes it once used."],
     ["data-mero-agenda", "Root of an agenda. Restores focus after a swap from its <code>data-agenda-focus</code> value, and swaps an error response only on HTTP 422."],
     ["*data-mero-load-superseded", "On a grid or agenda mount when the person acted before its first refresh returned. That refresh is then discarded."],
     ["data-mero-kanban", "Root of a board. Cards move between its <code>data-lane</code> columns by drag or by the Move to menu, and fire <code>mero:kanban-move</code>."],
