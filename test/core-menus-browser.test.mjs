@@ -22,7 +22,7 @@ test("menu button follows the APG keyboard pattern across instances and swaps",
   { skip: !playwright && "Install Playwright to run the browser regression" }, async t => {
     const server = createApp();
     await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
-    t.after(() => new Promise(resolve => server.close(resolve)));
+    t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
     const base = "http://127.0.0.1:" + server.address().port;
     const engine = browserConfig.engine || "chromium";
     const browser = await playwright[engine].launch({ executablePath: engine === "chromium" ? browserConfig.chromeExecutable : undefined });

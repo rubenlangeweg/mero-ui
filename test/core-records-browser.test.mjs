@@ -12,7 +12,7 @@ test("sortable table sorts through ?sort links with and without scripts",
   { skip: !playwright && "Install Playwright to run the browser regression" }, async t => {
     const server = createApp();
     await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
-    t.after(() => new Promise(resolve => server.close(resolve)));
+    t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
     const base = "http://127.0.0.1:" + server.address().port;
     const engine = browserConfig.engine || "chromium";
     const browser = await playwright[engine].launch({ executablePath: engine === "chromium" ? browserConfig.chromeExecutable : undefined });
@@ -70,7 +70,7 @@ test("focus returns to the opened row link after Back",
   { skip: !playwright && "Install Playwright to run the browser regression" }, async t => {
     const server = createApp();
     await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
-    t.after(() => new Promise(resolve => server.close(resolve)));
+    t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
     const base = "http://127.0.0.1:" + server.address().port;
     const engine = browserConfig.engine || "chromium";
     const browser = await playwright[engine].launch({ executablePath: engine === "chromium" ? browserConfig.chromeExecutable : undefined });
@@ -128,7 +128,7 @@ test("filter chips add, remove and clear filters through the URL",
   { skip: !playwright && "Install Playwright to run the browser regression" }, async t => {
     const server = createApp();
     await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
-    t.after(() => new Promise(resolve => server.close(resolve)));
+    t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
     const base = "http://127.0.0.1:" + server.address().port;
     const engine = browserConfig.engine || "chromium";
     const browser = await playwright[engine].launch({ executablePath: engine === "chromium" ? browserConfig.chromeExecutable : undefined });
