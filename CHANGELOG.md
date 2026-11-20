@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 · 20 November 2026
 
-- **Breaking (0.5.0):** Mero targets htmx 4 only. htmx 2 is no longer supported, and `mero.js` no longer relays htmx 4 events under htmx 2 names.
+- **Breaking:** Mero targets htmx 4 only. htmx 2 is no longer supported, and `mero.js` no longer relays htmx 4 events under htmx 2 names.
 - The Data Grid sorts from its column headers, filters by status with chips and a "+ Filter" menu, and moves Edit and Delete into a row Actions menu.
 
 To upgrade:
