@@ -8,17 +8,17 @@
       this.listeners = new AbortController();
       const options = { signal: this.listeners.signal };
       this.addEventListener("change", event => {
-        if (event.target.matches("[data-rl-gallery-choice]")) this.choose(event.target.value);
+        if (event.target.matches("[data-mero-gallery-choice]")) this.choose(event.target.value);
       }, options);
       this.addEventListener("pointerover", event => {
-        if (!this.hasAttribute("data-rl-hover-preview") || event.pointerType !== "mouse") return;
-        const control = event.target.closest("label")?.querySelector("[data-rl-gallery-choice]");
+        if (!this.hasAttribute("data-mero-hover-preview") || event.pointerType !== "mouse") return;
+        const control = event.target.closest("label")?.querySelector("[data-mero-gallery-choice]");
         if (control) this.choose(control.value);
       }, options);
       this.addEventListener("click", event => {
-        const button = event.target.closest("[data-rl-prev], [data-rl-next]");
+        const button = event.target.closest("[data-mero-prev], [data-mero-next]");
         if (button && button.getAttribute("aria-disabled") !== "true") {
-          this.go(this.index + (button.hasAttribute("data-rl-next") ? 1 : -1), true);
+          this.go(this.index + (button.hasAttribute("data-mero-next") ? 1 : -1), true);
         }
       }, options);
       this.addEventListener("keydown", event => {
@@ -92,8 +92,8 @@
         this.observedTrack = track;
         if (track) this.resize.observe(track);
       }
-      const selected = this.querySelector("[data-rl-gallery-choice]:checked");
-      if (selected && this.slides.some(slide => slide.dataset.rlSlide === selected.value)) this.choose(selected.value);
+      const selected = this.querySelector("[data-mero-gallery-choice]:checked");
+      if (selected && this.slides.some(slide => slide.dataset.meroSlide === selected.value)) this.choose(selected.value);
       else this.refresh();
     }
     disconnectedCallback() {
@@ -104,7 +104,7 @@
       this.track?.removeAttribute("data-dragging");
       this.drag = null;
     }
-    get track() { return this.querySelector(".rl-gallery-track"); }
+    get track() { return this.querySelector(".mero-gallery-track"); }
     get slides() { return this.track ? [...this.track.children] : []; }
     refresh() {
       if (!this.track || !this.slides.length) return;
@@ -122,7 +122,7 @@
       return best;
     }
     choose(value) {
-      const index = this.slides.findIndex(slide => slide.dataset.rlSlide === value);
+      const index = this.slides.findIndex(slide => slide.dataset.meroSlide === value);
       if (index !== -1) this.go(index, false);
     }
     go(index, smooth) {
@@ -140,13 +140,13 @@
       const slide = slides[index];
       if (!slide) return;
       this.index = index;
-      this.querySelectorAll("[data-rl-gallery-choice]").forEach(control => { control.checked = control.value === slide.dataset.rlSlide; });
-      this.querySelectorAll("[data-rl-prev]").forEach(button => button.setAttribute("aria-disabled", String(index === 0)));
-      this.querySelectorAll("[data-rl-next]").forEach(button => button.setAttribute("aria-disabled", String(index === slides.length - 1)));
-      const label = this.querySelector("[data-rl-gallery-label]");
+      this.querySelectorAll("[data-mero-gallery-choice]").forEach(control => { control.checked = control.value === slide.dataset.meroSlide; });
+      this.querySelectorAll("[data-mero-prev]").forEach(button => button.setAttribute("aria-disabled", String(index === 0)));
+      this.querySelectorAll("[data-mero-next]").forEach(button => button.setAttribute("aria-disabled", String(index === slides.length - 1)));
+      const label = this.querySelector("[data-mero-gallery-label]");
       const text = slide.dataset.label;
       if (label && text && text !== label.textContent) label.textContent = text;
-      if (slide.dataset.href) this.querySelectorAll("[data-rl-gallery-link]").forEach(link => link.setAttribute("href", slide.dataset.href));
+      if (slide.dataset.href) this.querySelectorAll("[data-mero-gallery-link]").forEach(link => link.setAttribute("href", slide.dataset.href));
     }
   }
 
@@ -154,9 +154,9 @@
     connectedCallback() {
       this.update = event => {
         const slider = event?.target ?? this.querySelector("input[type=range]");
-        const stage = slider?.closest(".rl-diff-stage");
+        const stage = slider?.closest(".mero-diff-stage");
         if (!stage || slider.type !== "range") return;
-        stage.style.setProperty("--rl-diff-split", slider.value + "%");
+        stage.style.setProperty("--mero-diff-split", slider.value + "%");
         slider.setAttribute("aria-valuetext", slider.value + "% " + (slider.dataset.label ?? "before"));
       };
       this.addEventListener("input", this.update);
@@ -174,19 +174,19 @@
         const box = this.getBoundingClientRect();
         const x = (event.clientX - box.left) / box.width;
         const y = (event.clientY - box.top) / box.height;
-        this.style.setProperty("--rl-tilt-x", ((x - .5) * 9) + "deg");
-        this.style.setProperty("--rl-tilt-y", ((.5 - y) * 9) + "deg");
-        this.style.setProperty("--rl-shine-x", (x * 100) + "%");
-        this.style.setProperty("--rl-shine-y", (y * 100) + "%");
+        this.style.setProperty("--mero-tilt-x", ((x - .5) * 9) + "deg");
+        this.style.setProperty("--mero-tilt-y", ((.5 - y) * 9) + "deg");
+        this.style.setProperty("--mero-shine-x", (x * 100) + "%");
+        this.style.setProperty("--mero-shine-y", (y * 100) + "%");
       }, options);
       this.addEventListener("pointerleave", () => {
-        for (const property of ["--rl-tilt-x", "--rl-tilt-y", "--rl-shine-x", "--rl-shine-y"]) this.style.removeProperty(property);
+        for (const property of ["--mero-tilt-x", "--mero-tilt-y", "--mero-shine-x", "--mero-shine-y"]) this.style.removeProperty(property);
       }, options);
     }
     disconnectedCallback() { this.listeners.abort(); }
   }
 
-  for (const [name, component] of [["rl-gallery", Gallery], ["rl-image-diff", ImageDiff], ["rl-holo-card", HoloCard]]) {
+  for (const [name, component] of [["mero-gallery", Gallery], ["mero-image-diff", ImageDiff], ["mero-holo-card", HoloCard]]) {
     if (!customElements.get(name)) customElements.define(name, component);
   }
 })();

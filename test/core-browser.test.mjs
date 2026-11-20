@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import test from "node:test";
-import { catalogFragment, groups } from "../site/components.mjs";
+import { catalogFragment, groups } from "../site/core-components.mjs";
 import { createInventoryExample } from "../examples/studio-inventory/server.mjs";
 
 // Optional browser dependency for contributors. MERO_PLAYWRIGHT_MODULE can
@@ -17,7 +17,7 @@ const playwright = await import(browserConfig.playwrightModule || "playwright").
   throw error;
 });
 const examples = new Map(groups.flatMap(group => group.items.map(item => [item.id, item])));
-const source = new URL("../public/", import.meta.url);
+const source = new URL("../", import.meta.url);
 const browserName = browserConfig.engine || "chromium";
 const browserOptions = { skip: !playwright && "Install Playwright to run the browser regression" };
 
@@ -57,7 +57,7 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
     if (url.pathname.startsWith("/demo/catalog/")) {
       return route.fulfill({ contentType: "text/html", body: catalogFragment(url.pathname.split("/").at(-1), url.searchParams) });
     }
-    const filename = { "/htmx.js": "vendor/htmx.min.js", "/mero.js": "mero.js", "/mero.css": "mero.css" }[url.pathname];
+    const filename = { "/htmx.js": "public/vendor/htmx.min.js", "/mero.js": "ui/mero.js", "/mero.css": "ui/mero.css" }[url.pathname];
     if (!filename) return route.fulfill({ status: 404, body: "" });
     return route.fulfill({
       contentType: filename.endsWith(".css") ? "text/css" : "text/javascript",
@@ -107,7 +107,6 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
   const trigger = second.getByRole("button", { name: "Workspace details" });
   await trigger.click();
   await second.getByRole("dialog").waitFor();
-  assert.equal(await page.evaluate(() => window.MeroUI === window.RelayUI), true);
   await page.evaluate(() => window.MeroUI.toast("Saved inside dialog", { duration: 0 }));
   const dismiss = second.getByRole("dialog").getByRole("button", { name: "Dismiss notification" });
   await dismiss.focus();
@@ -115,7 +114,7 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
   await dismiss.press("Enter");
   assert.equal(await second.getByRole("dialog").getByText("Saved inside dialog").count(), 0);
   await page.keyboard.press("Escape");
-  await page.waitForFunction(() => document.activeElement?.matches("section:nth-of-type(2) [data-rl-open]"));
+  await page.waitForFunction(() => document.activeElement?.matches("section:nth-of-type(2) [data-mero-open]"));
 
   const combo = second.getByRole("combobox", { name: "Workspace" });
   await combo.fill("not-a-workspace");
@@ -166,7 +165,7 @@ test("copied widgets keep local references through HTMX swaps", browserOptions, 
   assert.match(await sections.first().getByRole("tabpanel").innerText(), /deployment/);
   assert.match(await sections.nth(2).getByRole("tabpanel").innerText(), /invited collaborators/);
   assert.deepEqual(await page.evaluate(() => ["light-preview", "dark-preview"].map(id =>
-    getComputedStyle(document.getElementById(id)).getPropertyValue("--rl-surface").trim())), ["#fff", "#1c1c1e"]);
+    getComputedStyle(document.getElementById(id)).getPropertyValue("--mero-surface").trim())), ["#fff", "#1c1c1e"]);
   assert.deepEqual(errors, []);
 });
 

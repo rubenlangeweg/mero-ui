@@ -18,9 +18,9 @@ When serving the site on a public domain, set `MERO_SITE_ORIGIN` to its full ori
 
 ## Use a component
 
-Install the UI assets and HTMX with `npm install @rubenlangeweg/mero-ui htmx.org@2`. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/public/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
+Install the UI assets and HTMX with `npm install @rubenlangeweg/mero-ui htmx.org@2`. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
 
-Serve `public/mero.css` and `public/mero.js` from your app. Include HTMX 2.x for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. The local catalog includes HTMX 2.0.11 and Geist with their license notices.
+Serve `ui/mero.css` and `ui/mero.js` from your app. Include HTMX 2.x for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. The local catalog includes HTMX 2.0.11 and Geist with their license notices.
 
 ```html
 <link rel="stylesheet" href="/mero.css">
@@ -30,26 +30,32 @@ Serve `public/mero.css` and `public/mero.js` from your app. Include HTMX 2.x for
 
 Use the [theme studio](http://127.0.0.1:4173/themes) to try colors, fonts and radii on real components or an app layout. Export the CSS, load it after `mero.css` and set `data-theme="light"` or `data-theme="dark"` on a document or section.
 
-Media uses `mero-gallery` assets. Collections use `mero-collections`. Workspace controls use `mero-workspace`. Charts and conversation examples use `mero-insights`. Presentation utilities use `mero-composition`. Each pair comprises a stylesheet and a deferred script. The two optional server helpers in `public/insight-*.mjs` render charts and a small Markdown subset.
+Media uses `mero-gallery` assets. Collections use `mero-collections`. Workspace controls use `mero-workspace`. Charts and conversation examples use `mero-insights`. Presentation utilities use `mero-composition`. Each pair comprises a stylesheet and a deferred script. The two optional server helpers in `ui/insight-*.mjs` render charts and a small Markdown subset.
+
+## Upgrade from 0.2
+
+Release 0.3 renames the `rl-` prefix to `mero-` in classes, `--mero-*` tokens and `data-mero-*` attributes. Workspace controls change from `rlw-` to `mero-ws-`, and `relay:*` events become `mero:*`. The package files moved from `public/` to `ui/`. Replace the prefixes in your templates and stylesheets and update the copy path.
 
 ## Take an example into another app
 
 Download the [complete preview and source](http://127.0.0.1:4173/downloads/mero-ui.tar.gz), extract into an empty directory, then run `npm start`. For the smaller [standalone inventory example](http://127.0.0.1:4173/downloads/studio-inventory.tar.gz), see the [example instructions](examples/studio-inventory/README.md). The local server creates downloads with `tar`. The hosted site serves archives prepared during the build.
 
-The [coverage map](docs/component-coverage.md) links the catalog to the original reference families. The [edit comparison](examples/edit-comparison/README.md) uses the same edit flow across three implementations. The [responsive layout and documentation research](docs/review/responsive-layouts-and-documentation.md) compares established systems and sets out the proposed mobile and documentation pilots.
+The [coverage map](docs/component-coverage.md) links the catalog to the original reference families. The [edit comparison](examples/edit-comparison/README.md) uses the same edit flow across three implementations.
 
-The inventory form uses `mero-forms.js` for pending state, a replacement form on HTTP 422, and a successful `relay:form-saved` event. The host supplies validation, persistence and authorization in its own application. A chart table, campus map and chat assistant in the catalog use local sample data. The chat demo gives deterministic replies.
+The inventory form uses `mero-forms.js` for pending state, a replacement form on HTTP 422, and a successful `mero:form-saved` event. The host supplies validation, persistence and authorization in its own application. A chart table, campus map and chat assistant in the catalog use local sample data. The chat demo gives deterministic replies.
 
 ## Verify
 
 ```sh
+npm ci
+npx playwright install chromium
 npm test
 npm run pack:ui
 ```
 
 The npm package contains the UI assets. The downloadable preview includes the reference server and example routes. Browser checks and their environment options are documented next to the tests.
 
-For a catalog-wide check, use a contributor environment with Playwright, Chromium and axe-core installed, then run `npm run audit:catalog -- --all`. The command starts an isolated server and emits a JSON result. To use existing installations, set `MERO_PLAYWRIGHT_MODULE`, `MERO_CHROME` and `MERO_AXE_PATH` to their local paths. The [quality review](docs/quality-review.md) records the issues fixed and the checks that still need a person.
+For a catalog-wide check, run `npm run audit:catalog -- --all`. The command starts an isolated server and emits a JSON result. To use existing installations, set `MERO_PLAYWRIGHT_MODULE`, `MERO_CHROME` and `MERO_AXE_PATH` to their local paths. The [quality review](docs/quality-review.md) records the issues fixed and the checks that still need a person.
 
 To inspect spacing and alignment, run `MERO_REVIEW_DIR=visual-review npm run audit:catalog -- --all` and open `visual-review/index.html`. It includes actual-size screenshots of every default and named variant at both review sizes. The audit also checks each example at 320 px with enlarged text in both writing directions. Select a component name to open its live example. Generated captures stay local. [Component spacing and alignment standards](docs/component-standards.md)
 

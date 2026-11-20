@@ -66,7 +66,7 @@ test("catalog discovery, exported previews and the HTTP inspector", options, asy
   const popup = await browser.newPage();
   await popup.goto(target.href);
   assert.equal(await popup.getByRole("heading", {level: 1}).innerText(), "Carousel");
-  const color = element => getComputedStyle(element).getPropertyValue("--rl-primary").trim();
+  const color = element => getComputedStyle(element).getPropertyValue("--mero-primary").trim();
   assert.equal(await popup.locator("html").evaluate(color), await page.locator("[data-sample-scope]").evaluate(color));
   await popup.close();
 

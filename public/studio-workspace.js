@@ -40,7 +40,7 @@
   document.addEventListener("htmx:afterSettle", event => {
     if (event.detail.target?.id !== "studio-workspace") return;
     const workspace = document.getElementById("studio-workspace");
-    const heading = workspace?.querySelector(".rl-app-main h1");
+    const heading = workspace?.querySelector(".mero-app-main h1");
     if (!heading) return;
     const suffix = document.body.classList.contains("layout-embed") ? "Mero UI preview" : "Mero UI";
     document.title = heading.textContent.trim() + " · Studio · " + suffix;

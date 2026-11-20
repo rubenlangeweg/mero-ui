@@ -11,10 +11,10 @@
   const notice = studio.querySelector("[data-ts-notice]");
   let state = readTheme(new URLSearchParams(location.search));
   const shellAliases = {
-    "--site-bg":"--rl-bg", "--site-panel":"--rl-surface", "--site-raised":"--rl-raised",
-    "--site-fg":"--rl-text", "--site-muted":"--rl-muted", "--site-subtle":"--rl-muted",
-    "--site-line":"--rl-line", "--site-accent":"--rl-accent", "--site-accent-ink":"--rl-accent-ink",
-    "--site-primary":"--rl-primary", "--site-primary-ink":"--rl-primary-ink", "--site-font":"--rl-font",
+    "--site-bg":"--mero-bg", "--site-panel":"--mero-surface", "--site-raised":"--mero-raised",
+    "--site-fg":"--mero-text", "--site-muted":"--mero-muted", "--site-subtle":"--mero-muted",
+    "--site-line":"--mero-line", "--site-accent":"--mero-accent", "--site-accent-ink":"--mero-accent-ink",
+    "--site-primary":"--mero-primary", "--site-primary-ink":"--mero-primary-ink", "--site-font":"--mero-font",
   };
   function studioURL(settings) {
     const url = new URL(location.href);
@@ -133,7 +133,7 @@
         notice.textContent = "Theme link copied.";
       } catch {
         const input = document.createElement("input");
-        input.className = "rl-input";
+        input.className = "mero-input";
         input.value = url;
         input.readOnly = true;
         input.setAttribute("aria-label", "Theme link");

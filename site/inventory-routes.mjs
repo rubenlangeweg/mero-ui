@@ -15,11 +15,14 @@ export const inventoryAssets = [
   "fonts/geist-LICENSE.txt", "fonts/geist-mono-LICENSE.txt",
 ];
 
+// Mero's own files ship from ui/. HTMX and the fonts stay in public/.
+export const inventoryAssetPath = name => (name.startsWith("mero") ? "ui/" : "public/") + name;
+
 export const inventoryArchiveEntries = [
   "LICENSE",
   "examples/studio-inventory/server.mjs", "examples/studio-inventory/README.md",
   "site/html.mjs", "site/lab.mjs", "site/layouts.mjs", "site/inventory-routes.mjs",
-  ...inventoryAssets.map(name => "public/" + name),
+  ...inventoryAssets.map(inventoryAssetPath),
 ];
 
 function send(response, body, status = 200, headers = {}) {
@@ -85,7 +88,7 @@ export async function handleInventoryRequest(request, response, url, store, { ba
   if (scenario === "slow") await new Promise(resolve => setTimeout(resolve, 1000));
   if (scenario === "fail") return send(response, "The sample server could not save this change.", 500);
   const product = match ? store.products.find(item => String(item.id) === match[1]) : null;
-  if (match && !product) return send(response, "This product no longer exists.", 404, { "Relay-Form-Error": "This product was removed. Close the editor and refresh the inventory." });
+  if (match && !product) return send(response, "This product no longer exists.", 404, { "Mero-Form-Error": "This product was removed. Close the editor and refresh the inventory." });
   const action = match?.[2];
   if (request.method === "GET") {
     if (action === "edit") return send(response, renderProductDialog(product, {}, false, context));
@@ -95,7 +98,7 @@ export async function handleInventoryRequest(request, response, url, store, { ba
   if (action === "edit") return send(response, "Method not allowed.", 405);
   if (product && params.has("productVersion") && params.get("productVersion") !== productVersion(product)) {
     const conflict = "This product changed while you were editing it. Your draft is still here. Reopen the product to review its latest values.";
-    return send(response, conflict, 409, { ...version(), "Relay-Form-Error": conflict });
+    return send(response, conflict, 409, { ...version(), "Mero-Form-Error": conflict });
   }
 
   let message;
@@ -116,6 +119,6 @@ export async function handleInventoryRequest(request, response, url, store, { ba
     (params.has("studioShowcase") ? renderRelated(changedId ?? product.id) : "");
   return send(response, fragments, 200, {
     ...version(), "HX-Reswap": "none",
-    "HX-Trigger-After-Settle": JSON.stringify({ "relay:form-saved": { message } }),
+    "HX-Trigger-After-Settle": JSON.stringify({ "mero:form-saved": { message } }),
   });
 }

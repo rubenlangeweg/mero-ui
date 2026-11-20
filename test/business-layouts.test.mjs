@@ -13,7 +13,7 @@ test('business examples resolve only known filters and reconcile cash balances a
   const negotiation = renderBusinessLayout('crm', new URLSearchParams('stage=negotiation&deal=cinder'));
   assert.match(negotiation, /2 opportunities/);
   assert.match(negotiation, /<h2>Stillwater<\/h2>/);
-  assert.doesNotMatch(negotiation, /View Cinder Studio deal/);
+  assert.doesNotMatch(negotiation, /id="deal-cinder"/);
   const october = renderBusinessLayout('finance');
   assert.match(october, /<strong>\$193,270<\/strong>/);
   assert.match(october, /<dt>Opening balance<\/dt><dd>\$151,570/);
@@ -40,7 +40,7 @@ test('CRM and Finance links update records, chart data and browser history with 
     await page.getByRole('link', { name:'Negotiation', exact:true }).click();
     await page.waitForURL('**/layouts/crm?stage=negotiation');
     assert.equal(await page.locator('.bu-deal').count(), 2);
-    await page.getByRole('link', { name:'View Union House deal' }).click();
+    await page.getByRole('link', { name:/^Union House/ }).click();
     await page.waitForSelector('.bu-deal-detail h2:text-is("Union House")');
     assert.match(await page.locator('.bu-deal-detail').textContent(), /Leo Meyer/);
     if (javaScriptEnabled) assert.equal(documents.length, 0);
@@ -48,22 +48,22 @@ test('CRM and Finance links update records, chart data and browser history with 
     await page.waitForSelector('.bu-deal-detail h2:text-is("Stillwater")', { state:'attached' });
     await page.goto(base + '/layouts/finance');
     const october = await page.locator('.bu-balance > strong').textContent();
-    await page.getByRole('link', { name:'September 2026' }).click();
+    await page.getByRole('link', { name:'Sep, September 2026', exact:true }).click();
     await page.waitForURL('**/layouts/finance?period=2026-09');
     assert.notEqual(await page.locator('.bu-balance > strong').textContent(), october);
-    await page.getByRole('link', { name:'View Morrow Supply transaction' }).click();
+    await page.getByRole('link', { name:/^Morrow Supply/, expanded:false }).click();
     await page.getByLabel('Transaction details').waitFor();
     assert.match(await page.getByLabel('Transaction details').textContent(), /MS-620/);
-    await page.getByRole('link', { name:'Close Morrow Supply transaction' }).click();
+    await page.getByRole('link', { name:/^Morrow Supply/, expanded:true }).click();
     await page.getByLabel('Transaction details').waitFor({ state:'detached' });
     if (javaScriptEnabled) {
       await page.setViewportSize({ width:320, height:850 });
       const tickInset = await page.locator('.bu-chart').evaluate(panel => Math.min(...[...panel.querySelectorAll('text[text-anchor="end"]')].map(tick => tick.getBoundingClientRect().left - panel.getBoundingClientRect().left)));
       assert.ok(tickInset >= 4, `Chart labels need a visible inset, got ${tickInset}px`);
-      const point = page.locator('.bu-chart [data-rl-plot-value]').first();
+      const point = page.locator('.bu-chart [data-mero-plot-value]').first();
       await point.focus();
       await point.press('ArrowRight');
-      assert.match(await page.locator('[data-rl-plot-readout]').textContent(), /Sep 8/);
+      assert.match(await page.locator('[data-mero-plot-readout]').textContent(), /Sep 8/);
     }
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     await page.close();

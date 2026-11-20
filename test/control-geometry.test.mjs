@@ -15,8 +15,8 @@ async function indicatorBounds(control, property) {
   const capture = { scale: "css", animations: "disabled" };
   const visible = await control.screenshot(capture);
   const css = property === "thumb"
-    ? ".rl-switch::before { visibility: hidden !important }"
-    : ".rl-select { background-image: none !important }";
+    ? ".mero-switch::before { visibility: hidden !important }"
+    : ".mero-select { background-image: none !important }";
   const override = await control.page().addStyleTag({ content: css });
   let hidden;
   try {
@@ -77,7 +77,7 @@ test("native select indicators and switch thumbs sit inside the control in both 
   await page.route(base + "/plain", route => route.fulfill({ contentType: "text/html", body: `<!doctype html>
     <meta name="viewport" content="width=device-width"><link rel="stylesheet" href="/mero.css">
     <link rel="stylesheet" href="/mero-workspace.css"><body>${components.get("native-select").demo}${components.get("cell-switch").demo}
-    <select class="rl-select" multiple aria-label="Multiple"><option>North</option><option>West</option></select></body>` }));
+    <select class="mero-select" multiple aria-label="Multiple"><option>North</option><option>West</option></select></body>` }));
   const cases = [
     { pageType: "catalog", theme: "dark", dir: "ltr", zoom: 1 },
     { pageType: "catalog", theme: "light", dir: "rtl", zoom: 1.25 },

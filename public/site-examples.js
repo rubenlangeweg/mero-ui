@@ -68,7 +68,7 @@
       chooser.querySelector("summary").focus();
     }
   });
-  document.addEventListener("relay:site-theme", syncPreviews);
+  document.addEventListener("mero:site-theme", syncPreviews);
   document.addEventListener("change", (event) => {
     const select = event.target.closest("[data-preview-theme]");
     if (select) updatePreview(select);

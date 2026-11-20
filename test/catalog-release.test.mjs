@@ -20,7 +20,7 @@ test("every catalog example has a usable preview, matching template, and optiona
     }
   }
   const assets = new Set([...components.values()].flatMap((item) => moduleAssets(item.module)));
-  await Promise.all([...assets].map((name) => access(new URL("../public/" + name, import.meta.url))));
+  await Promise.all([...assets].map((name) => access(new URL("../ui/" + name, import.meta.url))));
   assert.equal(
     groups.reduce((count, group) => count + group.items.length, 0),
     components.size,
@@ -38,7 +38,7 @@ test("optional media code stays scoped to media pages", () => {
 test("chart and Markdown helpers are downloadable server modules separate from the browser assets", async () => {
   for (const item of [...components.values()].filter(item => item.category === "Charts" || item.id === "markdown")) {
     const file = item.id === "markdown" ? "insight-markdown.mjs" : "insight-charts.mjs";
-    await access(new URL("../public/" + file, import.meta.url));
+    await access(new URL("../ui/" + file, import.meta.url));
     for (const variant of ["Default", ...(item.variants || []).map(option => option.name)]) {
       const search = new URLSearchParams({ variant });
       const page = componentPage(item, search);

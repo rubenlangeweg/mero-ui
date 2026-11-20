@@ -14,68 +14,68 @@ const details = [
 
 export function lampPhoto(finish, view, alt, eager = false) {
   const loading = eager ? 'fetchpriority="high"' : 'loading="lazy"';
-  return `<span class="rl-lamp-photo" data-finish="${escapeHtml(finish)}" data-view="${escapeHtml(view)}">
+  return `<span class="mero-lamp-photo" data-finish="${escapeHtml(finish)}" data-view="${escapeHtml(view)}">
     <img src="/studio-lamp.webp" alt="${escapeHtml(alt)}" width="1120" height="747" ${loading} decoding="async" draggable="false">
   </span>`;
 }
 
 export function galleryTrack(items = finishes, { links = false, eager = false, productName = "Arc Task Lamp" } = {}) {
-  return `<ol class="rl-gallery-track" tabindex="0" aria-label="Product photographs">
-    ${items.map((item, index) => `<li data-rl-slide="${escapeHtml(item.value)}" data-label="${escapeHtml(item.label)}"${links ? ` data-href="/layouts/dashboard?view=inventory&amp;edit=6&amp;finish=${encodeURIComponent(item.value)}"` : ""}>
+  return `<ol class="mero-gallery-track" tabindex="0" aria-label="Product photographs">
+    ${items.map((item, index) => `<li data-mero-slide="${escapeHtml(item.value)}" data-label="${escapeHtml(item.label)}"${links ? ` data-href="/layouts/dashboard?view=inventory&amp;edit=6&amp;finish=${encodeURIComponent(item.value)}"` : ""}>
       ${lampPhoto(item.finish ?? item.value, item.finish ? item.value : "profile", `${productName}, ${item.label}`, eager && index === 0)}
     </li>`).join("\n    ")}
   </ol>`;
 }
 
 export function galleryArrows() {
-  return `<div class="rl-gallery-arrows">
-    <button type="button" data-rl-prev aria-label="Previous image" aria-disabled="true"><span aria-hidden="true">←</span></button>
-    <button type="button" data-rl-next aria-label="Next image"><span aria-hidden="true">→</span></button>
+  return `<div class="mero-gallery-arrows">
+    <button type="button" data-mero-prev aria-label="Previous image" aria-disabled="true"><span aria-hidden="true">←</span></button>
+    <button type="button" data-mero-next aria-label="Next image"><span aria-hidden="true">→</span></button>
   </div>`;
 }
 
 function productGallery(hover = false) {
   const items = hover ? details : finishes;
   const name = hover ? "Product details" : "Product finishes";
-  return `<rl-gallery class="rl-media-card" role="region" aria-label="${name}" aria-roledescription="carousel"${hover ? " data-rl-hover-preview" : ""}>
+  return `<mero-gallery class="mero-media-card" role="region" aria-label="${name}" aria-roledescription="carousel"${hover ? " data-mero-hover-preview" : ""}>
   ${galleryTrack(items)}
-  <div class="rl-media-caption">
-    <div><strong>Arc Task Lamp</strong><output data-rl-gallery-label aria-live="polite">${items[0].label}</output></div>
+  <div class="mero-media-caption">
+    <div><strong>Arc Task Lamp</strong><output data-mero-gallery-label aria-live="polite">${items[0].label}</output></div>
     ${galleryArrows()}
   </div>
-  <form class="rl-gallery-choices">
+  <form class="mero-gallery-choices">
     <fieldset><legend>${hover ? "View" : "Finish"}</legend>
       ${items.map((item, i) => `<label>
-        <input type="radio" name="view" data-rl-gallery-choice value="${item.value}"${i ? "" : " checked"}>
-        <span class="rl-gallery-thumb">${lampPhoto(item.finish ?? item.value, item.finish ? item.value : "profile", "")}</span>
+        <input type="radio" name="view" data-mero-gallery-choice value="${item.value}"${i ? "" : " checked"}>
+        <span class="mero-gallery-thumb">${lampPhoto(item.finish ?? item.value, item.finish ? item.value : "profile", "")}</span>
         <span>${item.label}</span>
       </label>`).join("\n      ")}
     </fieldset>
   </form>
-</rl-gallery>`;
+</mero-gallery>`;
 }
 
-const diff = `<rl-image-diff class="rl-media-card" role="group" aria-label="Compare Arc Task Lamp finishes">
-  <div class="rl-diff-stage">
-    <div class="rl-diff-image">${lampPhoto("graphite", "profile", "Arc lamp with a graphite shade")}</div>
-    <div class="rl-diff-image" data-rl-before>${lampPhoto("ivory", "profile", "Arc lamp with an ivory shade")}</div>
-    <label class="rl-diff-control">
+const diff = `<mero-image-diff class="mero-media-card" role="group" aria-label="Compare Arc Task Lamp finishes">
+  <div class="mero-diff-stage">
+    <div class="mero-diff-image">${lampPhoto("graphite", "profile", "Arc lamp with a graphite shade")}</div>
+    <div class="mero-diff-image" data-mero-before>${lampPhoto("ivory", "profile", "Arc lamp with an ivory shade")}</div>
+    <label class="mero-diff-control">
       <span>Reveal ivory finish</span>
       <input type="range" min="0" max="100" value="50" data-label="ivory" aria-valuetext="50% ivory">
     </label>
-    <span class="rl-diff-line" aria-hidden="true"><i>↔</i></span>
+    <span class="mero-diff-line" aria-hidden="true"><i>↔</i></span>
   </div>
-  <div class="rl-diff-caption"><span>Soft ivory</span><span>Graphite</span></div>
-</rl-image-diff>`;
+  <div class="mero-diff-caption"><span>Soft ivory</span><span>Graphite</span></div>
+</mero-image-diff>`;
 
-const holo = `<rl-holo-card>
-  <a href="/components/carousel" class="rl-foil">
-    <span class="rl-foil-ink" aria-hidden="true"></span>
-    <span class="rl-foil-top"><span>Studio materials</span><span aria-hidden="true">↗</span></span>
-    <span class="rl-foil-title">Brushed nickel</span>
-    <span class="rl-foil-meta">Arc collection · Finish gallery</span>
+const holo = `<mero-holo-card>
+  <a href="/components/carousel" class="mero-foil">
+    <span class="mero-foil-ink" aria-hidden="true"></span>
+    <span class="mero-foil-top"><span>Studio materials</span><span aria-hidden="true">↗</span></span>
+    <span class="mero-foil-title">Brushed nickel</span>
+    <span class="mero-foil-meta">Arc collection · Finish gallery</span>
   </a>
-</rl-holo-card>`;
+</mero-holo-card>`;
 
 function example(id, name, description, demo, notes) {
   return { id, name, description, demo, code: demo, notes };

@@ -56,7 +56,7 @@ export function renderResults(store, params = new URLSearchParams(), outOfBand =
   const products = getProducts(store, params);
   return `<div id="${prefix}product-results"${outOfBand ? ' hx-swap-oob="true"' : ""}>
     <div class="lab-table-wrap">
-      <table class="rl-table lab-table">
+      <table class="mero-table lab-table">
         <thead><tr><th scope="col">Product</th><th scope="col">Status</th><th scope="col">Category</th><th scope="col"><span class="lab-sr-only">Actions</span></th></tr></thead>
         <tbody>${products.map((product) => `
           <tr id="${prefix}product-${product.id}"${product.id === changedId ? " data-inventory-updated" : ""}>
@@ -66,7 +66,7 @@ export function renderResults(store, params = new URLSearchParams(), outOfBand =
             </div></th>
             <td><span class="lab-status lab-status-${esc(tones[product.status])}">${esc(product.status)}</span></td>
             <td class="lab-category">${esc(product.category)}</td>
-            <td class="lab-row-action"><button type="button" id="${prefix}edit-product-${product.id}" class="rl-button lab-edit" aria-label="Edit ${esc(product.name)}" aria-haspopup="dialog"
+            <td class="lab-row-action"><button type="button" id="${prefix}edit-product-${product.id}" class="mero-button lab-edit" aria-label="Edit ${esc(product.name)}" aria-haspopup="dialog"
               hx-get="${basePath}/${product.id}/edit" hx-target="#${prefix}lab-overlay" hx-sync="#${prefix}lab-overlay:replace">${icon("edit")}</button></td>
           </tr>`).join("") || '<tr><td colspan="4"><div class="lab-empty"><strong>No matching products</strong><span>Try a different search or category.</span></div></td></tr>'}</tbody>
       </table>
@@ -94,20 +94,20 @@ export function renderWorkbench(store, { expanded = false, dashboard = false, in
     <header class="lab-header"><div class="lab-breadcrumb"><span class="lab-workspace" aria-hidden="true">${esc(brand.slice(0, 1))}</span><span>${esc(brand)}</span><span class="lab-slash">/</span><span>Inventory</span></div><span class="lab-live"><i></i> Live demo</span></header>
     <div class="lab-body">
       <div class="lab-heading"><div><h2>Products</h2><p>Manage your product catalog.</p></div>
-        <button type="button" id="${prefix}add-product" class="rl-button lab-add" aria-haspopup="dialog" hx-get="${basePath}/new" hx-target="#${prefix}lab-overlay" hx-sync="#${prefix}lab-overlay:replace">${icon("plus")} <span>Add product</span></button>
+        <button type="button" id="${prefix}add-product" class="mero-button lab-add" aria-haspopup="dialog" hx-get="${basePath}/new" hx-target="#${prefix}lab-overlay" hx-sync="#${prefix}lab-overlay:replace">${icon("plus")} <span>Add product</span></button>
       </div>
       <form id="${prefix}lab-filters" class="lab-toolbar" role="search" hx-get="${basePath}" hx-target="#${prefix}product-results-frame" hx-swap="innerHTML" hx-sync="this:replace"
         hx-trigger="submit, input changed delay:200ms from:find [type=search], change">
         <label class="lab-search">${icon("search")} <span class="lab-sr-only">Search products</span><input id="${prefix}lab-search" type="search" name="q" value="${esc(initial.get("q"))}" placeholder="Search products…" autocomplete="off"></label>
         ${dashboard ? '<input type="hidden" name="dashboard" value="1">' : ""}
-        <label class="lab-filter"><span class="lab-sr-only">Filter by category</span><select class="rl-select" name="filterCategory"><option value="">All categories</option>${options(categories, initial.get("filterCategory"))}</select></label>
-        ${expanded ? `<label class="lab-filter lab-order"><span class="lab-sr-only">Sort products</span><select class="rl-select" name="order"><option value="">Default order</option><option value="name"${initial.get("order") === "name" ? " selected" : ""}>Sort by name</option></select></label>` : ""}
+        <label class="lab-filter"><span class="lab-sr-only">Filter by category</span><select class="mero-select" name="filterCategory"><option value="">All categories</option>${options(categories, initial.get("filterCategory"))}</select></label>
+        ${expanded ? `<label class="lab-filter lab-order"><span class="lab-sr-only">Sort products</span><select class="mero-select" name="order"><option value="">Default order</option><option value="name"${initial.get("order") === "name" ? " selected" : ""}>Sort by name</option></select></label>` : ""}
       </form>
       <p class="lab-request-error" data-lab-request-error role="alert" hidden></p>
       <div id="${prefix}product-results-frame">${renderResults(store, initial, false, context)}</div>
       ${inspect ? `<details class="lab-scenarios" id="${prefix}lab-scenarios"><summary>Request scenarios</summary>
-        <label>Next save <select class="rl-select" data-inventory-scenario><option value="">Normal response</option><option value="slow">Slow response (1 second)</option><option value="fail">Server error (500)</option><option value="invalid">Validation error (422)</option></select></label>
-        <button type="button" class="rl-button rl-button-sm" hx-post="${basePath}/reset" hx-target="#${prefix}product-results-frame" hx-swap="innerHTML" hx-include="#${prefix}lab-filters">Restore sample products</button>
+        <label>Next save <select class="mero-select" data-inventory-scenario><option value="">Normal response</option><option value="slow">Slow response (1 second)</option><option value="fail">Server error (500)</option><option value="invalid">Validation error (422)</option></select></label>
+        <button type="button" class="mero-button mero-button-sm" hx-post="${basePath}/reset" hx-target="#${prefix}product-results-frame" hx-swap="innerHTML" hx-include="#${prefix}lab-filters">Restore sample products</button>
       </details>` : ""}
     </div>
     <div id="${prefix}lab-overlay">${initialDialog}</div>
@@ -118,14 +118,14 @@ export function renderProductDialog(product, errors = {}, isNew = false, context
   const { prefix, basePath } = context;
   const id = product.id;
   const title = isNew ? "Add product" : "Edit product";
-  return `<dialog id="${prefix}product-dialog" class="rl-dialog rl-drawer lab-dialog" data-rl-autoopen aria-labelledby="${prefix}product-dialog-title">
-    <div class="rl-dialog-body lab-dialog-body">
+  return `<dialog id="${prefix}product-dialog" class="mero-dialog mero-drawer lab-dialog" data-mero-autoopen aria-labelledby="${prefix}product-dialog-title">
+    <div class="mero-dialog-body lab-dialog-body">
     <header class="lab-dialog-head">
       <div><h2 id="${prefix}product-dialog-title">${title}</h2><p>${isNew ? "Create an item in your catalog." : "Update the product details."}</p></div>
-      <button type="button" class="rl-button lab-dialog-close" data-rl-close aria-label="Close">×</button>
+      <button type="button" class="mero-button lab-dialog-close" data-mero-close aria-label="Close">×</button>
     </header>
     ${renderProductForm(product, errors, isNew, context, version)}
-    ${isNew ? "" : `<div class="lab-danger-zone"><button type="button" class="rl-button lab-delete" aria-haspopup="dialog"
+    ${isNew ? "" : `<div class="lab-danger-zone"><button type="button" class="mero-button lab-delete" aria-haspopup="dialog"
       hx-get="${basePath}/${id}/delete" hx-target="#${prefix}lab-confirm" hx-sync="#${prefix}lab-confirm:replace">Delete product</button></div><div id="${prefix}lab-confirm"></div>`}
     </div>
   </dialog>`;
@@ -135,29 +135,29 @@ export function renderProductForm(product, errors = {}, isNew = false, context =
   const { prefix, basePath } = context;
   const action = isNew ? basePath : `${basePath}/${product.id}`;
   const textField = (name, label, value, maxLength, autofocus = false) => `<label class="lab-field" for="${prefix}product-${name}"><span>${label}</span>
-    <input class="rl-input" id="${prefix}product-${name}" name="${name}" value="${esc(value)}" maxlength="${maxLength}" required${autofocus ? " autofocus" : ""}${errors[name] ? ` aria-invalid="true" aria-describedby="${prefix}error-${name}"` : ""}>
+    <input class="mero-input" id="${prefix}product-${name}" name="${name}" value="${esc(value)}" maxlength="${maxLength}" required${autofocus ? " autofocus" : ""}${errors[name] ? ` aria-invalid="true" aria-describedby="${prefix}error-${name}"` : ""}>
     ${errors[name] ? `<small id="${prefix}error-${name}" class="lab-field-error">${esc(errors[name])}</small>` : ""}</label>`;
-  return `<form class="lab-form" data-rl-form data-rl-return-focus="#${prefix}${isNew ? "add-product" : `edit-product-${product.id}`}" data-rl-fallback-focus="#${prefix}add-product"
+  return `<form class="lab-form" data-mero-form data-mero-return-focus="#${prefix}${isNew ? "add-product" : `edit-product-${product.id}`}" data-mero-fallback-focus="#${prefix}add-product"
       hx-post="${action}" hx-target="this" hx-swap="outerHTML" hx-sync="this:drop" hx-include="#${prefix}lab-filters">
     ${isNew ? "" : `<input type="hidden" name="productVersion" value="${esc(version)}">`}
     ${textField("name", "Product name", product.name, 80, true)}
     ${textField("sku", "SKU", product.sku, 24)}
-    ${product.finish ? `<label class="lab-field"><span>Finish</span><select class="rl-select" name="finish"${errors.finish ? ` aria-invalid="true" aria-describedby="${prefix}error-finish"` : ""}>${Object.entries(finishes).map(([value, label]) => `<option value="${value}"${value === product.finish ? " selected" : ""}>${label}</option>`).join("")}</select>${errors.finish ? `<small id="${prefix}error-finish" class="lab-field-error">Choose a finish.</small>` : ""}</label>` : ""}
-    <label class="lab-field"><span>Category</span><select class="rl-select" name="category"${errors.category ? ` aria-invalid="true" aria-describedby="${prefix}error-category"` : ""}>${options(categories, product.category)}</select>${errors.category ? `<small id="${prefix}error-category" class="lab-field-error">Choose a category.</small>` : ""}</label>
-    <label class="lab-field"><span>Status</span><select class="rl-select" name="status"${errors.status ? ` aria-invalid="true" aria-describedby="${prefix}error-status"` : ""}>${options(states, product.status)}</select>${errors.status ? `<small id="${prefix}error-status" class="lab-field-error">Choose a status.</small>` : ""}</label>
-    <p data-rl-form-error class="lab-field-error" role="alert" hidden></p>
-    <footer class="lab-form-actions"><button type="button" class="rl-button lab-cancel" data-rl-close>Cancel</button><button type="submit" class="rl-button lab-add">${isNew ? "Create product" : "Save changes"}</button></footer>
+    ${product.finish ? `<label class="lab-field"><span>Finish</span><select class="mero-select" name="finish"${errors.finish ? ` aria-invalid="true" aria-describedby="${prefix}error-finish"` : ""}>${Object.entries(finishes).map(([value, label]) => `<option value="${value}"${value === product.finish ? " selected" : ""}>${label}</option>`).join("")}</select>${errors.finish ? `<small id="${prefix}error-finish" class="lab-field-error">Choose a finish.</small>` : ""}</label>` : ""}
+    <label class="lab-field"><span>Category</span><select class="mero-select" name="category"${errors.category ? ` aria-invalid="true" aria-describedby="${prefix}error-category"` : ""}>${options(categories, product.category)}</select>${errors.category ? `<small id="${prefix}error-category" class="lab-field-error">Choose a category.</small>` : ""}</label>
+    <label class="lab-field"><span>Status</span><select class="mero-select" name="status"${errors.status ? ` aria-invalid="true" aria-describedby="${prefix}error-status"` : ""}>${options(states, product.status)}</select>${errors.status ? `<small id="${prefix}error-status" class="lab-field-error">Choose a status.</small>` : ""}</label>
+    <p data-mero-form-error class="lab-field-error" role="alert" hidden></p>
+    <footer class="lab-form-actions"><button type="button" class="mero-button lab-cancel" data-mero-close>Cancel</button><button type="submit" class="mero-button lab-add">${isNew ? "Create product" : "Save changes"}</button></footer>
   </form>`;
 }
 
 export function renderDelete(product, context = inventoryContext()) {
   const { prefix, basePath } = context;
-  return `<dialog class="rl-dialog lab-confirm-dialog" id="${prefix}confirm-delete" data-rl-autoopen aria-labelledby="${prefix}confirm-delete-title">
-    <div class="rl-dialog-body lab-dialog-body"><h2 id="${prefix}confirm-delete-title">Delete ${esc(product.name)}?</h2><p>This removes the product from your catalog.</p>
-    <form data-rl-form data-rl-close-all data-rl-return-focus="#${prefix}add-product" hx-post="${basePath}/${product.id}/delete" hx-target="this" hx-swap="outerHTML" hx-sync="this:drop" hx-include="#${prefix}lab-filters">
+  return `<dialog class="mero-dialog lab-confirm-dialog" id="${prefix}confirm-delete" data-mero-autoopen aria-labelledby="${prefix}confirm-delete-title">
+    <div class="mero-dialog-body lab-dialog-body"><h2 id="${prefix}confirm-delete-title">Delete ${esc(product.name)}?</h2><p>This removes the product from your catalog.</p>
+    <form data-mero-form data-mero-close-all data-mero-return-focus="#${prefix}add-product" hx-post="${basePath}/${product.id}/delete" hx-target="this" hx-swap="outerHTML" hx-sync="this:drop" hx-include="#${prefix}lab-filters">
       <input type="hidden" name="productVersion" value="${productVersion(product)}">
-      <p data-rl-form-error class="lab-field-error" role="alert" hidden></p>
-      <footer class="lab-form-actions"><button type="button" class="rl-button lab-cancel" data-rl-close autofocus>Cancel</button><button type="submit" class="rl-button lab-delete-solid">Delete product</button></footer>
+      <p data-mero-form-error class="lab-field-error" role="alert" hidden></p>
+      <footer class="lab-form-actions"><button type="button" class="mero-button lab-cancel" data-mero-close autofocus>Cancel</button><button type="submit" class="mero-button lab-delete-solid">Delete product</button></footer>
     </form></div>
   </dialog>`;
 }

@@ -94,3 +94,18 @@ test("search metadata describes the document and distinguishes previews and HTML
   assert.match(fragment, /<h1\b[^>]*>Button<\/h1>/);
   assert.doesNotMatch(fragment, /<head>|<footer\b/i);
 });
+
+test("HEAD answers like GET with the same status and headers and no body", async t => {
+  const base = await serve(t);
+  for (const path of ["/", "/components/button", "/sitemap.xml", "/mero.css", "/demo/stock-summary", "/no-such-page"]) {
+    const get = await fetch(base + path);
+    const head = await fetch(base + path, { method: "HEAD" });
+    assert.equal(head.status, get.status, path);
+    for (const name of ["content-type", "cache-control", "vary", "x-robots-tag", "x-content-type-options"]) {
+      assert.equal(head.headers.get(name), get.headers.get(name), path + " " + name);
+    }
+    assert.equal(await head.text(), "", path);
+    assert.notEqual(await get.text(), "", path);
+  }
+  assert.equal((await fetch(base + "/demo/settings", { method: "PUT" })).status, 404);
+});

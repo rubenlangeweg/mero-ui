@@ -42,19 +42,19 @@ test('collection interactions preserve drafts, keyboard focus and access to popo
     await focused('[data-grid-cancel]');
     await page.keyboard.press('Enter');
     await focused('[data-grid-delete="6"]');
-    assert.ok(await page.locator('.rl-collection-scroll').evaluate(el => el.scrollWidth <= el.clientWidth+1));
+    assert.ok(await page.locator('.mero-collection-scroll').evaluate(el => el.scrollWidth <= el.clientWidth+1));
 
-    await page.locator('[data-rl-grid]').evaluate(first => {
+    await page.locator('[data-mero-grid]').evaluate(first => {
       const copy = first.cloneNode(true);
       first.after(copy);
       window.htmx.process(copy);
     });
-    const grids = page.locator('[data-rl-grid]');
+    const grids = page.locator('[data-mero-grid]');
     await grids.nth(1).getByRole('checkbox',{name:'Select Arc Task Lamp',exact:true}).check();
     await grids.nth(1).getByRole('button',{name:'Edit Arc Task Lamp'}).click();
     await focused('input[name=name]');
     assert.equal(await grids.nth(1).locator('[data-grid-count]').textContent(),'1 selected');
-    assert.equal(await grids.first().locator('.rl-collection-editor').count(),0);
+    assert.equal(await grids.first().locator('.mero-collection-editor').count(),0);
     assert.ok(await grids.first().locator('[data-grid-bar]').isHidden());
 
     let finishInitialRefresh;
@@ -95,7 +95,7 @@ test('collection interactions preserve drafts, keyboard focus and access to popo
       return el === document.activeElement && el.contains(document.elementFromPoint(bounds.left+bounds.width/2,bounds.top+bounds.height/2));
     }));
     await page.keyboard.press('Escape');
-    await focused('.rl-hover-trigger');
+    await focused('.mero-hover-trigger');
     assert.equal(await trigger.getAttribute('aria-expanded'),'false');
   });
 
@@ -115,7 +115,7 @@ test('copied compositions fit a narrow host using only their distributed styles'
       if (path === '/') return route.fulfill({contentType:'text/html',body:`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/mero.css"><link rel="stylesheet" href="/mero-composition.css"><main>${markup}</main></html>`});
       const asset = path.slice(1);
       if (!['mero.css','mero-composition.css','studio-lamp.webp'].includes(asset)) return route.abort();
-      return route.fulfill({contentType:asset.endsWith('.css') ? 'text/css' : 'image/webp',body:await readFile(new URL('../public/'+asset,import.meta.url))});
+      return route.fulfill({contentType:asset.endsWith('.css') ? 'text/css' : 'image/webp',body:await readFile(new URL('../ui/'+asset,import.meta.url))});
     });
     await page.goto(origin+'/');
     const spill = await page.locator('[data-example]').evaluateAll(elements => elements.filter(el => el.scrollWidth > el.clientWidth+1).map(el => el.dataset.example));

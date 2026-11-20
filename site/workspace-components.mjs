@@ -1,7 +1,7 @@
 import { escapeHtml as esc } from "./html.mjs";
 
-const actionClass = "rl-button rl-button-sm rl-button-secondary";
-const primaryClass = "rl-button rl-button-sm rl-button-primary";
+const actionClass = "mero-button mero-button-sm mero-button-secondary";
+const primaryClass = "mero-button mero-button-sm mero-button-primary";
 
 const iconPaths = {
   home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
@@ -13,7 +13,7 @@ const iconPaths = {
   chevron: '<path d="m6 9 6 6 6-6"/>',
 };
 function icon(name) {
-  return `<svg class="rlw-icon" aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${iconPaths[name]}</svg>`;
+  return `<svg class="mero-ws-icon" aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${iconPaths[name]}</svg>`;
 }
 
 function component(id, name, description, demo, notes) {
@@ -29,46 +29,46 @@ const cellInfo = {
 };
 
 function cellControl(key) {
-  if (key === "color") return '<input class="rlw-color" type="color" name="value" value="#56846f" aria-label="Workspace accent">';
-  if (key === "select") return '<select class="rl-select" name="value" aria-label="Start of week"><option>Monday</option><option>Sunday</option><option>Saturday</option></select>';
-  if (key === "slider") return '<input class="rl-slider" type="range" name="value" min="60" max="120" step="5" value="80" aria-label="Preview size">';
-  return '<input class="rl-switch" type="checkbox" role="switch" name="value" value="on" aria-label="Release notifications" checked>';
+  if (key === "color") return '<input class="mero-ws-color" type="color" name="value" value="#56846f" aria-label="Workspace accent">';
+  if (key === "select") return '<select class="mero-select" name="value" aria-label="Start of week"><option>Monday</option><option>Sunday</option><option>Saturday</option></select>';
+  if (key === "slider") return '<input class="mero-slider" type="range" name="value" min="60" max="120" step="5" value="80" aria-label="Preview size">';
+  return '<input class="mero-switch" type="checkbox" role="switch" name="value" value="on" aria-label="Release notifications" checked>';
 }
 
 function cell(key) {
   const { title, hint } = cellInfo[key];
-  return `<form class="rlw-cell" hx-post="/demo/workspace/cell/${key}" hx-trigger="change" hx-target="find output" hx-sync="this:replace">
-  <label class="rlw-cell-row"><span><strong>${title}</strong><small>${hint}</small></span>
+  return `<form class="mero-ws-cell" hx-post="/demo/workspace/cell/${key}" hx-trigger="change" hx-target="find output" hx-sync="this:replace">
+  <label class="mero-ws-cell-row"><span><strong>${title}</strong><small>${hint}</small></span>
     ${cellControl(key)}
   </label>
-  <output role="status" class="rlw-status"></output>
+  <output role="status" class="mero-ws-status"></output>
 </form>`;
 }
 
 function choiceGroup(type, name, title, choices) {
-  return `<form class="rlw-cardform"><fieldset class="rlw-choices">
+  return `<form class="mero-ws-cardform"><fieldset class="mero-ws-choices">
   <legend>${title}</legend>
-  ${choices.map(([label, detail, value], index) => `<label class="rlw-choice"><input class="rl-${type}" type="${type}" name="${name}" value="${value}"${index === 0 ? " checked" : ""}><span><strong>${label}</strong><small>${detail}</small></span></label>`).join("\n  ")}
+  ${choices.map(([label, detail, value], index) => `<label class="mero-ws-choice"><input class="mero-${type}" type="${type}" name="${name}" value="${value}"${index === 0 ? " checked" : ""}><span><strong>${label}</strong><small>${detail}</small></span></label>`).join("\n  ")}
 </fieldset></form>`;
 }
 
 function fileForm(drop) {
-  return `<form class="rlw-upload" method="post" enctype="multipart/form-data" hx-post="/demo/workspace/upload" hx-encoding="multipart/form-data" hx-target="find output" hx-sync="this:replace" data-rlw-upload>
-  <label class="${drop ? "rlw-drop" : "rlw-file"}">${drop ? '<span aria-hidden="true" class="rlw-upload-icon">↑</span><strong>Drop a product image</strong><small>or choose a file · PNG or JPEG, up to 2 MB</small>' : '<strong>Product photography</strong><small>Choose a PNG or JPEG up to 2 MB.</small>'}
+  return `<form class="mero-ws-upload" method="post" enctype="multipart/form-data" hx-post="/demo/workspace/upload" hx-encoding="multipart/form-data" hx-target="find output" hx-sync="this:replace" data-mero-ws-upload>
+  <label class="${drop ? "mero-ws-drop" : "mero-ws-file"}">${drop ? '<span aria-hidden="true" class="mero-ws-upload-icon">↑</span><strong>Drop a product image</strong><small>or choose a file · PNG or JPEG, up to 2 MB</small>' : '<strong>Product photography</strong><small>Choose a PNG or JPEG up to 2 MB.</small>'}
     <input name="photo" type="file" accept="image/png,image/jpeg" required aria-label="Product image">
   </label>
-  ${drop ? '<span class="rlw-file-name" aria-live="polite"></span>' : ""}
+  ${drop ? '<span class="mero-ws-file-name" aria-live="polite"></span>' : ""}
   <button class="${actionClass}" type="submit">Check image</button>
-  <output class="rlw-status" role="status"></output>
+  <output class="mero-ws-status" role="status"></output>
 </form>`;
 }
 
-const inlineSelect = `<label class="rlw-inline">Publish to
-  <select class="rl-select rlw-inline-select" name="audience"><option>Team only</option><option>Everyone</option><option>Just me</option></select>
+const inlineSelect = `<label class="mero-ws-inline">Publish to
+  <select class="mero-select mero-ws-inline-select" name="audience"><option>Team only</option><option>Everyone</option><option>Just me</option></select>
 </label>`;
 
-const stepperNumber = `<div class="rlw-labeled"><strong>Seats</strong>
-  <span class="rlw-step-number" data-rlw-number>
+const stepperNumber = `<div class="mero-ws-labeled"><strong>Seats</strong>
+  <span class="mero-ws-step-number" data-mero-ws-number>
     <button type="button" aria-label="Remove one seat" data-step="-1">${icon("minus")}</button>
     <input type="number" name="seats" aria-label="Seats" min="1" max="12" step="1" value="3" inputmode="numeric">
     <button type="button" aria-label="Add one seat" data-step="1">${icon("plus")}</button>
@@ -76,18 +76,18 @@ const stepperNumber = `<div class="rlw-labeled"><strong>Seats</strong>
   <small>1 to 12 seats per workspace</small>
 </div>`;
 
-const nativeSelect = `<label class="rlw-labeled rlw-workspace-picker"><strong>Default workspace</strong>
-  <select class="rl-select" name="workspace"><optgroup label="Design"><option>Studio North</option><option>Archive</option></optgroup><optgroup label="Operations"><option>Production</option></optgroup></select>
+const nativeSelect = `<label class="mero-ws-labeled mero-ws-workspace-picker"><strong>Default workspace</strong>
+  <select class="mero-select" name="workspace"><optgroup label="Design"><option>Studio North</option><option>Archive</option></optgroup><optgroup label="Operations"><option>Production</option></optgroup></select>
 </label>`;
 
-const richEditor = `<form class="rlw-editor" data-rlw-editor hx-post="/demo/workspace/preview" hx-target="find output">
-  <div class="rlw-editor-tools" role="group" aria-label="Text formatting" hidden>
+const richEditor = `<form class="mero-ws-editor" data-mero-ws-editor hx-post="/demo/workspace/preview" hx-target="find output">
+  <div class="mero-ws-editor-tools" role="group" aria-label="Text formatting" hidden>
     <button type="button" data-format="bold" aria-label="Bold" aria-pressed="false"><b>B</b></button>
     <button type="button" data-format="italic" aria-label="Italic" aria-pressed="false"><i>I</i></button>
   </div>
-  <textarea class="rl-input" name="body" aria-label="Product description" maxlength="4000">A lamp for the quiet hours.</textarea>
+  <textarea class="mero-input" name="body" aria-label="Product description" maxlength="4000">A lamp for the quiet hours.</textarea>
   <button class="${actionClass}" type="submit">Preview description</button>
-  <output class="rlw-rich-preview" aria-live="polite"></output>
+  <output class="mero-ws-rich-preview" aria-live="polite"></output>
 </form>`;
 
 const navLinks = [["Overview", "/layouts/dashboard"], ["Inventory", "/layouts/dashboard?view=inventory"], ["Settings", "/layouts/dashboard?view=settings"]];
@@ -96,92 +96,92 @@ function nav(label, links = navLinks) {
 }
 
 function appLayout(sidebarOnly = false) {
-  return `<section class="rlw-shell" data-rlw-shell aria-label="Studio workspace">
-  <aside class="rlw-side"><strong>Studio North</strong>${nav("Workspace sidebar")}</aside>
-  <div class="rlw-shell-main">
-    <button class="${actionClass} rlw-mobile-nav" type="button" data-rlw-open>Open navigation</button>
+  return `<section class="mero-ws-shell" data-mero-ws-shell aria-label="Studio workspace">
+  <aside class="mero-ws-side"><strong>Studio North</strong>${nav("Workspace sidebar")}</aside>
+  <div class="mero-ws-shell-main">
+    <button class="${actionClass} mero-ws-mobile-nav" type="button" data-mero-ws-open>Open navigation</button>
     <header><small>Studio North</small><h2>${sidebarOnly ? "Workspace" : "Release room"}</h2></header>
-    <div class="rlw-summary"><span class="rlw-dot"></span><div><strong>Spring collection</strong><small>Photography approved</small></div></div>
-    <a class="rl-link" href="/layouts/dashboard?view=inventory">Open inventory →</a>
+    <div class="mero-ws-summary"><span class="mero-ws-dot"></span><div><strong>Spring collection</strong><small>Photography approved</small></div></div>
+    <a class="mero-link" href="/layouts/dashboard?view=inventory">Open inventory →</a>
   </div>
-  <dialog class="rl-dialog rlw-drawer" aria-label="Workspace navigation"><div class="rl-dialog-body">
-    <button class="${actionClass}" type="button" data-rl-close autofocus>Close navigation</button>
+  <dialog class="mero-dialog mero-ws-drawer" aria-label="Workspace navigation"><div class="mero-dialog-body">
+    <button class="${actionClass}" type="button" data-mero-close autofocus>Close navigation</button>
     ${nav("Mobile workspace")}
   </div></dialog>
 </section>`;
 }
 
-const command = `<section class="rlw-command" data-rlw-command>
-  <button class="rlw-launch" type="button" data-rlw-open><span>Search commands</span><kbd>⌘ / Ctrl K</kbd></button>
-  <dialog class="rl-dialog rlw-command-dialog" aria-label="Workspace commands">
-    <div class="rlw-command-head"><input type="search" data-command-search placeholder="Search pages and actions…" aria-label="Search commands" autofocus><button type="button" data-rl-close aria-label="Close commands">${icon("close")}</button></div>
-    <div class="rlw-command-items">
+const command = `<section class="mero-ws-command" data-mero-ws-command>
+  <button class="mero-ws-launch" type="button" data-mero-ws-open><span>Search commands</span><kbd>⌘ / Ctrl K</kbd></button>
+  <dialog class="mero-dialog mero-ws-command-dialog" aria-label="Workspace commands">
+    <div class="mero-ws-command-head"><input type="search" data-command-search placeholder="Search pages and actions…" aria-label="Search commands" autofocus><button type="button" data-mero-close aria-label="Close commands">${icon("close")}</button></div>
+    <div class="mero-ws-command-items">
       <a href="/layouts/dashboard?view=inventory"><strong>Open inventory</strong><small>Workspace</small></a>
       <a href="/layouts/dashboard?view=settings"><strong>Workspace settings</strong><small>Workspace</small></a>
       <button type="button" data-command-copy><strong>Copy page link</strong><small>Action</small></button>
     </div>
-    <p class="rlw-command-empty" hidden>No matching commands</p>
+    <p class="mero-ws-command-empty" hidden>No matching commands</p>
   </dialog>
-  <output class="rlw-status" role="status"></output>
+  <output class="mero-ws-status" role="status"></output>
 </section>`;
 
-const contextMenu = `<section class="rlw-context" data-rlw-context>
-  <div class="rlw-context-row" tabindex="0" aria-label="Product sheet. Press Shift F10 for actions"><span><strong>Product sheet</strong><small>Studio documents</small></span><button class="${actionClass}" type="button" data-rlw-context-open aria-haspopup="menu" aria-expanded="false">Actions</button></div>
-  <div class="rlw-menu" role="menu" aria-label="Product sheet actions" hidden>
-    <button role="menuitem" tabindex="-1" type="button" data-rlw-action="pin">Pin document</button>
+const contextMenu = `<section class="mero-ws-context" data-mero-ws-context>
+  <div class="mero-ws-context-row" tabindex="0" aria-label="Product sheet. Press Shift F10 for actions"><span><strong>Product sheet</strong><small>Studio documents</small></span><button class="${actionClass}" type="button" data-mero-ws-context-open aria-haspopup="menu" aria-expanded="false">Actions</button></div>
+  <div class="mero-ws-menu" role="menu" aria-label="Product sheet actions" hidden>
+    <button role="menuitem" tabindex="-1" type="button" data-mero-ws-action="pin">Pin document</button>
     <a role="menuitem" tabindex="-1" href="/layouts/dashboard?view=inventory">Open inventory</a>
   </div>
-  <output class="rlw-status" role="status"></output>
+  <output class="mero-ws-status" role="status"></output>
 </section>`;
 
-const segment = `<form><fieldset class="rlw-segment"><legend class="rlw-sr">Preview density</legend>
+const segment = `<form><fieldset class="mero-ws-segment"><legend class="mero-ws-sr">Preview density</legend>
   <label><input name="density" type="radio" value="compact">Compact</label>
   <label><input name="density" type="radio" value="regular" checked>Regular</label>
   <label><input name="density" type="radio" value="spacious">Spacious</label>
 </fieldset></form>`;
 
 const flowSteps = [
-  ["Details", '<label class="rlw-labeled"><strong>Project name</strong><input class="rl-input" name="project" required maxlength="80" placeholder="Spring collection"></label>'],
-  ["Access", '<label class="rlw-labeled"><strong>Access level</strong><select class="rl-select" name="access"><option>Team only</option><option>Private</option></select></label>'],
-  ["Review", '<p data-rlw-review></p>'],
+  ["Details", '<label class="mero-ws-labeled"><strong>Project name</strong><input class="mero-input" name="project" required maxlength="80" placeholder="Spring collection"></label>'],
+  ["Access", '<label class="mero-ws-labeled"><strong>Access level</strong><select class="mero-select" name="access"><option>Team only</option><option>Private</option></select></label>'],
+  ["Review", '<p data-mero-ws-review></p>'],
 ];
-const stepper = `<form class="rlw-wizard" data-rlw-wizard hx-post="/demo/workspace/project" hx-target="find output">
+const stepper = `<form class="mero-ws-wizard" data-mero-ws-wizard hx-post="/demo/workspace/project" hx-target="find output">
   <ol aria-label="Project setup">${flowSteps.map(([name], i) => `<li${i === 0 ? ' aria-current="step"' : ""}>${name}</li>`).join("")}</ol>
   ${flowSteps.map(([title, fields], i) => `<section${i !== 0 ? " hidden" : ""}><h2 tabindex="-1">${title}</h2>${fields}</section>`).join("\n  ")}
-  <footer><button class="${actionClass}" data-rlw-back type="button" hidden>Back</button><button class="${primaryClass}" data-rlw-next type="button">Continue</button><button class="${primaryClass}" data-rlw-finish type="submit" hidden>Confirm setup</button></footer>
-  <output role="status" class="rlw-status"></output>
+  <footer><button class="${actionClass}" data-mero-ws-back type="button" hidden>Back</button><button class="${primaryClass}" data-mero-ws-next type="button">Continue</button><button class="${primaryClass}" data-mero-ws-finish type="submit" hidden>Confirm setup</button></footer>
+  <output role="status" class="mero-ws-status"></output>
 </form>`;
 
 function resizable(adaptive = false) {
-  return `<div class="rlw-split" data-rlw-split${adaptive ? ' data-rlw-snap data-rlw-snap-key="catalog-collection"' : ""}>
+  return `<div class="mero-ws-split" data-mero-ws-split${adaptive ? ' data-mero-ws-snap data-mero-ws-snap-key="catalog-collection"' : ""}>
   <section id="lighting-collection"><small>Collection</small><h2>Lighting</h2><p>Pendant lights<br>Table lamps<br>Wall lights</p></section>
-  <div class="rlw-split-handle" role="separator" aria-label="Resize collection and details" aria-controls="lighting-collection" aria-orientation="vertical" aria-valuemin="20" aria-valuemax="80" aria-valuenow="40" tabindex="0"></div>
+  <div class="mero-ws-split-handle" role="separator" aria-label="Resize collection and details" aria-controls="lighting-collection" aria-orientation="vertical" aria-valuemin="20" aria-valuemax="80" aria-valuenow="40" tabindex="0"></div>
   <section><small>Selected item</small><h2>Arc Task Lamp</h2><p>${adaptive ? "Drag the divider and release it near the same width three times. On the next pass, feel where it catches." : "Adjust the divider to change the space available to each panel."}</p></section>
 </div>`;
 }
 
 const emojiChoices = [["✳️","spark"],["👍","thumbs up"],["❤️","heart"],["🎉","celebrate"],["✅","done"],["👀","watching"],["💡","idea"],["🌿","leaf"],["⭐","star"],["🔥","fire"],["🚀","rocket"],["☕","coffee"]];
-const emojiPicker = `<div class="rlw-emoji" data-rlw-emoji>
-  <button class="${actionClass}" type="button" data-rlw-open>Choose a reaction</button>
-  <dialog class="rl-dialog" aria-label="Choose an emoji"><div class="rl-dialog-body">
-    <div class="rlw-command-head"><input type="search" placeholder="Find an emoji" aria-label="Search emoji" autofocus><button type="button" aria-label="Close picker" data-rl-close>${icon("close")}</button></div>
-    <div class="rlw-emoji-grid">${emojiChoices.map(([emoji, label]) => `<button type="button" aria-label="${label}">${emoji}</button>`).join("")}</div><p class="rlw-command-empty" hidden>No matching emoji</p>
+const emojiPicker = `<div class="mero-ws-emoji" data-mero-ws-emoji>
+  <button class="${actionClass}" type="button" data-mero-ws-open>Choose a reaction</button>
+  <dialog class="mero-dialog" aria-label="Choose an emoji"><div class="mero-dialog-body">
+    <div class="mero-ws-command-head"><input type="search" placeholder="Find an emoji" aria-label="Search emoji" autofocus><button type="button" aria-label="Close picker" data-mero-close>${icon("close")}</button></div>
+    <div class="mero-ws-emoji-grid">${emojiChoices.map(([emoji, label]) => `<button type="button" aria-label="${label}">${emoji}</button>`).join("")}</div><p class="mero-ws-command-empty" hidden>No matching emoji</p>
   </div></dialog>
-  <input type="hidden" name="reaction" value=""><output role="status" class="rlw-status"></output>
+  <input type="hidden" name="reaction" value=""><output role="status" class="mero-ws-status"></output>
 </div>`;
 
-const joinedFilter = `<form class="rlw-filter" hx-get="/demo/workspace/filter" hx-target="find output" hx-sync="this:replace">
-  <div class="rlw-join"><input type="search" name="q" class="rl-input" placeholder="Find a product" aria-label="Search products"><select name="status" class="rl-select" aria-label="Filter by status"><option value="">All states</option><option>Draft</option><option>Ready</option></select><button class="${primaryClass}" type="submit">Filter</button></div>
-  <output class="rlw-results" aria-live="polite">${filterResults(new URLSearchParams())}</output>
+const joinedFilter = `<form class="mero-ws-filter" hx-get="/demo/workspace/filter" hx-target="find output" hx-sync="this:replace">
+  <div class="mero-ws-join"><input type="search" name="q" class="mero-input" placeholder="Find a product" aria-label="Search products"><select name="status" class="mero-select" aria-label="Filter by status"><option value="">All states</option><option>Draft</option><option>Ready</option></select><button class="${primaryClass}" type="submit">Filter</button></div>
+  <output class="mero-ws-results" aria-live="polite">${filterResults(new URLSearchParams())}</output>
 </form>`;
 
-const menu = `<details class="rlw-mega"><summary>Browse the library ${icon("chevron")}</summary>
+const menu = `<details class="mero-ws-mega"><summary>Browse the library ${icon("chevron")}</summary>
   <div><section><strong>Components</strong>${nav("Component categories", [["Form controls","/components/native-select"],["Navigation","/components/sidebar"],["Overlays","/components/emoji-picker"]])}</section><section><strong>Workspaces</strong>${nav("Workspace examples")}</section></div>
 </details>`;
-const dock = `<nav class="rlw-dock" aria-label="Workspace shortcuts">
+const dock = `<nav class="mero-ws-dock" aria-label="Workspace shortcuts">
   <a href="/layouts/dashboard">${icon("home")}Overview</a><a href="/layouts/dashboard?view=inventory">${icon("inventory")}Inventory</a><a href="/layouts/dashboard?view=settings">${icon("settings")}Settings</a>
 </nav>`;
-const fab = `<details class="rlw-fab"><summary aria-label="Quick actions">${icon("plus")}</summary>
+const fab = `<details class="mero-ws-fab"><summary aria-label="Quick actions">${icon("plus")}</summary>
   <nav aria-label="Quick actions"><a href="/layouts/dashboard?view=inventory">Manage inventory</a><a href="/layouts/dashboard?view=settings">Workspace settings</a></nav>
 </details>`;
 
@@ -201,7 +201,7 @@ export const groups = [
   { name: "Workspace navigation", items: [
     component("app-layout","App Layout","A responsive workspace with a sidebar, content area and mobile navigation drawer.",appLayout()),
     component("sidebar","Sidebar","Navigate the workspace from a side rail that becomes a drawer at narrow widths.",appLayout(true)),
-    component("navbar","Navbar","Place the workspace name and destinations in a wrapping top bar.",`<header class="rlw-navbar"><strong>Studio North</strong>${nav("Primary navigation")}</header>`),
+    component("navbar","Navbar","Place the workspace name and destinations in a wrapping top bar.",`<header class="mero-ws-navbar"><strong>Studio North</strong>${nav("Primary navigation")}</header>`),
     component("command","Command","Search destinations and actions, then use the arrows and Enter to execute.",command,"Click the trigger or press Cmd/Ctrl K. Escape returns focus to where you were working."),
     component("context-menu","Context Menu","Open item actions with the visible button, a secondary click, or Shift F10.",contextMenu),
     component("segment","Segment","Choose one display density in a compact segmented control.",segment),
@@ -217,7 +217,7 @@ export const groups = [
         name: "Adaptive",
         description: "The divider learns where you usually release it and snaps to that width. Recent drags count more.",
         demo: resizable(true),
-        notes: "For a precise width, hold the divider still when it snaps, then keep dragging. Arrow keys move one pixel at a time. Hold Shift for ten pixels. Add data-rlw-snap to enable snapping. Give each divider its own data-rlw-snap-key to remember its width and recent stops across reloads and HTMX swaps in this tab.",
+        notes: "For a precise width, hold the divider still when it snaps, then keep dragging. Arrow keys move one pixel at a time. Hold Shift for ten pixels. Add data-mero-ws-snap to enable snapping. Give each divider its own data-mero-ws-snap-key to remember its width and recent stops across reloads and HTMX swaps in this tab.",
       }],
       relatedExample: { href: "/layouts/mail", label: "Try the divider in Mail" },
     },

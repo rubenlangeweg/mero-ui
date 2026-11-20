@@ -35,11 +35,11 @@ export function renderStudio(studio, store, settings, params, options = {}) {
     case "calendar": content = renderStudioBookings(studio, params, options); break;
     case "companies": content = renderStudioCompanies(studio, params, options); break;
     case "inventory":
-      content = `<header class="rl-page-head"><div><h1>Inventory</h1><p>Products, stock and publication status.</p></div></header>
+      content = `<header class="mero-page-head"><div><h1>Inventory</h1><p>Products, stock and publication status.</p></div></header>
         ${renderStats(store)}${renderWorkbench(store, { expanded: true, dashboard: true, initial: params, brand: settings.name })}`;
       break;
     case "settings":
-      content = `<header class="rl-page-head"><div><h1>Workspace settings</h1></div></header>
+      content = `<header class="mero-page-head"><div><h1>Workspace settings</h1></div></header>
         ${renderSettingsForm(options.error ? options.values : settings, options.error, { formAttrs: studioForm("/demo/studio/settings", params) })}`;
       break;
     default: content = renderStudioOverview(studio, store, params, options);

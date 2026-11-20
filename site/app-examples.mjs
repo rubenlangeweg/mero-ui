@@ -37,14 +37,14 @@ export function layoutGallery() {
       <p>Explore complete, working interfaces built with Mero and HTMX.</p></header>
     <article id="example-dashboard" class="app-studio-feature app-color-dashboard">
       <div class="app-studio-intro"><h2>${studio.name}</h2><p>${studio.description}</p>
-        <a class="rl-button rl-button-primary site-cta" href="/layouts/dashboard">Open workspace ${icon("open")}</a>
+        <a class="mero-button mero-button-primary site-cta" href="/layouts/dashboard">Open workspace ${icon("open")}</a>
         <nav aria-label="Studio screens"><a href="/layouts/dashboard?view=companies">Companies</a><a href="/layouts/dashboard?view=board">Kanban board</a><a href="/layouts/dashboard?view=calendar">Bookings</a></nav>
       </div><a href="/layouts/dashboard" aria-label="Preview the Studio workspace">${artwork(studio.id)}</a>
     </article>
     <div class="app-gallery-grid">${examples.map(({ id, name, description }) => `
-      <a id="example-${id}" href="/layouts/${id}" class="app-gallery-card app-color-${id}" aria-labelledby="layout-${id}" aria-describedby="layout-${id}-description">
+      <a id="example-${id}" href="/layouts/${id}" class="app-gallery-card app-color-${id}">
         ${artwork(id)}
-        <div class="app-gallery-caption"><div><h2 id="layout-${id}">${name}</h2><p id="layout-${id}-description">${description}</p></div>
+        <div class="app-gallery-caption"><div><h2>${name}</h2><p>${description}</p></div>
           <span class="app-gallery-open">${icon("open")}</span></div>
       </a>`).join("")}</div>
     <a class="app-gallery-playground" href="/playground">Open the inventory playground ${icon("open")}</a>

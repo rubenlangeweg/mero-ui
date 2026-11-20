@@ -5,14 +5,14 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 
-export const styleCache = join(tmpdir(), 'relay-edit-comparison-5.8.1-3.2.7');
+export const styleCache = join(tmpdir(), 'mero-edit-comparison-5.8.1-3.2.7');
 const sources = [
   {id:'daisyui', name:'daisyui@5.8.1', archive:'daisyui-5.8.1.tgz', file:'package/daisyui.css', sha256:'0e737f52e0c583d1864c2a4ffdb8a3127cbc72f4ad6c1eacf127d7b8e9b31902'},
   {id:'heroui', name:'@heroui/styles@3.2.7', archive:'heroui-styles-3.2.7.tgz', file:'package/dist/heroui.min.css', sha256:'6c29446c65a517b65b0be08ed875713dfc9267a7da8e5fcda81cbb5bea1e8f66'},
 ];
 
 async function install(fromDirectory) {
-  const directory = fromDirectory ?? await mkdtemp(join(tmpdir(),'relay-upstream-css-'));
+  const directory = fromDirectory ?? await mkdtemp(join(tmpdir(),'mero-upstream-css-'));
   await mkdir(styleCache,{recursive:true});
   for (const source of sources) {
     if (!fromDirectory) execFileSync('npm',['pack',source.name,'--ignore-scripts','--silent','--pack-destination',directory],{stdio:'inherit'});

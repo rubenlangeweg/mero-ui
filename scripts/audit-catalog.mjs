@@ -9,10 +9,10 @@ import { studioViews } from "../site/studio.mjs";
 
 const require = createRequire(import.meta.url);
 const { chromium } = await import(browserConfig.playwrightModule || "playwright");
-const axe = process.env.MERO_AXE_PATH || process.env.RELAY_AXE_PATH || require.resolve("axe-core/axe.min.js");
+const axe = process.env.MERO_AXE_PATH || require.resolve("axe-core/axe.min.js");
 const requested = process.argv.slice(2);
 const captures = [];
-const captureDir = process.env.MERO_REVIEW_DIR || process.env.RELAY_REVIEW_DIR;
+const captureDir = process.env.MERO_REVIEW_DIR;
 const examples = [...components.values()].flatMap(item => [
   item.id,
   ...(item.variants || []).map(variant => item.id + "?variant=" + encodeURIComponent(variant.name)),
@@ -74,7 +74,7 @@ try {
   ];
   for (const { width, height, theme } of scenarios) {
     const context = await browser.newContext({ viewport: { width, height }, reducedMotion: "reduce" });
-    await context.addInitScript(value => localStorage.setItem("relay-theme", value), theme);
+    await context.addInitScript(value => localStorage.setItem("mero-theme", value), theme);
     const queue = [...routes];
     await Promise.all(Array.from({ length: Math.min(4, queue.length) }, async () => {
       const page = await context.newPage();

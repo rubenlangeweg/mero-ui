@@ -46,9 +46,9 @@
   -webkit-font-smoothing: antialiased;
 }
 
-@layer relay-site-defaults {
+@layer mero-site-defaults {
   .site-body :where(*, *::before, *::after) { box-sizing: border-box; }
-  .site-body :where(a:not(.rl-button, .rl-link)):not(:where([data-sample-scope] *)) { color: inherit; text-decoration: none; }
+  .site-body :where(a:not(.mero-button, .mero-link)):not(:where([data-sample-scope] *)) { color: inherit; text-decoration: none; }
   .site-body :where(button, input, select, textarea):not(:where([data-sample-scope] *)) { font: inherit; }
   .site-body :where(a, button, input, select, textarea):focus-visible {
     outline: 2px solid var(--site-accent);
@@ -57,10 +57,10 @@
 }
 .site-body [hidden] { display: none !important; }
 .layout-embed {
-  --site-bg: var(--rl-bg); --site-panel: var(--rl-surface); --site-raised: var(--rl-raised);
-  --site-fg: var(--rl-text); --site-muted: var(--rl-muted); --site-subtle: var(--rl-muted);
-  --site-line: var(--rl-line); --site-accent: var(--rl-accent); --site-accent-ink: var(--rl-accent-ink);
-  --site-primary: var(--rl-primary); --site-primary-ink: var(--rl-primary-ink); --site-font: var(--rl-font);
+  --site-bg: var(--mero-bg); --site-panel: var(--mero-surface); --site-raised: var(--mero-raised);
+  --site-fg: var(--mero-text); --site-muted: var(--mero-muted); --site-subtle: var(--mero-muted);
+  --site-line: var(--mero-line); --site-accent: var(--mero-accent); --site-accent-ink: var(--mero-accent-ink);
+  --site-primary: var(--mero-primary); --site-primary-ink: var(--mero-primary-ink); --site-font: var(--mero-font);
 }
 .layout-embed main:has(> #business-layout) { padding: clamp(14px, 3vw, 28px); }
 .site-body ::selection { color: var(--site-accent-ink); background: var(--site-accent); }
@@ -98,7 +98,7 @@
 }
 .hero-intro { padding-bottom: .22em; }
 .hero-description { max-width: 36ch; margin: 0; color: var(--site-muted); font-size: clamp(16px, 1.26vw, 18px); font-weight: 450; line-height: 1.55; text-wrap: pretty; }
-.hero-actions { --rl-control-height: 2.75rem; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.hero-actions { --mero-control-height: 2.75rem; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
 @media (prefers-reduced-motion: no-preference) {
   /* Sampled response of the Studio spring (stiffness 300, damping 30, unit mass). */
   .hero { --home-spring: linear(0, .1058, .3114, .5188, .6888, .8129, .8962, .948, .978, .9939, 1.0013, 1.004, 1.0043, 1.0036, 1.0027, 1.0018, 1.0012, 1.0007, 1.0004, 1.0002, 1); }
@@ -128,8 +128,8 @@
 @media (forced-colors: active) {
   .hero-metal { background: none; -webkit-text-fill-color: CanvasText; }
 }
-.site-cta { --rl-radius: 999px; }
-.nav-start { --rl-control-height: 2.25rem; font-size: 13px; padding-inline: 14px; }
+.site-cta { --mero-radius: 999px; }
+.nav-start { --mero-control-height: 2.25rem; font-size: 13px; padding-inline: 14px; }
 
 .showcase { padding-block: clamp(72px, 8vw, 120px) 86px; }
 .showcase-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
@@ -247,7 +247,7 @@
   .hero h1 { font-size: clamp(43px, 10.8vw, 62px); }
   .hero-description { font-size: 15px; }
   .hero-actions { margin-top: 16px; }
-  .hero-actions .rl-button { font-size: .8125rem; }
+  .hero-actions .mero-button { font-size: .8125rem; }
   .showcase { padding-block: 60px 54px; }
   .showcase-heading { gap: 8px; }
   .showcase-heading h2 { font-size: 23px; }
@@ -285,25 +285,25 @@
 .doc-tab-list,.doc-lab-options,.doc-variants { display:flex; align-items:center; gap:3px; }
 .doc-lab-head:has(.doc-tab-list button:first-child[aria-selected="false"]) .doc-lab-options { display:none; }
 .doc-tab-list button,.doc-lab-options a { color:var(--site-muted); border:0; background:transparent; border-radius:8px; font:550 12px/1.25 var(--site-font); padding:8px 10px; cursor:pointer; }
-.doc-lab-options .rl-select {
+.doc-lab-options .mero-select {
   width:auto; min-height:32px; min-block-size:32px; max-width:140px; padding-block:5px; padding-inline-start:10px;
   border-color:transparent; border-radius:8px; background-color:transparent; color:var(--site-muted);
   font:550 12px/1.25 var(--site-font); cursor:pointer;
 }
-.doc-lab-options .rl-select:hover { color:var(--site-fg); background-color:var(--site-raised); }
+.doc-lab-options .mero-select:hover { color:var(--site-fg); background-color:var(--site-raised); }
 .doc-lab-options a { display:grid; place-items:center; width:32px; height:32px; padding:0; font-size:16px; }
 .doc-tab-list button[aria-selected="true"],.doc-tab-list button:hover,.doc-lab-options a:hover { color:var(--site-fg); background:var(--site-raised); }
-.doc-lab .docs-preview { font:400 15px/1.5 var(--rl-font); min-height:260px; padding:clamp(16px,4vw,36px); justify-items:safe center; border-radius:0 0 15px 15px; background-color:var(--rl-bg); color:var(--rl-text); overflow-wrap:break-word; }
+.doc-lab .docs-preview { font:400 15px/1.5 var(--mero-font); min-height:260px; padding:clamp(16px,4vw,36px); justify-items:safe center; border-radius:0 0 15px 15px; background-color:var(--mero-bg); color:var(--mero-text); overflow-wrap:break-word; }
 .doc-lab .docs-code { padding:14px; border:0; border-radius:0 0 15px 15px; }
 .doc-lab .docs-code pre,.docs-http pre { max-height:38rem; overflow:auto; }
 .doc-variants { gap:6px; padding:10px 14px; border-bottom:1px solid var(--site-line); flex-wrap:wrap; }
 .doc-variants > span { margin-inline-end:4px; color:var(--site-muted); font-size:12px; }
 .doc-lab-options .doc-source-jump { display:none; }
-.doc-lab:not([data-rl-tabs-ready]) > [role="tabpanel"] { animation:none; }
-:where(#catalog-content, .app-example-page) .doc-lab:not([data-rl-tabs-ready]) > .doc-lab-head :is(.doc-tab-list, [data-preview-theme]),
-:where(#catalog-content, .app-example-page):has(.doc-lab:not([data-rl-tabs-ready])) [data-copy-code] { display:none; }
-:where(#catalog-content, .app-example-page) .doc-lab:not([data-rl-tabs-ready]) .doc-source-jump { display:inline-flex; align-items:center; width:auto; padding-inline:8px; font-size:13px; }
-:where(#catalog-content, .app-example-page) .doc-lab:not([data-rl-tabs-ready]) > [role="tabpanel"][hidden]:has(> .docs-code) { display:block !important; scroll-margin-block-start:8rem; border-top:1px solid var(--site-line); }
+.doc-lab:not([data-mero-tabs-ready]) > [role="tabpanel"] { animation:none; }
+:where(#catalog-content, .app-example-page) .doc-lab:not([data-mero-tabs-ready]) > .doc-lab-head :is(.doc-tab-list, [data-preview-theme]),
+:where(#catalog-content, .app-example-page):has(.doc-lab:not([data-mero-tabs-ready])) [data-copy-code] { display:none; }
+:where(#catalog-content, .app-example-page) .doc-lab:not([data-mero-tabs-ready]) .doc-source-jump { display:inline-flex; align-items:center; width:auto; padding-inline:8px; font-size:13px; }
+:where(#catalog-content, .app-example-page) .doc-lab:not([data-mero-tabs-ready]) > [role="tabpanel"][hidden]:has(> .docs-code) { display:block !important; scroll-margin-block-start:8rem; border-top:1px solid var(--site-line); }
 @media (max-width:620px) {
   :where(#catalog-content, .app-example-page) .docs-code pre { white-space:pre-wrap; overflow-wrap:anywhere; }
 }
@@ -318,7 +318,7 @@
 .component-install p,.doc-notes { color:var(--site-muted); font-size:14px; }
 .feature-specimens { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(14px,2.4vw,32px); margin-top:26px; }
 .feature-specimens article { min-width:0; display:grid; grid-template-rows:subgrid; grid-row:span 3; row-gap:0; align-content:start; }
-.feature-specimens iframe { display:block; width:100%; height:max(var(--specimen-min-height, 250px), var(--specimen-content-height, 0px)); border:1px solid var(--site-line); border-radius:16px; background:var(--rl-bg); }
+.feature-specimens iframe { display:block; width:100%; height:max(var(--specimen-min-height, 250px), var(--specimen-content-height, 0px)); border:1px solid var(--site-line); border-radius:16px; background:var(--mero-bg); }
 .feature-specimens h3 { font-size:18px; margin:0; letter-spacing:-.03em; }
 .feature-specimens h3 span { color:var(--site-subtle); font-size:.8em; }
 .feature-specimens h3 a:hover { text-decoration:underline; }

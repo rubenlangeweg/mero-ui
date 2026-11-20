@@ -7,7 +7,7 @@ const actions = [
 ];
 
 function actionLink({ variant, label, href, download }) {
-  return `<a class="rl-button rl-button-${variant}" href="${href}"${download ? " download" : ""}>${label}</a>`;
+  return `<a class="mero-button mero-button-${variant}" href="${href}"${download ? " download" : ""}>${label}</a>`;
 }
 
 export function designPrinciplesPage() {
@@ -23,7 +23,7 @@ export function designPrinciplesPage() {
       <details class="principle-code"><summary>View the HTML</summary>
         ${example(actions.map(actionLink).join("\n"), undefined, "Action links")}
       </details>
-      <p>Use a link for a destination and a submit button for a save. Both can use the same <a class="rl-link" href="/components/button">button styles</a>.</p>
+      <p>Use a link for a destination and a submit button for a save. Both can use the same <a class="mero-link" href="/components/button">button styles</a>.</p>
     </section>
 
     <section aria-labelledby="server-response">
@@ -34,16 +34,16 @@ export function designPrinciplesPage() {
         <div><dt>Invalid field</dt><dd>Return the populated form with HTTP 422. Show the error beside the field and move focus there.</dd></div>
         <div><dt>Saved</dt><dd>Update the row, confirm the change and return focus to its edit button.</dd></div>
       </dl>
-      <p><a class="rl-link" href="/playground">Try a failed save in the playground</a> and open <strong>HTTP exchange</strong> to inspect the response.</p>
+      <p><a class="mero-link" href="/playground">Try a failed save in the playground</a> and open <strong>HTTP exchange</strong> to inspect the response.</p>
     </section>
 
     <section aria-labelledby="control-geometry">
       <h2 id="control-geometry">Keep controls aligned across themes</h2>
       <p>Default fields and buttons start at 40 px. The select reserves space for its arrow on the trailing edge. The switch thumb keeps the same inset at either end of its track. Test each position in light and dark mode.</p>
       <ul class="principle-links">
-        <li><a class="rl-link" href="/components/native-select">Native select</a></li>
-        <li><a class="rl-link" href="/components/cell-switch">Cell switch</a></li>
-        <li><a class="rl-link" href="/themes">Theme studio</a></li>
+        <li><a class="mero-link" href="/components/native-select">Native select</a></li>
+        <li><a class="mero-link" href="/components/cell-switch">Cell switch</a></li>
+        <li><a class="mero-link" href="/themes">Theme studio</a></li>
       </ul>
     </section>
   </article>`;

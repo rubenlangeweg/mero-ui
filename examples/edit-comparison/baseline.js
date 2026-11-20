@@ -4,7 +4,7 @@ editor.addEventListener('htmx:beforeRequest', event => {
   const form = event.detail.elt;
   if (!form.matches('form')) return;
   form.setAttribute('aria-busy', 'true');
-  form.querySelector('[data-rl-form-error]').hidden = true;
+  form.querySelector('[data-mero-form-error]').hidden = true;
 });
 editor.addEventListener('htmx:beforeSwap', event => {
   if (event.detail.xhr.status !== 422) return;
@@ -19,11 +19,11 @@ editor.addEventListener('htmx:afterRequest', event => {
   if (!form.matches('form')) return;
   form.removeAttribute('aria-busy');
   if (!event.detail.failed || event.detail.xhr.status === 422) return;
-  const error = form.querySelector('[data-rl-form-error]');
+  const error = form.querySelector('[data-mero-form-error]');
   error.textContent = 'The request failed. Check the record and try again.';
   error.hidden = false;
 });
-editor.addEventListener('relay:form-saved', () => {
+editor.addEventListener('mero:form-saved', () => {
   editor.closest('dialog').close();
   document.querySelector('#edit-record').focus();
 });

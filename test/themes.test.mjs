@@ -14,8 +14,8 @@ test("theme links preserve zero values and sanitize untrusted token settings", (
   assert.doesNotMatch(html,/bad"|src="\/layouts\/constructor"/);
   assert.match(themeCSS(neutral),/:root, \[data-theme="light"\]/);
   assert.match(themeCSS(neutral), /\[data-theme="dark"\]/);
-  assert.equal(themeTokens(neutral)["--rl-radius-panel"],"0.5rem");
-  assert.equal(themeTokens(neutral)["--rl-radius"],"0.375rem");
+  assert.equal(themeTokens(neutral)["--mero-radius-panel"],"0.5rem");
+  assert.equal(themeTokens(neutral)["--mero-radius"],"0.375rem");
   assert.match(themesPage(new URLSearchParams("view=mail&mode=light&hue=72")), /src="\/layouts\/mail\?embed=1&amp;studio=1&amp;[^"]*hue=72[^"]*mode=light/);
 });
 
@@ -35,7 +35,7 @@ test("theme settings survive reload and history, apply to working apps and expor
   await page.goto("http://127.0.0.1:"+app.address().port+"/themes?base=0&chroma=0&formRadius=small&hue=0&lightness=0&radius=small");
   await page.locator("[data-theme-studio][data-ready]").waitFor();
   const canvas = page.locator("[data-ts-canvas]");
-  const accent = () => canvas.evaluate(x => getComputedStyle(x).getPropertyValue("--rl-accent").trim());
+  const accent = () => canvas.evaluate(x => getComputedStyle(x).getPropertyValue("--mero-accent").trim());
   const original = await accent();
   assert.equal(await page.getByRole("button",{name:"Graphite"}).getAttribute("aria-pressed"),"true");
   await page.getByRole("button",{name:"Fern"}).click();
@@ -45,8 +45,8 @@ test("theme settings survive reload and history, apply to working apps and expor
   assert.equal(new URL(page.url()).searchParams.get("hue"),"156");
   await page.getByLabel("Surface radius").selectOption("large");
   await page.getByLabel("Form radius").selectOption("none");
-  assert.equal(await canvas.locator(".rl-card").first().evaluate(el=>getComputedStyle(el).borderTopLeftRadius),"24px");
-  assert.equal(await canvas.locator(".rl-input").evaluate(el=>getComputedStyle(el).borderTopLeftRadius),"0px");
+  assert.equal(await canvas.locator(".mero-card").first().evaluate(el=>getComputedStyle(el).borderTopLeftRadius),"24px");
+  assert.equal(await canvas.locator(".mero-input").evaluate(el=>getComputedStyle(el).borderTopLeftRadius),"0px");
   await page.reload();
   await page.locator("[data-theme-studio][data-ready]").waitFor();
   await page.getByRole("button",{name:"Export CSS"}).click();
@@ -64,10 +64,10 @@ test("theme settings survive reload and history, apply to working apps and expor
     await screens.getByRole("link",{name:text,exact:true}).click();
     await page.waitForFunction(p => {
       const doc = document.querySelector("[data-ts-app] iframe")?.contentDocument;
-      return doc?.location.pathname === "/layouts/"+p && Boolean(doc.documentElement?.style.getPropertyValue("--rl-accent")) && Boolean(doc.querySelector("main"));
+      return doc?.location.pathname === "/layouts/"+p && Boolean(doc.documentElement?.style.getPropertyValue("--mero-accent")) && Boolean(doc.querySelector("main"));
     },path);
     const root = page.frameLocator("[data-ts-app] iframe").locator("html");
-    const insideAccent = () => root.evaluate(el=>getComputedStyle(el).getPropertyValue("--rl-accent").trim());
+    const insideAccent = () => root.evaluate(el=>getComputedStyle(el).getPropertyValue("--mero-accent").trim());
     assert.equal(await insideAccent(),await accent());
     await page.getByRole("radio",{name:"Light preview"}).check();
     assert.equal(await root.getAttribute("data-theme"),"light");

@@ -19,26 +19,26 @@ function component(id, name, description, demo, notes, variants = []) {
 }
 
 function emptyState(title, description) {
-  return `<div class="rl-empty-state"><span class="rl-empty-glyph" aria-hidden="true"></span><strong>${escape(title)}</strong><p>${escape(description)}</p></div>`;
+  return `<div class="mero-empty-state"><span class="mero-empty-glyph" aria-hidden="true"></span><strong>${escape(title)}</strong><p>${escape(description)}</p></div>`;
 }
 
 function productStatus(status) {
-  return `<span class="rl-collection-status" data-status="${escape(status)}">${escape(status)}</span>`;
+  return `<span class="mero-collection-status" data-status="${escape(status)}">${escape(status)}</span>`;
 }
 
 function formField(label, name, value, error, extra = '') {
-  return `<label class="rl-collection-field"><span>${label}</span><input class="rl-input" name="${name}" value="${escape(value)}" ${extra}${error ? ' aria-invalid="true"' : ''}>${error ? `<small class="rl-collection-error">${escape(error)}</small>` : ''}</label>`;
+  return `<label class="mero-collection-field"><span>${label}</span><input class="mero-input" name="${name}" value="${escape(value)}" ${extra}${error ? ' aria-invalid="true"' : ''}>${error ? `<small class="mero-collection-error">${escape(error)}</small>` : ''}</label>`;
 }
 
 function editForm(product, errors) {
-  return `<form class="rl-collection-editor" hx-post="${gridPath}/save" hx-params="revision,q,filter,sort,row,id,name,sku,category,status">
+  return `<form class="mero-collection-editor" hx-post="${gridPath}/save" hx-params="revision,q,filter,sort,row,id,name,sku,category,status">
     <h3>${product.id ? 'Edit product' : 'Add product'}</h3>
     ${product.id ? `<input type="hidden" name="id" value="${product.id}">` : ''}
-    <div class="rl-collection-fields">${formField('Product name', 'name', product.name, errors.name, 'required maxlength="80"')}
+    <div class="mero-collection-fields">${formField('Product name', 'name', product.name, errors.name, 'required maxlength="80"')}
     ${formField('SKU', 'sku', product.sku, errors.sku, 'required maxlength="24"')}
-    <label class="rl-collection-field"><span>Category</span><select class="rl-select" name="category">${options(categories, product.category)}</select></label>
-    <label class="rl-collection-field"><span>Status</span><select class="rl-select" name="status">${options(statuses, product.status)}</select></label></div>
-    <div class="rl-collection-actions"><button type="submit" class="rl-button rl-button-primary rl-button-sm">Save product</button><button type="button" class="rl-button rl-button-ghost rl-button-sm" hx-get="${gridPath}" hx-params="${gridQueryParams}" hx-vals='{"returnFocus":"${product.id ? `edit-${product.id}` : 'add'}"}'>Cancel</button></div>
+    <label class="mero-collection-field"><span>Category</span><select class="mero-select" name="category">${options(categories, product.category)}</select></label>
+    <label class="mero-collection-field"><span>Status</span><select class="mero-select" name="status">${options(statuses, product.status)}</select></label></div>
+    <div class="mero-collection-actions"><button type="submit" class="mero-button mero-button-primary mero-button-sm">Save product</button><button type="button" class="mero-button mero-button-ghost mero-button-sm" hx-get="${gridPath}" hx-params="${gridQueryParams}" hx-vals='{"returnFocus":"${product.id ? `edit-${product.id}` : 'add'}"}'>Cancel</button></div>
   </form>`;
 }
 
@@ -51,24 +51,24 @@ export function renderCollectionGrid(store, params = new URLSearchParams(), stat
   const rows = store.products.filter(product => (!filter || product.status === filter) && `${product.name} ${product.sku}`.toLowerCase().includes(searchText));
   rows.sort((a,b) => sort === 'status' ? a.status.localeCompare(b.status) || a.name.localeCompare(b.name) : sort === 'name-desc' ? b.name.localeCompare(a.name) : a.name.localeCompare(b.name));
   const selected = new Set(params.getAll('row'));
-  return `<section class="rl-collection" data-rl-grid data-inventory-revision="${store.revision}" hx-target="closest [data-rl-grid]" hx-swap="outerHTML" hx-sync="closest [data-rl-grid]:drop" hx-include="closest [data-rl-grid]" hx-params="${gridQueryParams}"${state.focus ? ` data-rl-grid-focus="${escape(state.focus)}"` : ''}>
+  return `<section class="mero-collection" data-mero-grid data-inventory-revision="${store.revision}" hx-target="closest [data-mero-grid]" hx-swap="outerHTML" hx-sync="closest [data-mero-grid]:drop" hx-include="closest [data-mero-grid]" hx-params="${gridQueryParams}"${state.focus ? ` data-mero-grid-focus="${escape(state.focus)}"` : ''}>
     <input type="hidden" name="revision" value="${store.revision}">
-    <div class="rl-collection-head"><div><h2>Studio inventory</h2><p>Product catalog</p></div><button type="button" class="rl-button rl-button-primary rl-button-sm" data-grid-add hx-get="${gridPath}/new">Add product</button></div>
-    <form class="rl-collection-filters" role="search" hx-get="${gridPath}" hx-vals='{"returnFocus":"search"}'>
-      <input class="rl-input" type="search" name="q" value="${escape(query)}" maxlength="120" placeholder="Search products…" aria-label="Search products">
-      <select class="rl-select" name="filter" aria-label="Filter by status"><option value="">All statuses</option>${options(statuses,filter)}</select>
-      <select class="rl-select" name="sort" aria-label="Sort products">${[['name','Name A–Z'],['name-desc','Name Z–A'],['status','Status']].map(([value,label]) => `<option value="${value}"${value === sort ? ' selected' : ''}>${label}</option>`).join('')}</select>
-      <button type="submit" class="rl-button rl-button-outline rl-button-sm">Apply</button>
+    <div class="mero-collection-head"><div><h2>Studio inventory</h2><p>Product catalog</p></div><button type="button" class="mero-button mero-button-primary mero-button-sm" data-grid-add hx-get="${gridPath}/new">Add product</button></div>
+    <form class="mero-collection-filters" role="search" hx-get="${gridPath}" hx-vals='{"returnFocus":"search"}'>
+      <input class="mero-input" type="search" name="q" value="${escape(query)}" maxlength="120" placeholder="Search products…" aria-label="Search products">
+      <select class="mero-select" name="filter" aria-label="Filter by status"><option value="">All statuses</option>${options(statuses,filter)}</select>
+      <select class="mero-select" name="sort" aria-label="Sort products">${[['name','Name A–Z'],['name-desc','Name Z–A'],['status','Status']].map(([value,label]) => `<option value="${value}"${value === sort ? ' selected' : ''}>${label}</option>`).join('')}</select>
+      <button type="submit" class="mero-button mero-button-outline mero-button-sm">Apply</button>
     </form>
-    <p class="rl-collection-message" role="status" data-grid-message>${escape(state.message ?? '')}</p>
-    <p class="rl-collection-error" role="alert" data-grid-error${state.error ? '' : ' hidden'}>${escape(state.error ?? '')}</p>
+    <p class="mero-collection-message" role="status" data-grid-message>${escape(state.message ?? '')}</p>
+    <p class="mero-collection-error" role="alert" data-grid-error${state.error ? '' : ' hidden'}>${escape(state.error ?? '')}</p>
     ${state.edit ? editForm(state.edit, state.errors ?? {}) : ''}
-    ${state.remove ? `<form class="rl-collection-editor" hx-post="${gridPath}/delete" hx-params="revision,q,filter,sort,row,id"><h3>Delete ${escape(state.remove.name)}?</h3><p>This removes the product from your inventory.</p><input type="hidden" name="id" value="${state.remove.id}"><div class="rl-collection-actions"><button type="button" data-grid-cancel class="rl-button rl-button-outline rl-button-sm" hx-get="${gridPath}" hx-params="${gridQueryParams}" hx-vals='{"returnFocus":"delete-${state.remove.id}"}'>Cancel</button><button class="rl-button rl-button-danger rl-button-sm" type="submit">Delete product</button></div></form>` : ''}
-    <form class="rl-collection-body" hx-post="${gridPath}/bulk" hx-params="revision,q,filter,sort,row,next">
-      <div class="rl-collection-scroll"><table class="rl-table rl-collection-table"><caption class="rl-collection-sr">Studio products</caption><thead><tr><th scope="col"><label class="rl-collection-pick"><input type="checkbox" class="rl-checkbox" data-grid-all aria-label="Select all visible products"${rows.length ? '' : ' disabled'}></label></th><th scope="col">Product</th><th scope="col">Status</th><th scope="col"><span class="rl-collection-sr">Actions</span></th></tr></thead>
-      <tbody>${rows.map(product => `<tr><td><label class="rl-collection-pick"><input class="rl-checkbox" type="checkbox" name="row" value="${product.id}" aria-label="Select ${escape(product.name)}"${selected.has(String(product.id)) ? ' checked' : ''}></label></td><th scope="row"><strong>${escape(product.name)}</strong><small>${escape(product.sku)} · ${escape(product.category)}</small><span class="rl-small-status">${productStatus(product.status)}</span></th><td>${productStatus(product.status)}</td><td><div class="rl-collection-row-actions"><button type="button" class="rl-button rl-button-ghost rl-button-sm" data-grid-edit="${product.id}" hx-params="${gridQueryParams}" hx-get="${gridPath}/${product.id}/edit" aria-label="Edit ${escape(product.name)}">Edit</button><button type="button" class="rl-button rl-button-ghost rl-button-sm" data-grid-delete="${product.id}" hx-params="${gridQueryParams}" hx-get="${gridPath}/${product.id}/confirm" aria-label="Delete ${escape(product.name)}">Delete</button></div></td></tr>`).join('') || `<tr><td colspan="4">${emptyState('No matching products','Change the search or status filter.')}</td></tr>`}</tbody></table></div>
-      <div class="rl-action-bar" data-grid-bar hidden><output data-grid-count></output><select class="rl-select" name="next" aria-label="Set selected products to">${options(statuses,'Archived')}</select><button class="rl-button rl-button-primary rl-button-sm" type="submit">Update selected</button><button class="rl-button rl-button-ghost rl-button-sm" data-grid-clear type="button">Clear</button></div>
-    </form><footer class="rl-collection-foot">${rows.length} of ${store.products.length} products</footer>
+    ${state.remove ? `<form class="mero-collection-editor" hx-post="${gridPath}/delete" hx-params="revision,q,filter,sort,row,id"><h3>Delete ${escape(state.remove.name)}?</h3><p>This removes the product from your inventory.</p><input type="hidden" name="id" value="${state.remove.id}"><div class="mero-collection-actions"><button type="button" data-grid-cancel class="mero-button mero-button-outline mero-button-sm" hx-get="${gridPath}" hx-params="${gridQueryParams}" hx-vals='{"returnFocus":"delete-${state.remove.id}"}'>Cancel</button><button class="mero-button mero-button-danger mero-button-sm" type="submit">Delete product</button></div></form>` : ''}
+    <form class="mero-collection-body" hx-post="${gridPath}/bulk" hx-params="revision,q,filter,sort,row,next">
+      <div class="mero-collection-scroll"><table class="mero-table mero-collection-table"><caption class="mero-collection-sr">Studio products</caption><thead><tr><th scope="col"><label class="mero-collection-pick"><input type="checkbox" class="mero-checkbox" data-grid-all aria-label="Select all visible products"${rows.length ? '' : ' disabled'}></label></th><th scope="col">Product</th><th scope="col">Status</th><th scope="col"><span class="mero-collection-sr">Actions</span></th></tr></thead>
+      <tbody>${rows.map(product => `<tr><td><label class="mero-collection-pick"><input class="mero-checkbox" type="checkbox" name="row" value="${product.id}" aria-label="Select ${escape(product.name)}"${selected.has(String(product.id)) ? ' checked' : ''}></label></td><th scope="row"><strong>${escape(product.name)}</strong><small>${escape(product.sku)} · ${escape(product.category)}</small><span class="mero-small-status">${productStatus(product.status)}</span></th><td>${productStatus(product.status)}</td><td><div class="mero-collection-row-actions"><button type="button" class="mero-button mero-button-ghost mero-button-sm" data-grid-edit="${product.id}" hx-params="${gridQueryParams}" hx-get="${gridPath}/${product.id}/edit" aria-label="Edit ${escape(product.name)}">Edit</button><button type="button" class="mero-button mero-button-ghost mero-button-sm" data-grid-delete="${product.id}" hx-params="${gridQueryParams}" hx-get="${gridPath}/${product.id}/confirm" aria-label="Delete ${escape(product.name)}">Delete</button></div></td></tr>`).join('') || `<tr><td colspan="4">${emptyState('No matching products','Change the search or status filter.')}</td></tr>`}</tbody></table></div>
+      <div class="mero-action-bar" data-grid-bar hidden><output data-grid-count></output><select class="mero-select" name="next" aria-label="Set selected products to">${options(statuses,'Archived')}</select><button class="mero-button mero-button-primary mero-button-sm" type="submit">Update selected</button><button class="mero-button mero-button-ghost mero-button-sm" data-grid-clear type="button">Clear</button></div>
+    </form><footer class="mero-collection-foot">${rows.length} of ${store.products.length} products</footer>
   </section>`;
 }
 
@@ -91,22 +91,22 @@ function agendaNavigation(date, offset) {
   const atEnd = offset < 0 ? date === '0001-01-01' : date === '9999-12-31';
   const label = offset < 0 ? 'Previous day' : 'Next day';
   const request = atEnd ? 'disabled' : `hx-get="${agendaPath}?date=${shift(date,offset)}&amp;returnFocus=${action}"`;
-  return `<button type="button" class="rl-button rl-button-outline rl-button-sm" data-agenda-action="${action}" aria-label="${label}" ${request}><span aria-hidden="true"></span></button>`;
+  return `<button type="button" class="mero-button mero-button-outline mero-button-sm" data-agenda-action="${action}" aria-label="${label}" ${request}><span aria-hidden="true"></span></button>`;
 }
 function agendaMarkup(events, date = defaultDate, {focus, booking = {}, errors = {}, message = ''} = {}) {
   const day = new Intl.DateTimeFormat('en', { timeZone:'UTC', weekday:'long', month:'short', day:'numeric' }).format(new Date(date));
   const entries = events.filter(event => event.date === date).sort((a,b) => a.time.localeCompare(b.time));
-  return `<section class="rl-agenda" data-rl-agenda${focus ? ` data-agenda-focus="${escape(focus)}"` : ''} hx-target="closest [data-rl-agenda]" hx-swap="outerHTML" hx-sync="closest [data-rl-agenda]:drop">
-    <header class="rl-collection-head"><div><h2>Studio agenda</h2><p><time datetime="${date}">${day}</time></p></div><div class="rl-collection-actions">${agendaNavigation(date,-1)}${agendaNavigation(date,1)}</div></header>
-    <ol class="rl-agenda-list">${entries.map(event => `<li><time datetime="${date}T${escape(event.time)}">${escape(event.time)}</time><div><strong>${escape(event.title)}</strong><small>${escape(event.location)}</small></div></li>`).join('')}</ol>
-    ${entries.length ? '' : emptyState('No bookings','This day is open.')}<p role="status" class="rl-collection-message">${escape(message)}</p>
-    <details class="rl-collection-details"${Object.keys(errors).length ? ' open' : ''}><summary data-agenda-action="booking">Add booking</summary>
-      <form class="rl-collection-fields" hx-post="${agendaPath}"><input type="hidden" name="date" value="${date}">
+  return `<section class="mero-agenda" data-mero-agenda${focus ? ` data-agenda-focus="${escape(focus)}"` : ''} hx-target="closest [data-mero-agenda]" hx-swap="outerHTML" hx-sync="closest [data-mero-agenda]:drop">
+    <header class="mero-collection-head"><div><h2>Studio agenda</h2><p><time datetime="${date}">${day}</time></p></div><div class="mero-collection-actions">${agendaNavigation(date,-1)}${agendaNavigation(date,1)}</div></header>
+    <ol class="mero-agenda-list">${entries.map(event => `<li><time datetime="${date}T${escape(event.time)}">${escape(event.time)}</time><div><strong>${escape(event.title)}</strong><small>${escape(event.location)}</small></div></li>`).join('')}</ol>
+    ${entries.length ? '' : emptyState('No bookings','This day is open.')}<p role="status" class="mero-collection-message">${escape(message)}</p>
+    <details class="mero-collection-details"${Object.keys(errors).length ? ' open' : ''}><summary data-agenda-action="booking">Add booking</summary>
+      <form class="mero-collection-fields" hx-post="${agendaPath}"><input type="hidden" name="date" value="${date}">
         ${formField('Booking title','title',booking.title ?? '',errors.title,'required maxlength="80"')}
         ${formField('Location','location',booking.location ?? '',errors.location,'required maxlength="80"')}
         ${formField('Start time','time',booking.time ?? '10:00',errors.time,'required type="time"')}
-        <button class="rl-button rl-button-primary rl-button-sm" type="submit">Add booking</button>
-      </form></details><p class="rl-collection-error" role="alert" data-agenda-error hidden></p>
+        <button class="mero-button mero-button-primary mero-button-sm" type="submit">Add booking</button>
+      </form></details><p class="mero-collection-error" role="alert" data-agenda-error hidden></p>
   </section>`;
 }
 
@@ -116,11 +116,11 @@ const profiles = [
   ['DN','Dune textiles','Finishes and inventory','/components/list-view'],
 ];
 function itemCard([initials, name, detail, href]) {
-  return `<a class="rl-item-card" href="${escape(href)}"><span class="rl-collection-monogram" aria-hidden="true">${escape(initials)}</span><span><strong>${escape(name)}</strong><small>${escape(detail)}</small></span><span class="rl-item-arrow" aria-hidden="true">↗</span></a>`;
+  return `<a class="mero-item-card" href="${escape(href)}"><span class="mero-collection-monogram" aria-hidden="true">${escape(initials)}</span><span><strong>${escape(name)}</strong><small>${escape(detail)}</small></span><span class="mero-item-arrow" aria-hidden="true">↗</span></a>`;
 }
 
 function listView() {
-  return `<section class="rl-list-view" aria-label="Catalog resources">${[['Release checklist','Publish a collection','widget'],['Asset files','Browse packaging artwork','file-tree'],['Studio map','Find a location','map']].map(([name, label, slug]) => `<a href="/components/${slug}"><span><strong>${name}</strong><small>${label}</small></span><span aria-hidden="true">→</span></a>`).join('')}</section>`;
+  return `<section class="mero-list-view" aria-label="Catalog resources">${[['Release checklist','Publish a collection','widget'],['Asset files','Browse packaging artwork','file-tree'],['Studio map','Find a location','map']].map(([name, label, slug]) => `<a href="/components/${slug}"><span><strong>${name}</strong><small>${label}</small></span><span aria-hidden="true">→</span></a>`).join('')}</section>`;
 }
 
 const locations = [
@@ -129,43 +129,43 @@ const locations = [
   ['dispatch','Dispatch','West entrance · Loading bay','27%','73%'],
 ];
 function studioMap() {
-  return `<figure class="rl-place-map" data-rl-place-map><figcaption><strong>Studio campus</strong><small>Rotterdam</small></figcaption><div class="rl-map-drawing" aria-label="Studio locations"><div class="rl-map-block rl-map-block-a"></div><div class="rl-map-block rl-map-block-b"></div><div class="rl-map-block rl-map-block-c"></div>${locations.map(([id,name,,x,y],i) => `<button class="rl-map-pin" type="button" style="--pin-x:${x};--pin-y:${y}" aria-label="Show ${name}" aria-pressed="${i===0}" data-place="${id}">${i+1}</button>`).join('')}</div><div class="rl-map-caption">${locations.map(([id,name,detail],i)=>`<div data-place-detail="${id}"${i?' hidden':''}><strong>${name}</strong><small>${detail}</small></div>`).join('')}<output class="rl-collection-sr" aria-live="polite"></output></div></figure>`;
+  return `<figure class="mero-place-map" data-mero-place-map><figcaption><strong>Studio campus</strong><small>Rotterdam</small></figcaption><div class="mero-map-drawing" aria-label="Studio locations"><div class="mero-map-block mero-map-block-a"></div><div class="mero-map-block mero-map-block-b"></div><div class="mero-map-block mero-map-block-c"></div>${locations.map(([id,name,,x,y],i) => `<button class="mero-map-pin" type="button" style="--pin-x:${x};--pin-y:${y}" aria-label="${i+1}. ${name}" aria-pressed="${i===0}" data-place="${id}">${i+1}</button>`).join('')}</div><div class="mero-map-caption">${locations.map(([id,name,detail],i)=>`<div data-place-detail="${id}"${i?' hidden':''}><strong>${name}</strong><small>${detail}</small></div>`).join('')}<output class="mero-collection-sr" aria-live="polite"></output></div></figure>`;
 }
 
 const lanes = ['Queued','In progress','Ready'];
 function kanbanCard(title, category, lane) {
-  return `<article class="rl-kanban-card" draggable="true"><small>${category}</small><strong>${title}</strong><label>Move to<select class="rl-select" data-kanban-move aria-label="Move ${title}">${options(lanes,lane)}</select></label></article>`;
+  return `<article class="mero-kanban-card" draggable="true"><small>${category}</small><strong>${title}</strong><label>Move to<select class="mero-select" data-kanban-move aria-label="Move ${title}">${options(lanes,lane)}</select></label></article>`;
 }
 function kanban() {
   const cards = [['Validate finishes','Production',lanes[0]],['Approve label proof','Packaging',lanes[1]],['Send sample kit','Outreach',lanes[2]]];
-  return `<section class="rl-kanban" data-rl-kanban aria-label="Release board"><div class="rl-kanban-lanes">${lanes.map(lane=>`<section class="rl-kanban-lane" data-lane="${lane}"><h2>${lane}<span data-lane-count>1</span></h2><div data-lane-cards>${cards.filter(([, , stage])=>stage===lane).map(card=>kanbanCard(...card)).join('')}</div></section>`).join('')}</div><output role="status" class="rl-collection-sr"></output></section>`;
+  return `<section class="mero-kanban" data-mero-kanban aria-label="Release board"><div class="mero-kanban-lanes">${lanes.map(lane=>`<section class="mero-kanban-lane" data-lane="${lane}"><h2>${lane}<span data-lane-count>1</span></h2><div data-lane-cards>${cards.filter(([, , stage])=>stage===lane).map(card=>kanbanCard(...card)).join('')}</div></section>`).join('')}</div><output role="status" class="mero-collection-sr"></output></section>`;
 }
 
 function treeFile(name, explanation) {
-  return `<li><button type="button" class="rl-file" data-file-preview="${escape(explanation)}">${escape(name)}</button></li>`;
+  return `<li><button type="button" class="mero-file" data-file-preview="${escape(explanation)}">${escape(name)}</button></li>`;
 }
 function fileTree() {
-  return `<section class="rl-file-tree"><details open><summary>Studio collection</summary><ul><li><details open><summary>Product sheets</summary><ul>${treeFile('arc-task-lamp.txt','Arc Task Lamp · Powder-coated steel. Finish options include ivory, sand and graphite.')}${treeFile('forma-vase.txt','Forma Vase · Hand-finished glazed stoneware. Packaging dimensions: 20 × 20 × 28 cm.')}</ul></details></li><li><details><summary>Photography</summary><ul>${treeFile('shot-list.md','Shoot the front, profile and detail angles against the graphite background.')}</ul></details></li></ul></details><output aria-live="polite">Select a file to preview its contents.</output></section>`;
+  return `<section class="mero-file-tree"><details open><summary>Studio collection</summary><ul><li><details open><summary>Product sheets</summary><ul>${treeFile('arc-task-lamp.txt','Arc Task Lamp · Powder-coated steel. Finish options include ivory, sand and graphite.')}${treeFile('forma-vase.txt','Forma Vase · Hand-finished glazed stoneware. Packaging dimensions: 20 × 20 × 28 cm.')}</ul></details></li><li><details><summary>Photography</summary><ul>${treeFile('shot-list.md','Shoot the front, profile and detail angles against the graphite background.')}</ul></details></li></ul></details><output aria-live="polite">Select a file to preview its contents.</output></section>`;
 }
 
 function floatingToc() {
   const entries=[['Materials','Powder-coated steel, brushed brass and low-gloss enamel. Check a sample under daylight before ordering.'],['Assembly','Place the base on a flat surface. Align the threaded stem and turn until the joint is hand-tight.'],['Care','Wipe the shade with a soft, dry cloth. Let the fixture cool before replacing the bulb.']];
-  return `<div class="rl-toc" data-rl-toc><nav aria-label="Product guide contents">${entries.map(([name],i)=>`<button type="button" data-toc-link="${i}"${i===0?' aria-current="location"':''}>${name}</button>`).join('')}</nav><div class="rl-toc-scroll" tabindex="0" aria-label="Product guide">${entries.map(([name,detail],i)=>`<section data-toc-section="${i}"><h2 tabindex="-1">${name}</h2><p>${detail}</p></section>`).join('')}</div></div>`;
+  return `<div class="mero-toc" data-mero-toc><nav aria-label="Product guide contents">${entries.map(([name],i)=>`<button type="button" data-toc-link="${i}"${i===0?' aria-current="location"':''}>${name}</button>`).join('')}</nav><div class="mero-toc-scroll" tabindex="0" aria-label="Product guide">${entries.map(([name,detail],i)=>`<section data-toc-section="${i}"><h2 tabindex="-1">${name}</h2><p>${detail}</p></section>`).join('')}</div></div>`;
 }
 
 function widget() {
-  return `<section class="rl-widget" data-rl-widget><header><div><h2>Release checklist</h2><small>Arc collection</small></div><output aria-live="polite">1 of 3</output></header><progress max="3" value="1" aria-label="Release progress"></progress>${['Photography approved','Finish samples signed off','Packaging received'].map((name,i)=>`<label><input class="rl-checkbox" type="checkbox"${i===0?' checked':''}>${name}</label>`).join('')}</section>`;
+  return `<section class="mero-widget" data-mero-widget><header><div><h2>Release checklist</h2><small>Arc collection</small></div><output aria-live="polite">1 of 3</output></header><progress max="3" value="1" aria-label="Release progress"></progress>${['Photography approved','Finish samples signed off','Packaging received'].map((name,i)=>`<label><input class="mero-checkbox" type="checkbox"${i===0?' checked':''}>${name}</label>`).join('')}</section>`;
 }
 function hoverCard() {
-  return `<div class="rl-hover-card" data-rl-hover-card><button class="rl-hover-trigger" type="button" aria-expanded="false"><span class="rl-collection-monogram" aria-hidden="true">ML</span>Mara Lind</button><aside class="rl-hover-content" popover="manual" hidden><strong>Mara Lind</strong><small>Materials designer · Studio North</small><p>Owns finish sampling and supplier sign-off for the Arc collection.</p><a class="rl-link" href="/components/agenda">View studio agenda</a></aside></div>`;
+  return `<div class="mero-hover-card" data-mero-hover-card><button class="mero-hover-trigger" type="button" aria-expanded="false"><span class="mero-collection-monogram" aria-hidden="true">ML</span>Mara Lind</button><aside class="mero-hover-content" popover="manual" hidden><strong>Mara Lind</strong><small>Materials designer · Studio North</small><p>Owns finish sampling and supplier sign-off for the Arc collection.</p><a class="mero-link" href="/components/agenda">View studio agenda</a></aside></div>`;
 }
 function timeline() {
-  return `<ol class="rl-collection-timeline" aria-label="Production timeline">${[['09:10','Final sample approved','Mara signed off the graphite finish.'],['11:25','Production started','Atelier 01 received the first work order.'],['14:00','Dispatch planned','Shipment is waiting on packaging.']].map(([time,title,description],i)=>`<li${i===2?' aria-current="step"':''}><time>${time}</time><div><strong>${title}</strong><p>${description}</p></div></li>`).join('')}</ol>`;
+  return `<ol class="mero-collection-timeline" aria-label="Production timeline">${[['09:10','Final sample approved','Mara signed off the graphite finish.'],['11:25','Production started','Atelier 01 received the first work order.'],['14:00','Dispatch planned','Shipment is waiting on packaging.']].map(([time,title,description],i)=>`<li${i===2?' aria-current="step"':''}><time>${time}</time><div><strong>${title}</strong><p>${description}</p></div></li>`).join('')}</ol>`;
 }
 
 function gridExample(query = '') {
   const url = query ? `${gridPath}?${query}` : gridPath;
-  return `<div class="rl-grid-mount" hx-get="${escape(url)}" hx-trigger="load" hx-swap="innerHTML">${renderCollectionGrid(createLabStore(), new URLSearchParams(query))}</div>`;
+  return `<div class="mero-grid-mount" hx-get="${escape(url)}" hx-trigger="load" hx-swap="innerHTML">${renderCollectionGrid(createLabStore(), new URLSearchParams(query))}</div>`;
 }
 const liveGrid = gridExample();
 const actionBarGrid = gridExample('row=1&row=2');
@@ -176,16 +176,16 @@ export const groups = [{name:'Studio collections',items:[
     {name:'No matches',demo:gridExample('q=No+such+SKU')},
   ]),
   component('action-bar','Action Bar','Select records and apply one status change to the selection.',actionBarGrid,'The action bar appears for a nonempty selection. Bulk actions include the selected row IDs and the current query.'),
-  component('agenda','Agenda','Browse daily bookings and add a timed event.',`<div class="rl-agenda-mount" hx-get="${agendaPath}" hx-trigger="load" hx-swap="innerHTML">${agendaMarkup(initialAgenda)}</div>`,'Return a dated agenda fragment on navigation and after saving a booking. Demo bookings live in memory.'),
-  component('empty-state','Empty State','Explain an empty result and give the user a relevant next action.',`<section class="rl-collection-empty">${emptyState('No products in this collection','Add the first product to start tracking inventory.')}<a class="rl-button rl-button-primary rl-button-sm" href="/components/data-grid">Open inventory</a></section>`),
+  component('agenda','Agenda','Browse daily bookings and add a timed event.',`<div class="mero-agenda-mount" hx-get="${agendaPath}" hx-trigger="load" hx-swap="innerHTML">${agendaMarkup(initialAgenda)}</div>`,'Return a dated agenda fragment on navigation and after saving a booking. Demo bookings live in memory.'),
+  component('empty-state','Empty State','Explain an empty result and give the user a relevant next action.',`<section class="mero-collection-empty">${emptyState('No products in this collection','Add the first product to start tracking inventory.')}<a class="mero-button mero-button-primary mero-button-sm" href="/components/data-grid">Open inventory</a></section>`),
   component('file-tree','File Tree','Expand folders and preview a selected file with native disclosure controls.',fileTree()),
   component('floating-toc','Floating TOC','Navigate to sections with an index that follows the reading position.',floatingToc()),
   component('hover-card','Hover Card','Preview a contributor on hover, focus or tap.',hoverCard(),'Tab into the card for its action. Escape dismisses it.'),
   component('item-card','Item Card','Give a related destination an identity, title and supporting detail.',itemCard(profiles[0])),
-  component('item-card-group','Item Card Group','Arrange related destinations into a responsive group.',`<div class="rl-item-card-group">${profiles.map(itemCard).join('')}</div>`),
+  component('item-card-group','Item Card Group','Arrange related destinations into a responsive group.',`<div class="mero-item-card-group">${profiles.map(itemCard).join('')}</div>`),
   {
     ...component('kanban', 'Kanban', 'Move a card between stages with a drag or its Move to menu.', kanban(),
-      'Tap a card’s Move to menu and choose a stage. On a keyboard, Tab to the same menu and type R for Ready. The card moves, both lane counts update and focus stays on the menu. The bubbling relay:kanban-move event carries the card element and the from and to lane names in event.detail. Reloading resets this board.'),
+      'Tap a card’s Move to menu and choose a stage. On a keyboard, Tab to the same menu and type R for Ready. The card moves, both lane counts update and focus stays on the menu. The bubbling mero:kanban-move event carries the card element and the from and to lane names in event.detail. Reloading resets this board.'),
     relatedExample: { href: '/layouts/dashboard?view=companies&company=forma', label: 'Try a server-saved task move in Studio' },
   },
   component('list-view','List View','Browse structured destinations in a compact keyboard-accessible list.',listView()),

@@ -4,9 +4,9 @@ import { extname } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createLabStore, renderWorkbench } from "../../site/lab.mjs";
 import { renderLayout } from "../../site/layouts.mjs";
-import { handleInventoryRequest, inventoryAssets } from "../../site/inventory-routes.mjs";
+import { handleInventoryRequest, inventoryAssetPath, inventoryAssets } from "../../site/inventory-routes.mjs";
 
-const files = new URL("../../public/", import.meta.url);
+const files = new URL("../../", import.meta.url);
 const types = { ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2", ".txt": "text/plain" };
 const navigation = [
   { id: "dashboard", href: "/", label: "Overview" },
@@ -24,10 +24,10 @@ function page(content, theme, url) {
     <style>
       @font-face{font-family:Geist;src:url("/fonts/geist.woff2") format("woff2");font-weight:100 900;font-display:swap}
       @font-face{font-family:"Geist Mono";src:url("/fonts/geist-mono.woff2") format("woff2");font-weight:100 900;font-display:swap}
-      *{box-sizing:border-box}body{margin:0;background:var(--rl-bg);color:var(--rl-text);font-family:var(--rl-font)}
+      *{box-sizing:border-box}body{margin:0;background:var(--mero-bg);color:var(--mero-text);font-family:var(--mero-font)}
       main{max-width:72rem;margin:clamp(1rem,5vw,4rem) auto;padding:0 1rem}
       main>nav{display:flex;flex-wrap:wrap;gap:1rem;margin-block-end:1rem}main>nav a{color:inherit}
-      .examples{display:grid;grid-template-columns:minmax(0,1fr);gap:1.25rem}.tenant{min-width:0;--rl-primary:#23655e;--rl-primary-ink:white;--rl-accent:#368a80}
+      .examples{display:grid;grid-template-columns:minmax(0,1fr);gap:1.25rem}.tenant{min-width:0;--mero-primary:#23655e;--mero-primary-ink:white;--mero-accent:#368a80}
     </style>
     <script defer src="/vendor/htmx.min.js"></script><script defer src="/mero.js"></script>
     <script defer src="/mero-forms.js"></script><script defer src="/mero-inventory.js"></script>
@@ -44,7 +44,7 @@ export function createInventoryExample() {
       if (await handleInventoryRequest(req, res, url, tenantStore, { basePath: "/tenant/inventory" })) return;
       const name = url.pathname.slice(1);
       if (req.method === "GET" && inventoryAssets.includes(name)) {
-        const asset = await readFile(new URL(name, files));
+        const asset = await readFile(new URL(inventoryAssetPath(name), files));
         res.writeHead(200, { "Content-Type": types[extname(name)], "X-Content-Type-Options": "nosniff" });
         return res.end(asset);
       }

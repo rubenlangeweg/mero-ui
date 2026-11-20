@@ -190,8 +190,8 @@ test("mobile catalog navigation closes Browse, supports HTMX across families and
   await nav.getByRole("link", {name:"Carousel",exact:true}).click();
   await page.getByRole("heading", {name:"Carousel",exact:true,level:1}).waitFor();
   release.resolve();
-  await page.locator("rl-gallery").first().waitFor();
-  assert.equal(await page.evaluate(() => !!customElements.get("rl-gallery")), true);
+  await page.locator("mero-gallery").first().waitFor();
+  assert.equal(await page.evaluate(() => !!customElements.get("mero-gallery")), true);
   await menu.check();
   await page.route("**/components/tooltip", route => route.abort());
   await nav.getByRole("link",{name:"Tooltip",exact:true}).click();

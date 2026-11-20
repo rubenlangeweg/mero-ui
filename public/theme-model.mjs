@@ -52,14 +52,14 @@ export function themeTokens(state, mode = state.mode) {
   // The foreground range stays legible as the chosen hue and chroma change.
   const accent = `oklch(${(dark ? .72 + .16 * lightness : .30 + .16 * lightness).toFixed(3)} ${state.chroma} ${state.hue})`;
   return {
-    "--rl-font": fonts[state.font][1], "--rl-radius-panel": surfaceRadius[state.radius], "--rl-radius": controlRadius[state.formRadius],
-    "--rl-bg": base(dark ? .17 : .965), "--rl-surface": base(dark ? .215 : .995),
-    "--rl-raised": base(dark ? .265 : .945), "--rl-hover": base(dark ? .31 : .91),
-    "--rl-line": base(dark ? .34 : .86), "--rl-control-line": base(dark ? .57 : .54),
-    "--rl-text": base(dark ? .965 : .19), "--rl-muted": base(dark ? .77 : .44),
-    "--rl-accent": accent, "--rl-primary": accent, "--rl-accent-ink": dark ? "#101216" : "#fff",
-    "--rl-primary-ink": dark ? "#101216" : "#fff",
-    "--rl-switch-active": dark ? "color-mix(in srgb, var(--rl-accent) 56%, #101216)" : "var(--rl-accent)",
+    "--mero-font": fonts[state.font][1], "--mero-radius-panel": surfaceRadius[state.radius], "--mero-radius": controlRadius[state.formRadius],
+    "--mero-bg": base(dark ? .17 : .965), "--mero-surface": base(dark ? .215 : .995),
+    "--mero-raised": base(dark ? .265 : .945), "--mero-hover": base(dark ? .31 : .91),
+    "--mero-line": base(dark ? .34 : .86), "--mero-control-line": base(dark ? .57 : .54),
+    "--mero-text": base(dark ? .965 : .19), "--mero-muted": base(dark ? .77 : .44),
+    "--mero-accent": accent, "--mero-primary": accent, "--mero-accent-ink": dark ? "#101216" : "#fff",
+    "--mero-primary-ink": dark ? "#101216" : "#fff",
+    "--mero-switch-active": dark ? "color-mix(in srgb, var(--mero-accent) 56%, #101216)" : "var(--mero-accent)",
   };
 }
 

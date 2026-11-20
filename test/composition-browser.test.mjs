@@ -35,13 +35,13 @@ test("copied compositions align in both writing directions and retain their keyb
         <script defer src="/mero-composition.js"></script><main>${examples.map(item => `<section id="${item.id}">${item.code}</section>`).join("")}</main></html>`,
     });
     if (assets.has(path.slice(1))) return route.fulfill({
-      contentType: assets.get(path.slice(1)), body: await readFile(new URL("../public" + path, import.meta.url)),
+      contentType: assets.get(path.slice(1)), body: await readFile(new URL("../ui" + path, import.meta.url)),
     });
     return route.fulfill({ contentType: "text/html", body: "<main>Destination</main>" });
   });
   await page.goto(origin);
   const join = page.locator("#join");
-  const indicator = page.getByRole("link", { name: "Inventory, 3 updates" });
+  const indicator = page.getByRole("link", { name: "Inventory 3 updates" });
   for (const dir of ["ltr", "rtl"]) {
     await page.locator("html").evaluate((node, dir) => node.dir = dir, dir);
     const rounded = await join.evaluate(section => {
@@ -70,7 +70,7 @@ test("copied compositions align in both writing directions and retain their keyb
   }
   await page.locator("html").evaluate(el => el.dir = "ltr");
 
-  const swap = page.locator(".rl-swap");
+  const swap = page.locator(".mero-swap");
   const initial = await swap.boundingBox();
   await swap.getByRole("checkbox").focus();
   await page.keyboard.press("Space");
@@ -82,7 +82,7 @@ test("copied compositions align in both writing directions and retain their keyb
 
   const select = page.getByLabel("Appearance");
   await select.selectOption("dark");
-  assert.equal(await page.locator("[data-rl-theme-scope]").getAttribute("data-theme"), "dark");
+  assert.equal(await page.locator("[data-mero-theme-scope]").getAttribute("data-theme"), "dark");
   const sku = page.getByRole("textbox", { name: "Catalog SKU" });
   await sku.fill("invalid");
   await sku.press("Enter");

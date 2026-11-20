@@ -34,7 +34,7 @@ test("instance-scoped fragments and host routing survive validation, save and de
   assert.equal(ids.length, new Set(ids).size);
   assert.match(first, /hx-get="\/stock\/6\/edit" hx-target="#studio-lab-overlay"/);
   const drawer = await exchange(store, "/stock/6/edit?instance=studio", undefined, options);
-  assert.match(drawer.body, /data-rl-return-focus="#studio-edit-product-6"/);
+  assert.match(drawer.body, /data-mero-return-focus="#studio-edit-product-6"/);
   const invalid = await exchange(store, "/stock/6", { ...draft, sku: "RL-1042" }, options);
   assert.equal(invalid.status, 422);
   assert.match(invalid.body, /aria-describedby="studio-error-sku"/);
@@ -80,7 +80,7 @@ test("stale edits and deletes preserve the latest record, including after a vali
   for (const route of ["/demo/products/1", "/demo/products/1/delete"]) {
     const stale = await exchange(store, route, { ...draft, name: "Old chair" });
     assert.equal(stale.status, 409);
-    assert.match(stale.headers["Relay-Form-Error"], /Reopen/);
+    assert.match(stale.headers["Mero-Form-Error"], /Reopen/);
     assert.equal(store.products[0].name, "New chair");
   }
   const other = store.products[1];
@@ -106,6 +106,6 @@ test("downloaded archive contains a runnable application with local assets and s
   const script = join(directory, "examples/studio-inventory/server.mjs");
   const { createInventoryExample } = await import(pathToFileURL(script).href);
   assert.equal(typeof createInventoryExample, "function");
-  assert.deepEqual(await readFile(join(directory, "public/mero-inventory.css")), await readFile(new URL("../public/mero-inventory.css", import.meta.url)));
+  assert.deepEqual(await readFile(join(directory, "ui/mero-inventory.css")), await readFile(new URL("../ui/mero-inventory.css", import.meta.url)));
   assert.ok(await readFile(join(directory, "public/vendor/HTMX-LICENSE.txt"), "utf8"));
 });

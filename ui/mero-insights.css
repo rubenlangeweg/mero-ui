@@ -1,0 +1,167 @@
+/* Optional charts, metrics and conversation styles. Uses Mero's semantic theme. */
+.mero-plot, .mero-chat, .mero-chat-inbox, .mero-code-block, .mero-insight-metric, .mero-chat-disclosure, .mero-markdown-editor {
+  box-sizing: border-box;
+  min-inline-size: 0;
+  margin: 0;
+  color: var(--mero-text);
+  background: var(--mero-surface);
+  border: 1px solid var(--mero-line);
+  border-radius: var(--mero-radius-panel);
+  font-family: var(--mero-font);
+}
+.mero-insight-sr {position:absolute;inline-size:1px;block-size:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+.mero-plot {position:relative;container-type:inline-size;width:min(100%,35rem);padding:clamp(.9rem,3vw,1.45rem);margin-inline:auto;}
+.mero-plot figcaption {display:grid;gap:.25rem;}
+.mero-plot figcaption strong, .mero-chat-head strong {font-size:clamp(1rem,2vw,1.22rem);font-weight:600;letter-spacing:-.03em;}
+.mero-plot figcaption span, .mero-chat-head span, .mero-chat-file small, .mero-chat-disclosure small {color:var(--mero-muted);font-size:.79rem;}
+.mero-plot-legend {display:flex;flex-wrap:wrap;gap:.25rem .85rem;list-style:none;padding:0;margin:.9rem 0 .35rem;}
+.mero-plot-legend li {display:flex;align-items:center;gap:.38rem;color:var(--mero-muted);font-size:.75rem;}
+.mero-plot-legend i {display:inline-block;width:.57rem;height:.57rem;border-radius:3px;background:currentColor;}
+.mero-plot-tone-0 {color:var(--mero-success);} .mero-plot-tone-1 {color:var(--mero-info);}
+.mero-plot-tone-2 {color:var(--mero-warning);} .mero-plot-tone-3 {color:var(--mero-muted);}
+.mero-plot-tone-4 {color:var(--mero-danger);} .mero-plot-tone-5 {color:var(--mero-text);}
+.mero-plot svg {display:block;width:100%;max-block-size:15rem;overflow:visible;}
+.mero-plot-axis {fill:var(--mero-muted);font:12px var(--mero-font);}
+.mero-plot-grid {stroke:var(--mero-line);stroke-width:1;stroke-dasharray:3 4;}
+.mero-plot-line, .mero-plot-radar {stroke:currentColor;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round;}
+.mero-plot-line {fill:none;}
+.mero-plot-line.mero-plot-tone-1, .mero-plot-radar.mero-plot-tone-1 {stroke-dasharray:5 4;}
+:is([data-mero-chart=line],[data-mero-chart=area],[data-mero-chart=radar]) .mero-plot-legend i, [data-mero-chart=composed] .mero-plot-legend li + li i {width:1rem;height:0;border-radius:0;background:transparent;border-block-start:2px solid currentColor;}
+:is([data-mero-chart=line],[data-mero-chart=area],[data-mero-chart=radar]) .mero-plot-legend .mero-plot-tone-1, [data-mero-chart=composed] .mero-plot-legend .mero-plot-tone-1 {border-block-start-style:dashed;}
+.mero-plot-empty {padding-block:1rem;color:var(--mero-muted);}
+/* The SVG viewBox also scales its text. Compensate for the plot's actual content width. */
+@container (max-width:30rem) { .mero-plot-axis {font-size:14px;} }
+@container (max-width:25rem) { .mero-plot-axis {font-size:17px;} }
+@container (max-width:20rem) { .mero-plot-axis {font-size:21px;} }
+@container (max-width:16rem) { .mero-plot-axis {font-size:25px;} }
+.mero-plot-area, .mero-plot-radar {fill:currentColor;fill-opacity:.12;}
+.mero-plot-track {stroke:var(--mero-line);}
+.mero-plot-point {fill:currentColor;cursor:crosshair;}
+.mero-plot-point:focus-visible {outline:1.5px solid var(--mero-text);outline-offset:2px;}
+.mero-plot-point:is(:hover,:focus-visible) {color:var(--mero-text);}
+.mero-plot-dot {stroke:var(--mero-surface);stroke-width:1.6;}
+.mero-plot-readout {min-height:1.45rem;color:var(--mero-muted);font-size:.79rem;font-variant-numeric:tabular-nums;}
+.mero-plot-readout[data-active] {color:var(--mero-text);}
+.mero-plot-tooltip {position:absolute;z-index:1;max-width:calc(100% - 1rem);pointer-events:none;transform:translate(-50%,-100%);border-radius:.4rem;padding:.3rem .5rem;color:var(--mero-primary-ink);background:var(--mero-primary);font:550 .75rem/1.35 var(--mero-font);box-shadow:var(--mero-shadow);}
+.mero-plot-data {margin-top:.35rem;border-top:1px solid var(--mero-line);}
+.mero-plot-data summary {padding-block:.55rem 0;font-size:.8rem;font-weight:550;}
+.mero-plot-data > div {margin-top:.7rem;overflow:auto;}
+.mero-plot-data caption {text-align:start;margin-bottom:.5rem;color:var(--mero-muted);font-size:.78rem;}
+.mero-insight-metrics {display:flex;flex-wrap:wrap;inline-size:min(100%,52rem);gap:.75rem;margin:0 auto;}
+.mero-insight-metrics:has(> :only-child) {max-inline-size:18rem;}
+.mero-insight-metric {flex:1 1 10.5rem;min-inline-size:0;container-type:inline-size;padding:1rem;}
+.mero-insight-metric dt, .mero-insight-metric dd > span {color:var(--mero-muted);font-size:.78rem;}
+.mero-insight-metric dd {margin:.48rem 0 0;display:grid;gap:.32rem;}
+.mero-insight-metric dd strong {font-size:clamp(1.5rem,17cqi,2.1rem);overflow-wrap:anywhere;font-variant-numeric:tabular-nums;line-height:1.1;font-weight:550;letter-spacing:-.065em;}
+.mero-insight-trends {display:flex;align-items:center;gap:.6rem 1rem;flex-wrap:wrap;}
+.mero-insight-trends > span {display:flex;gap:.45rem;align-items:center;font-size:.83rem;}
+.mero-trend {display:inline-flex;align-items:center;gap:.22rem;width:fit-content;border-radius:99px;padding:.18rem .52rem;background:var(--mero-raised);font:600 .75rem/1.45 var(--mero-font);font-variant-numeric:tabular-nums;}
+.mero-trend[data-direction=up] {color:var(--mero-success);background:color-mix(in srgb,currentColor 11%,var(--mero-surface));}
+.mero-trend[data-direction=down] {color:var(--mero-info);background:color-mix(in srgb,currentColor 11%,var(--mero-surface));}
+.mero-chat-actions {display:flex;align-items:center;flex-wrap:wrap;gap:.38rem;}
+.mero-reaction, .mero-pressable, .mero-suggestion, .mero-insight-link {font:500 .82rem/1.2 var(--mero-font);cursor:pointer;color:var(--mero-text);transition:background var(--mero-fast),transform var(--mero-fast) var(--mero-ease);}
+.mero-reaction, .mero-pressable, .mero-suggestion {display:inline-flex;align-items:center;gap:.42rem;border:1px solid var(--mero-line);background:var(--mero-surface);border-radius:99rem;padding:.52rem .78rem;min-block-size:2rem;}
+.mero-pressable {border-radius:var(--mero-radius);}
+.mero-pressable [data-mero-press-icon] {font-size:1.15em;}
+.mero-insight-link {border:0;border-radius:.4rem;padding:.32rem .45rem;background:transparent;color:var(--mero-muted);min-height:1.7rem;}
+:is(.mero-reaction,.mero-pressable,.mero-insight-link,.mero-suggestion):hover {background:var(--mero-hover);}
+:is(.mero-reaction,.mero-pressable,.mero-suggestion):active {transform:scale(.96);}
+:is(.mero-reaction,.mero-pressable,.mero-insight-link)[aria-pressed=true] {color:var(--mero-accent);background:color-mix(in srgb,var(--mero-accent) 12%,var(--mero-surface));}
+.mero-rating {border:0;margin:0;padding:0;color:var(--mero-text);}
+.mero-rating legend {margin-bottom:.35rem;font-size:.85rem;font-weight:550;}
+.mero-rating-options {display:inline-flex;gap:.22rem;}
+.mero-rating label {position:relative;display:grid;place-items:center;min-width:2rem;min-height:2.25rem;cursor:pointer;}
+.mero-rating input {position:absolute;inset:0;margin:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.mero-rating label > span {color:var(--mero-muted);font-size:1.75rem;line-height:1;}
+.mero-rating label:has(input:checked) > span, .mero-rating label:has(~ label input:checked) > span {color:var(--mero-warning);}
+.mero-rating label:focus-within {outline:2px solid var(--mero-accent);outline-offset:2px;border-radius:.3rem;}
+.mero-chat, .mero-chat-inbox {width:min(100%,38rem);margin-inline:auto;overflow:hidden;}
+.mero-chat-head {display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.95rem 1.1rem;border-bottom:1px solid var(--mero-line);}
+.mero-chat-history {display:grid;gap:.9rem;min-width:0;padding:.9rem;}
+.mero-chat .mero-chat-history {max-block-size:clamp(16rem,44dvh,25rem);overflow-y:auto;overscroll-behavior-y:contain;scrollbar-width:thin;}
+.mero-chat-history:empty {padding:0;}
+.mero-chat-message {width:fit-content;max-width:min(100%,36rem);color:var(--mero-text);min-width:0;overflow-wrap:anywhere;font-family:var(--mero-font);}
+.mero-chat-message header {font-size:.72rem;line-height:1.5;font-weight:550;color:var(--mero-muted);}
+.mero-chat-message [data-mero-message-text] {margin-top:.18rem;}
+.mero-chat-message[data-role=user] {justify-self:end;padding:.5rem .85rem;background:var(--mero-raised);border-radius:1rem 1rem .3rem 1rem;}
+.mero-chat-message p {margin:.24rem 0;font-size:.91rem;line-height:1.55;}
+.mero-chat-message .mero-chat-actions {margin-top:.45rem;}
+.mero-chat-compose, .mero-md-edit {display:grid;min-inline-size:0;gap:.6rem;padding:.8rem;}
+.mero-chat-compose {margin:.7rem;background:var(--mero-raised);border:1px solid var(--mero-line);border-radius:.9rem;}
+.mero-chat-compose label, .mero-md-edit label {display:grid;gap:.4rem;font-size:.8rem;font-weight:500;}
+.mero-chat-compose textarea.mero-input {box-sizing:border-box;width:100%;min-height:3.1rem;background:transparent;color:var(--mero-text);border:0;resize:vertical;font:inherit;}
+.mero-chat-compose-foot {display:flex;align-items:center;justify-content:space-between;gap:.5rem;}
+.mero-chat-compose-foot [role=status] {font-size:.75rem;color:var(--mero-muted);}
+.mero-chat-inbox nav {display:flex;flex-wrap:wrap;gap:.2rem;padding:.6rem;border-bottom:1px solid var(--mero-line);}
+.mero-chat-inbox nav a {padding:.45rem .6rem;color:var(--mero-muted);text-decoration:none;font-size:.85rem;border-radius:.45rem;}
+.mero-chat-inbox nav a:hover {background:var(--mero-raised);}
+.mero-chat-inbox nav a[aria-current] {color:var(--mero-text);background:var(--mero-raised);font-weight:600;}
+.mero-chat-inbox nav a:focus-visible {outline:2px solid var(--mero-accent);outline-offset:1px;}
+.mero-insight-status {font:400 .78rem/1.45 var(--mero-font);color:var(--mero-muted);}
+.mero-chat-inbox > .mero-insight-status:not(:empty) {margin:0 1rem .8rem;}
+.mero-chat-thread {padding:.85rem 1rem;}
+.mero-chat-thread h2 {margin:0 0 .55rem;font-size:1rem;}
+.mero-chat-file {display:inline-flex;background:var(--mero-surface);align-items:center;gap:.72rem;padding:.75rem 1rem;border:1px solid var(--mero-line);border-radius:var(--mero-radius);color:var(--mero-text);text-decoration:none;}
+.mero-chat-file > span:first-child {display:grid;place-items:center;flex:none;inline-size:2.5rem;block-size:2.5rem;background:var(--mero-raised);border-radius:.5rem;font:500 1.2rem/1 var(--mero-font);}
+.mero-chat-file strong, .mero-chat-file small {display:block;line-height:1.55;}
+.mero-chat-file:hover {background:var(--mero-raised);}
+.mero-chat-disclosure {width:min(100%,36rem);padding:0 1rem;overflow:auto;}
+.mero-chat-disclosure summary, .mero-plot-data summary {display:flex;align-items:center;gap:.5rem;list-style:none;cursor:pointer;}
+:is(.mero-chat-disclosure,.mero-plot-data) summary::-webkit-details-marker {display:none;}
+:is(.mero-chat-disclosure,.mero-plot-data) summary::after {content:"";box-sizing:border-box;flex:none;inline-size:.48rem;block-size:.48rem;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);color:var(--mero-muted);}
+:is(.mero-chat-disclosure,.mero-plot-data):dir(rtl) summary::after {transform:rotate(135deg);}
+:is(.mero-chat-disclosure,.mero-plot-data)[open] summary::after {transform:rotate(45deg);}
+.mero-chat-disclosure summary {min-block-size:2.75rem;margin-inline:-1rem;padding:.5rem 1rem;box-sizing:border-box;font-weight:550;font-size:.91rem;}
+.mero-chat-disclosure summary:focus-visible {outline:2px solid var(--mero-accent);outline-offset:-3px;border-radius:inherit;}
+.mero-chat-disclosure summary > span {flex:none;margin-inline-start:auto;color:var(--mero-muted);font-size:.74rem;font-weight:450;}
+.mero-plot-data summary {min-block-size:2rem;justify-content:space-between;}
+.mero-chat-disclosure > :last-child:not(summary) {margin-block:0 1rem;}
+.mero-chat-disclosure th + th, .mero-chat-disclosure td, .mero-plot-data td, .mero-plot-data th + th {text-align:end;font-variant-numeric:tabular-nums;}
+:is(.mero-chat-disclosure,.mero-plot-data) tbody th[scope=row] {background:transparent;color:var(--mero-text);font-weight:500;}
+
+.mero-chat-steps {display:grid;gap:.6rem;padding-inline-start:1.4rem;font-size:.87rem;}
+.mero-chat-steps small {display:block;margin-top:.12rem;}
+.mero-tool-result {display:grid;grid-template-columns:auto 1fr;gap:.4rem .8rem;font-size:.85rem;}
+.mero-tool-result dt {color:var(--mero-muted);}.mero-tool-result dd {margin:0;}
+.mero-code-block {width:min(100%,40rem);overflow:hidden;}
+.mero-code-block figcaption {display:flex;align-items:center;justify-content:space-between;padding:.46rem .75rem;background:var(--mero-raised);font-size:.78rem;}
+.mero-code-block pre, .mero-markdown pre {margin:0;padding:1rem;overflow:auto;font:.82rem/1.55 ui-monospace,monospace;}
+.mero-markdown {color:var(--mero-text);overflow-wrap:anywhere;font:400 .9rem/1.55 var(--mero-font);}
+.mero-markdown :is(h3,h4,h5,p,ul) {margin:.45em 0;}
+.mero-markdown :is(h3,h4,h5) {font-weight:600;line-height:1.3;}
+.mero-markdown ul {padding-inline-start:1.4rem;}
+.mero-markdown code {font-size:.89em;}
+.mero-markdown p code, .mero-markdown li code {border-radius:.3rem;background:var(--mero-raised);padding:.08rem .24rem;}
+.mero-markdown pre {background:var(--mero-raised);border-radius:.5rem;}
+.mero-markdown-editor {width:min(100%,40rem);margin-inline:auto;overflow:hidden;}
+.mero-md-edit,.mero-md-preview {padding:clamp(.85rem,3vw,1.35rem);}
+.mero-md-edit {box-sizing:border-box;width:100%;}
+.mero-md-edit textarea.mero-input {min-height:8.5rem;width:100%;box-sizing:border-box;resize:vertical;font:400 .84rem/1.5 ui-monospace,monospace;}
+.mero-md-actions {display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;}
+.mero-md-preview {border-top:1px solid var(--mero-line);}
+.mero-md-preview > h2 {color:var(--mero-muted);font-size:.79rem;font-weight:550;margin:0 0 .6rem;}
+.mero-md-preview .mero-markdown h3 {font-size:1.08rem;}
+.mero-chat-loader {display:inline-flex;align-items:center;gap:.55rem;color:var(--mero-muted);font:500 .83rem var(--mero-font);}
+.mero-chat-loader > span {display:inline-flex;gap:.14rem;}
+.mero-chat-loader i {width:.34rem;height:.34rem;background:currentColor;border-radius:50%;animation:mero-chat-pulse 1.35s ease-in-out infinite;}
+.mero-chat-loader i:nth-child(2) {animation-delay:.14s;}.mero-chat-loader i:nth-child(3) {animation-delay:.28s;}
+@keyframes mero-chat-pulse {50% {opacity:.4;transform:translateY(-2px);}}
+.mero-text-shimmer {display:inline-block;margin:0;font:550 1rem/1.6 var(--mero-font);color:var(--mero-muted);}
+@supports (background-clip:text) {
+  .mero-text-shimmer {background:linear-gradient(110deg,var(--mero-muted) 30%,var(--mero-text) 50%,var(--mero-muted) 70%) 100% 0/250% 100%;background-clip:text;color:transparent;animation:mero-text-sweep 2.7s linear infinite;}
+}
+@keyframes mero-text-sweep {to {background-position:-100% 0;}}
+@media(prefers-reduced-motion:reduce) {
+  .mero-chat-loader i, .mero-text-shimmer {animation:none;}
+  :is(.mero-reaction,.mero-pressable,.mero-insight-link,.mero-suggestion) {transition:none;}
+  :is(.mero-reaction,.mero-pressable,.mero-suggestion):active {transform:none;}
+}
+@media(forced-colors:active) {
+  .mero-text-shimmer {color:CanvasText;background:none;}
+  .mero-plot-point {color:CanvasText;}
+  .mero-rating label:has(input:checked) {outline:2px solid Highlight;}
+  .mero-chat-inbox nav a[aria-current] {outline:1px solid Highlight;}
+}
+.mero-report-period {width:min(100%,35rem);}
+.mero-report-period form {display:flex;align-items:end;gap:.45rem;margin-bottom:.6rem;}
+.mero-report-period label {display:grid;gap:.28rem;font:500 .76rem var(--mero-font);}

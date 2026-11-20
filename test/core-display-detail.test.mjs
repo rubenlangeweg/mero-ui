@@ -24,10 +24,10 @@ test("core display controls keep their geometry through keyboard, pointer and di
 
   for (const theme of ["dark", "light"]) {
     await preview("close-button", theme);
-    await page.locator("[data-rl-open]").click();
+    await page.locator("[data-mero-open]").click();
     const close = page.getByRole("button", { name: "Close release details" });
     const button = await rect(close);
-    const mark = await rect(close.locator(".rl-dismiss-mark"));
+    const mark = await rect(close.locator(".mero-dismiss-mark"));
     assert.ok(button.width >= 32 && Math.abs(button.width - button.height) < 1);
     assert.ok(mark.width >= 14 && mark.height >= 14);
     for (const axis of ["x", "y"]) assert.ok(Math.abs(middle(button, axis) - middle(mark, axis)) < 1);
@@ -36,7 +36,7 @@ test("core display controls keep their geometry through keyboard, pointer and di
 
     await preview("separator", theme);
     const rule = await rect(page.getByRole("separator"));
-    const stack = await rect(page.locator(".rl-stack"));
+    const stack = await rect(page.locator(".mero-stack"));
     assert.ok(rule.width > 100 && Math.abs(stack.width - rule.width) < 1);
     assert.equal(rule.height, 1);
 
@@ -94,7 +94,7 @@ test("core display controls keep their geometry through keyboard, pointer and di
           viewport: innerWidth,
           document: document.documentElement.scrollWidth,
           group: document.querySelector('[aria-busy="true"]').getBoundingClientRect().width,
-          bars: [...document.querySelectorAll(".rl-skeleton")].map(el => el.getBoundingClientRect().width),
+          bars: [...document.querySelectorAll(".mero-skeleton")].map(el => el.getBoundingClientRect().width),
         };
       }, { scale, dir });
       assert.equal(sizes.document, sizes.viewport);
@@ -105,7 +105,7 @@ test("core display controls keep their geometry through keyboard, pointer and di
   await page.setViewportSize({ width: 960, height: 700 });
   await preview("drawer");
   await page.evaluate(() => { document.documentElement.dir = "rtl"; });
-  await page.locator("[data-rl-open]").click();
+  await page.locator("[data-mero-open]").click();
   const drawer = page.getByRole("dialog");
   const drawerRect = await rect(drawer);
   assert.ok(drawerRect.x < 1 && drawerRect.width < 960);

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { catalogFragment, groups } from "../site/components.mjs";
+import { catalogFragment, groups } from "../site/core-components.mjs";
 import { createLabStore, renderResults, renderProductForm, saveProduct } from "../site/lab.mjs";
 
 test("the catalog exposes distinct copyable component examples", () => {

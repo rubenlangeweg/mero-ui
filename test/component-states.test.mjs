@@ -50,7 +50,7 @@ test("copied request buttons recover from failures and switches expose the saved
   try {
     assert.ok(await button.isDisabled());
     assert.equal(await form.getAttribute("aria-busy"), "true");
-    assert.ok(await form.locator(".rl-indicator").isVisible());
+    assert.ok(await form.locator(".mero-indicator").isVisible());
     assert.deepEqual(await button.boundingBox(), before);
     assert.ok(await forms.first().getByRole("button").isEnabled());
     await page.keyboard.press("Enter");
@@ -60,7 +60,7 @@ test("copied request buttons recover from failures and switches expose the saved
   }
   await form.getByRole("alert").waitFor();
   assert.ok(await button.isEnabled());
-  assert.ok(await form.locator(".rl-indicator").isHidden());
+  assert.ok(await form.locator(".mero-indicator").isHidden());
   await button.click();
   await form.locator("output").getByText("6 products", { exact: true }).waitFor();
   assert.equal(await forms.first().locator("output").textContent(), "");

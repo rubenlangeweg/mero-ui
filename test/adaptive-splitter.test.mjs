@@ -53,7 +53,7 @@ function near(actual, expected, tolerance = 1.2) {
 test("the adaptive divider learns recent drop widths, releases for precision and keeps arrows exact", options, async t => {
   const { page, origin } = await fixture(t);
   await page.goto(origin + "/preview/resizable?variant=Adaptive");
-  const split = page.locator("[data-rlw-snap][data-rlw-split-ready]");
+  const split = page.locator("[data-mero-ws-snap][data-mero-ws-split-ready]");
   const handle = split.getByRole("separator");
   await handle.waitFor();
   const firstWidth = Math.round((await split.boundingBox()).width * .5);
@@ -64,11 +64,11 @@ test("the adaptive divider learns recent drop widths, releases for precision and
   // Several similar stops establish a preference. A nearby pointer position now lands on it.
   await handle.press("End");
   const pointer = await dragToWidth(page, split, firstWidth + 8);
-  await split.locator("[role=separator][data-rlw-snapped]").waitFor();
+  await split.locator("[role=separator][data-mero-ws-snapped]").waitFor();
   const snapped = await firstPaneWidth(split);
   near(snapped, firstWidth, 3);
   // Holding still unlocks the edge. The next three pixels of motion move the pane three pixels.
-  await split.locator("[role=separator][data-rlw-snapped]").waitFor({ state: "hidden" });
+  await split.locator("[role=separator][data-mero-ws-snapped]").waitFor({ state: "hidden" });
   near(await firstPaneWidth(split), snapped);
   await page.mouse.move(pointer.x + 3, pointer.y);
   near(await firstPaneWidth(split), snapped + 3);
@@ -103,7 +103,7 @@ test("Mail keeps its pane width and snap point through an HTMX message change an
   const { page, origin } = await fixture(t);
   await page.goto(origin + "/layouts/mail?embed=1&thread=proofs");
   const mail = page.locator('[data-communication="mail"]');
-  const split = mail.locator("[data-rlw-snap][data-rlw-split-ready]");
+  const split = mail.locator("[data-mero-ws-snap][data-mero-ws-split-ready]");
   const handle = split.getByRole("separator");
   await handle.waitFor();
   const preferred = Math.round((await split.boundingBox()).width * .41);

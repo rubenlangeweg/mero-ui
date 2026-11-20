@@ -4,7 +4,7 @@
   const actions = {
     inventory: { selector: '[data-lab] [name="q"]', value: "lamp" },
     settings: { selector: '#layout-settings [name="name"]', value: " " },
-    report: { selector: '.rl-report-period [name="period"]', value: "recent" },
+    report: { selector: '.mero-report-period [name="period"]', value: "recent" },
   };
   const action = actions[page.dataset.playground];
   if (!action) return;

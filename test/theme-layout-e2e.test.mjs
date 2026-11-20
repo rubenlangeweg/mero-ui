@@ -53,13 +53,13 @@ test("a theme edited from the homepage opens with the same controls in a fresh b
   await shared.getByRole("button", { name: "Done", exact: true }).click();
   const preview = shared.getByRole("region", { name: "Live preview" });
   const accent = await preview.getByRole("button", { name: "Preview invitation" }).evaluate(button =>
-    getComputedStyle(button).getPropertyValue("--rl-accent").trim());
+    getComputedStyle(button).getPropertyValue("--mero-accent").trim());
   assert.ok(accent);
   await preview.getByRole("link", { name: "CRM", exact: true }).click();
   await shared.frameLocator('iframe[title="CRM theme preview"]').getByRole("heading", { name: "Sales pipeline" }).waitFor();
   await shared.waitForFunction(expected => {
     const heading = document.querySelector('iframe[title="CRM theme preview"]').contentDocument.querySelector("h1");
-    return heading && getComputedStyle(heading).getPropertyValue("--rl-accent").trim() === expected;
+    return heading && getComputedStyle(heading).getPropertyValue("--mero-accent").trim() === expected;
   }, accent);
   await fitsViewport(shared);
 });
@@ -71,7 +71,7 @@ test("visitors can open each app from the layout gallery and return to the galle
   assert.equal(await showcase.getByRole("radio", { name: "Finance", exact: true }).isChecked(), true);
   await showcase.getByRole("link", { name: /open finance/i }).click();
   await page.waitForURL(url => url.pathname === "/layouts/finance");
-  await page.getByRole("link", { name: /^View .+ transaction$/i }).first().click();
+  await page.locator(".bu-posting").and(page.getByRole("link", { expanded: false })).first().click();
   await page.getByText("Reference", { exact: true }).waitFor();
   await page.waitForURL(url => url.searchParams.has("transaction"));
   await page.goBack();
@@ -152,7 +152,7 @@ test("the layout gallery downloads only matching viewport and theme captures", o
   const { browser, page } = await start(t);
   for (const [width, theme, suffix] of [[390, "light", "light-phone"], [1280, "dark", "dark"]]) {
     const gallery = await browser.newPage({ viewport: { width, height: 800 } });
-    await gallery.addInitScript(value => localStorage.setItem("relay-theme", value), theme);
+    await gallery.addInitScript(value => localStorage.setItem("mero-theme", value), theme);
     const art = new Set();
     gallery.on("request", request => {
       const image = new URL(request.url()).pathname;
@@ -161,7 +161,7 @@ test("the layout gallery downloads only matching viewport and theme captures", o
     await gallery.goto(new URL("/layouts", page.url()).href);
     assert.equal(art.size, 6);
     assert.ok([...art].every(path => path.endsWith("-" + suffix + ".webp")));
-    assert.equal(await gallery.getByRole("link", { name: "Mail", exact: true }).getAttribute("aria-describedby"), "layout-mail-description");
+    await gallery.getByRole("link", { name: /^Mail Read, reply to/ }).and(gallery.locator("#example-mail")).waitFor();
     await gallery.close();
   }
 });

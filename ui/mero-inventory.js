@@ -4,7 +4,7 @@
     return event.detail.requestConfig?.elt?.closest("[data-lab]") ?? event.target.closest?.("[data-lab]");
   }
   function showLoadError(event, message) {
-    if (event.detail.requestConfig?.elt?.closest("[data-rl-form]")) return;
+    if (event.detail.requestConfig?.elt?.closest("[data-mero-form]")) return;
     const error = workbench(event)?.querySelector("[data-lab-request-error]");
     if (error) {
       error.textContent = message;

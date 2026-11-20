@@ -66,7 +66,7 @@ export function workflowInstall(screen, assets) {
   const inventory = screen === "inventory";
   return `<details class="component-install"><summary>Use in your app</summary>
     <p>${guide.text}</p>
-    <p>Serve these assets from the download’s <code>public/</code> directory. Add the tags to your page head.</p>
+    <p>Serve these assets from the download’s <code>ui/</code> and <code>public/</code> directories. Add the tags to your page head.</p>
     ${example([assetStyles(assets), assetScripts(assets)].join("\n"), undefined, "Page assets")}
     <p>Server source · <a class="site-inline-link" href="/source/${guide.source}">${guide.source}</a></p>
     <a class="site-inline-link" href="/downloads/${inventory ? "studio-inventory" : "mero-ui"}.tar.gz" download>${inventory ? "Download runnable inventory example" : "Download full example source"} ↓</a></details>`;
