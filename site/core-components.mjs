@@ -4,7 +4,7 @@ import { groups as buttons } from "./core/buttons.mjs"
 import { groups as forms } from "./core/forms.mjs"
 import { groups as dateTime, calendarMarkup } from "./core/date-time.mjs"
 import { groups as navigation, pageLinks } from "./core/navigation.mjs"
-import { groups as overlays } from "./core/overlays.mjs"
+import { groups as overlays, commandResults } from "./core/overlays.mjs"
 import { groups as collections } from "./core/collections.mjs"
 import { groups as controls } from "./core/controls.mjs"
 import { groups as feedback } from "./core/feedback.mjs"
@@ -36,15 +36,7 @@ export function catalogFragment(id, params) {
   }
   if (id === "command-menu") {
     const query = (params.get("q") ?? "").trim().toLowerCase().slice(0, 80)
-    const commands = [
-      ...groups.flatMap((group) => group.items).map(({ id, name }) => ({ id, name, href: `/components/${id}`, kind: "Component" })),
-      { id: "export", name: "Export catalog", toast: "Export requested", kind: "Action" },
-    ]
-    const matches = commands.filter(({ name }) => name.toLowerCase().includes(query)).map(({ id, name, href, toast, kind }) => href
-      ? `<a class="mero-option" role="option" tabindex="-1" id="cmd-${id}" href="${href}">${escapeHtml(name)}<small>${kind}</small></a>`
-      : `<div class="mero-option" role="option" id="cmd-${id}" data-mero-toast="${escapeHtml(toast)}">${escapeHtml(name)}<small>${kind}</small></div>`)
-    return matches.slice(0, 6).join("\n")
-      || '<div class="mero-option" role="option" aria-disabled="true" id="cmd-empty">No commands match</div>'
+    return commandResults(query, groups.flatMap(group => group.items))
   }
   return null
 }

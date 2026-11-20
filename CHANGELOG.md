@@ -6,6 +6,7 @@
 - Remote comboboxes activate only options returned for the current query, including when Firefox restores a saved draft. Escape and empty results clear the active option.
 - Live Progress polls a status fragment while the tab is visible, keeps the last good status when a read fails and stops at the server’s terminal response.
 - Sortable Table and Filter Chips show labelled cards below 768 px. Sorting, row actions and focus on Back work in both layouts.
+- The command menu accepts named result groups. Arrow keys cross groups, Home and End reach the first and last result, and the live status counts selectable options.
 
 ## 0.5.1 · 20 November 2026
 

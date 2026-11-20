@@ -701,7 +701,7 @@
   }
   :where(.mero-dialog[open])::backdrop { background: #12141965; backdrop-filter: blur(3px); }
   @starting-style {
-    :where(.mero-dialog[open]) { opacity: 0; translate: var(--mero-offset-x) var(--mero-offset-y); }
+    :where(.mero-dialog[open]) { opacity: var(--mero-enter-opacity, 0); translate: var(--mero-offset-x) var(--mero-offset-y); }
     :where(.mero-dialog[open])::backdrop { background: transparent; backdrop-filter: none; }
   }
 }
@@ -790,8 +790,11 @@
   max-block-size: 12rem;
   overflow: auto;
 }
-:where(.mero-command) { inline-size: min(36rem, calc(100% - 2rem)); margin-block-start: 12vh; padding: .5rem; }
+/* Command results accept keyboard input immediately, including during entry. */
+:where(.mero-command) { --mero-enter-opacity: 1; inline-size: min(36rem, calc(100% - 2rem)); margin-block-start: 12vh; padding: .5rem; }
 :where(.mero-command .mero-combo-list:not([hidden])) { position: static; max-block-size: min(50vh, 24rem); margin-block-start: .35rem; box-shadow: none; }
+:where(.mero-command-heading) { margin: 0; padding: .55rem .56rem .15rem; color: var(--mero-muted); font-size: .78rem; font-weight: 600; }
+:where(.mero-command [role="group"] + [role="group"]) { margin-block-start: .3rem; border-block-start: 1px solid var(--mero-line); }
 :where(.mero-option small) { margin-inline-start: auto; color: var(--mero-muted); }
 :where(.mero-scroll-shadow) {
   max-block-size: var(--mero-scroll-height, 10rem);
@@ -857,8 +860,8 @@
 :where(.mero-button > .mero-button-label, .mero-button > .mero-button-label ~ .mero-indicator) { grid-area: 1 / 1; }
 :where(.htmx-request, [data-mero-pending]) :where(.mero-button-label:has(~ .mero-indicator)) { opacity: 0; }
 
-@keyframes mero-panel-in { from { opacity: 0; transform: translateY(.24rem); } }
-@keyframes mero-overlay-in { from { opacity: 0; transform: translate(var(--mero-offset-x, 0), var(--mero-offset-y, .5rem)); } }
+@keyframes mero-panel-in { from { opacity: var(--mero-enter-opacity, 0); transform: translateY(.24rem); } }
+@keyframes mero-overlay-in { from { opacity: var(--mero-enter-opacity, 0); transform: translate(var(--mero-offset-x, 0), var(--mero-offset-y, .5rem)); } }
 @keyframes mero-fade-in { from { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {

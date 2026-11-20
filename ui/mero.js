@@ -204,7 +204,7 @@
   }
 
   function optionsFor(list) {
-    return [...(list?.querySelectorAll(optionSelector) ?? [])].filter(option => !option.hidden && !disabled(option));
+    return [...(list?.querySelectorAll(optionSelector) ?? [])].filter(option => !option.hidden && !option.closest('[role="group"][hidden]') && !disabled(option));
   }
 
   function chooseOption(list, option) {
@@ -268,7 +268,8 @@
     const count = options.length;
     const empty = list.querySelector('[aria-disabled="true"]:not([hidden])');
     setComboOpen(input, Boolean(count || empty));
-    comboStatus(input, count ? count + (count === 1 ? " suggestion" : " suggestions") : empty?.textContent ?? "No matching options");
+    const unit = input.closest("[data-mero-command]") ? "result" : "suggestion";
+    comboStatus(input, count ? count + " " + unit + (count === 1 ? "" : "s") : empty?.textContent ?? "No matching options");
   }
 
   function activateCombo(input, list, option) {
@@ -305,6 +306,14 @@
     return currentQueries.get(query.input) === query && query.input.value === query.value && query.input.isConnected;
   }
 
+  function showComboResults(input) {
+    if (input !== document.activeElement) return;
+    const list = element(input.getAttribute("aria-controls"));
+    if (!list) return;
+    filterCombo(input);
+    if (input.closest("[data-mero-command]") && !input.hasAttribute("aria-activedescendant")) activateCombo(input, list, optionsFor(list)[0]);
+  }
+
   function reconcileCombos(root, request) {
     const selector = '[data-mero-combo] [role="combobox"]';
     const inputs = matching(root, selector);
@@ -319,13 +328,7 @@
         input.removeAttribute("data-mero-combo-pending");
         input.removeAttribute("aria-busy");
       }
-      if (input !== document.activeElement) continue;
-      const list = element(input.getAttribute("aria-controls"));
-      if (!list || !list.contains(element(input.getAttribute("aria-activedescendant")))) {
-        input.removeAttribute("aria-activedescendant");
-      }
-      filterCombo(input);
-      if (input.closest("[data-mero-command]") && !input.hasAttribute("aria-activedescendant")) activateCombo(input, list, optionsFor(list)[0]);
+      showComboResults(input);
     }
   }
 
@@ -561,7 +564,8 @@
         event.preventDefault();
         if (target.closest("[data-mero-command]")) active.click();
         else selectCombo(target, active);
-      } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      } else if (event.key === "ArrowUp" || event.key === "ArrowDown" ||
+        (!list.hidden && target.closest("[data-mero-command]") && (event.key === "Home" || event.key === "End"))) {
         event.preventDefault();
         if (target.hasAttribute("data-mero-combo-pending")) return;
         if (target.closest("[data-mero-combo-remote]") && (target.hasAttribute("data-mero-combo-error") ||
@@ -592,11 +596,19 @@
     const input = event.target;
     if (!input.matches?.('[data-mero-combo] [role="combobox"]')) return;
     if (input.closest("[data-mero-combo-remote]")) {
+      const query = currentQueries.get(input);
+      if (query?.value === input.value && input.hasAttribute("data-mero-combo-pending")) return;
       currentQueries.delete(input);
-      // Only a settled response establishes which options belong to this text.
-      displayedQueries.delete(input);
       input.removeAttribute("data-mero-combo-dismissed");
       input.removeAttribute("data-mero-combo-error");
+      // htmx's changed modifier suppresses the request if the user returns
+      // to the same query before the debounce expires. Its results are still here.
+      if (displayedQueries.get(input) === input.value) {
+        input.removeAttribute("data-mero-combo-pending");
+        input.removeAttribute("aria-busy");
+        showComboResults(input);
+        return;
+      }
       input.setAttribute("data-mero-combo-pending", "");
       input.setAttribute("aria-busy", "true");
       comboStatus(input, "Loading…");
@@ -674,7 +686,10 @@
     for (const task of tasks) taskRequests.set(task, ctx);
     const query = remoteQueries.get(ctx);
     // htmx 4 would swap an error page into the list of suggestions.
-    if (query && (!isCurrentQuery(query) || ctx.response?.status >= 400)) event.preventDefault();
+    if (query) {
+      if (!isCurrentQuery(query) || ctx.response?.status >= 400) event.preventDefault();
+      else displayedQueries.delete(query.input);
+    }
     const active = document.activeElement;
     const scope = active?.closest("[data-mero-scope]");
     if (scope && active.id && scopeAliases.has(scope) && !event.defaultPrevented && swapTarget(ctx)?.contains(active)) {
