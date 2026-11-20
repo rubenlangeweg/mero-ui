@@ -23,7 +23,7 @@ const received = [
   ["mero:toast", "Shows a notification. <code>message</code> is required. <code>tone</code> and <code>duration</code> match <code>MeroUI.toast</code>.",
     `HX-Trigger: {"mero:toast":{"message":"Export ready","tone":"success"}}`],
   ["mero:form-saved", "Requires <code>mero-forms.js</code>. Closes the dialog around the <code>data-mero-form</code> that received the event, returns focus and shows <code>message</code> as a success toast. Set <code>target</code> to a selector when the form is not the element that made the request.",
-    `HX-Reswap: none\nHX-Trigger-After-Settle: {"mero:form-saved":{"message":"Saved"}}`],
+    `HX-Reswap: none\nHX-Trigger: {"mero:form-saved":{"message":"Saved"}}`],
 ];
 
 const methods = [

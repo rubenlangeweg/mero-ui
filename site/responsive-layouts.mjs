@@ -23,7 +23,7 @@ function companyMark(company, large = false) {
 
 function companyPanes(requested, width) {
   const record = requested || companies[0];
-  return `<div class="sc-panes" id="guide-panes"${requested ? " data-open-record" : ""} hx-boost="true" hx-select="#guide-panes" hx-target="#guide-panes" hx-swap="outerHTML show:none" hx-sync="this:replace">
+  return `<div class="sc-panes" id="guide-panes"${requested ? " data-open-record" : ""} hx-boost:inherited="true" hx-select:inherited="#guide-panes" hx-target:inherited="#guide-panes" hx-swap:inherited="outerHTML show:none" hx-sync:inherited="this:replace">
     <nav class="sc-directory" aria-labelledby="guide-directory">
       <div class="sc-directory-head"><h3 id="guide-directory">Company directory</h3></div>
       <div class="sc-accounts">${companies.map(company => `<a class="sc-account" id="guide-row-${company.id}" data-guide-record href="${previewLink(company.id, width, "guide-record-title")}"${record === company ? ' aria-current="true"' : ""}>${companyMark(company)}<span><strong>${esc(company.name)}</strong><small>${esc(company.city)}</small></span></a>`).join("")}</div>

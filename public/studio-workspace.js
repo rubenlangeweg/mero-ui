@@ -12,8 +12,8 @@
     url.searchParams.sort();
     return url.pathname + url.search;
   }
-  document.addEventListener("htmx:beforeRequest", event => {
-    const link = event.detail.elt;
+  document.addEventListener("htmx:before:request", event => {
+    const link = event.detail.ctx.sourceElement;
     if (link?.matches("a[hx-get]") && link.closest("#studio-workspace")) {
       const page = destination(location.href);
       returnLinks.delete(page);
@@ -22,7 +22,7 @@
       try { sessionStorage.setItem(storageKey, JSON.stringify([...returnLinks])); } catch {}
     }
   });
-  document.addEventListener("htmx:historyRestore", () => {
+  function restored() {
     const saved = returnLinks.get(destination(location.href));
     if (!saved?.url) return;
     const link = Array.from(document.querySelectorAll("#studio-workspace a[hx-get]"))
@@ -36,15 +36,20 @@
       const offset = Math.max(top, Math.min(saved.top, innerHeight - rect.height - 12));
       window.scrollBy({ top: rect.top - offset, behavior: "instant" });
     });
+  }
+  // htmx 4 restores history inside a Navigation API transition; the browser resets focus when it ends.
+  document.addEventListener("htmx:after:swap", event => {
+    if (event.detail.ctx.request?.headers?.["HX-History-Restore-Request"]) (window.navigation?.transition?.finished ?? Promise.resolve()).then(restored, restored);
   });
-  document.addEventListener("htmx:afterSettle", event => {
-    if (event.detail.target?.id !== "studio-workspace") return;
+  document.addEventListener("htmx:after:settle", event => {
+    if (event.detail.task.target?.id !== "studio-workspace") return;
     const workspace = document.getElementById("studio-workspace");
     const heading = workspace?.querySelector(".mero-app-main h1");
     if (!heading) return;
     const suffix = document.body.classList.contains("layout-embed") ? "Mero UI preview" : "Mero UI";
     document.title = heading.textContent.trim() + " · Studio · " + suffix;
-    if (event.detail.requestConfig?.elt?.hasAttribute("data-studio-auto-display")) return;
+    // task.sourceElement stays the original source; ctx.sourceElement moves to the new workspace.
+    if (event.detail.task.sourceElement?.hasAttribute?.("data-studio-auto-display")) return;
     const focus = workspace.querySelector('[aria-invalid="true"]') || workspace.querySelector('[role="alert"]:not([hidden])') || workspace.querySelector("[data-studio-initial-focus]") || heading;
     if (!focus.hasAttribute("tabindex") && !focus.matches("input,textarea,select,button,a[href]")) focus.tabIndex = -1;
     focus.focus({ preventScroll: true });

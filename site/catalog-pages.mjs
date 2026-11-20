@@ -23,7 +23,7 @@ export function catalogIndex() {
 
 export function exampleAssets(item, demo) {
   const assets = ['mero.css','mero.js',...moduleAssets(item.module)];
-  if (/\bhx-(?:get|post|put|patch|delete|boost)=/.test(demo)) assets.unshift('vendor/htmx.min.js');
+  if (/\bhx-(?:get|post|put|patch|delete|boost)(?::inherited)?=/.test(demo)) assets.unshift('vendor/htmx.min.js');
   if (/data-mero-(?:form|action)\b/.test(demo)) assets.push('mero-forms.js');
   return assets;
 }
@@ -52,7 +52,7 @@ export function standalonePage(item, search) {
   const embedded = search.has("embed");
   const theme = search.get("theme");
   return `<!doctype html><html lang="en" data-theme="${theme === "light" || theme === "brand" ? "light" : "dark"}"${theme === "brand" ? " data-tenant-preview" : ""}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false,"includeIndicatorCSS":false,"implicitInheritance":true}'>
+    <meta name="htmx-config" content='{"includeIndicatorCSS":false}'>
     <title>${esc(item.name)} · Mero UI</title>
     <meta name="robots" content="noindex">
     ${assetStyles(["site-fonts.css",...assets, "preview.css"])}

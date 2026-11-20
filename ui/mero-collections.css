@@ -28,7 +28,7 @@
 .mero-collection-head .mero-button { flex:none; }
 .mero-collection .mero-filter-bar { margin-block:.6rem 0; }
 .mero-collection-body { margin-block-start:.75rem; }
-.mero-collection-scroll { width:100%; overflow:auto; }
+.mero-collection-scroll { position:relative; width:100%; overflow:auto; }
 .mero-collection-table { width:100%; border-collapse:collapse; margin:0; }
 .mero-collection-table tr :is(td,th) { padding:.65rem .45rem; text-align:start; border-bottom:1px solid var(--mero-line); }
 .mero-collection-table thead th { font-size:.7rem; color:var(--mero-muted); font-weight:600; }

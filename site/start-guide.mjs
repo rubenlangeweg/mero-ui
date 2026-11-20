@@ -11,7 +11,7 @@ export function startGuide() {
 <script defer src="/mero.js"></script>`;
   const markup = `<button type="button" class="mero-button mero-button-primary"
         hx-get="/demo/stock-summary" hx-target="next output"
-        hx-disabled-elt="this">
+        hx-disable="this">
   Check inventory
 </button>
 <output aria-live="polite"></output>`;

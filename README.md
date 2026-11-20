@@ -21,14 +21,20 @@ When serving the site on a public domain, set `MERO_SITE_ORIGIN` to its full ori
 Install the UI assets from the [GitHub release](https://github.com/rubenlangeweg/mero-ui/releases) and HTMX from npm:
 
 ```sh
-npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.4.0/rubenlangeweg-mero-ui-0.4.0.tgz htmx.org@2
+npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.4.0/rubenlangeweg-mero-ui-0.4.0.tgz htmx.org@4
 ```
 
 To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.4.0/ui/mero.css`.
 
-Mero also runs on htmx 4: install `htmx.org@4` instead and read [Use htmx 4](#use-htmx-4). Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
+Mero targets htmx 4 only. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
 
-Serve `ui/mero.css` and `ui/mero.js` from your app. Include HTMX 2.x or 4.x for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. A sortable table sorts on the server through plain `?sort=` header links, so it works without JavaScript. Filter chips work the same way: each chip, the "+ Filter" menu items and "Clear all filters" are links to the URL with that query parameter changed. A `role="menu"` popover gets arrow-key, Home, End, typeahead, Escape and Tab handling from `mero.js`. A `dialog[data-mero-command]` holding a remote combobox opens on Cmd or Ctrl K and runs the chosen server option; use one per page, and not alongside the workspace Command. The local catalog includes HTMX 2.0.11, HTMX 4.0.2 and Geist with their license notices.
+The Mero scripts listen to htmx 4 events and read `event.detail.ctx`. Load `mero.js` on every page that uses a Mero script.
+
+- **Inheritance.** Wrapper attributes in the copyable markup are written as `hx-target:inherited`, `hx-swap:inherited`, `hx-sync:inherited` and so on, so they work on a plain htmx 4 page. Do not set `implicitInheritance`: with it set, htmx 4 ignores `:inherited` on ancestors. `hx-params` is a Mero attribute: `mero.js` filters the request fields, and the nearest `hx-params` wins.
+- **Server responses.** Send `HX-Trigger: {"mero:form-saved":{"message":"Saved"}}` after a successful save. htmx 4 fires it after the swap settles. Add a `target` selector to the event detail when the swap replaces the submitting form. Read the `HX-Target` request header as `tag#id`. An error response other than the documented 422, 409 or 413 is never swapped into a Mero component, although htmx 4 swaps error responses by default.
+- **The compatibility extension.** Do not load `htmx-2-compat` on a page with Mero scripts. It dispatches the old event names, which the Mero scripts do not read.
+
+Serve `ui/mero.css` and `ui/mero.js` from your app. Include htmx 4 for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. A sortable table sorts on the server through plain `?sort=` header links, so it works without JavaScript. Filter chips work the same way: each chip, the "+ Filter" menu items and "Clear all filters" are links to the URL with that query parameter changed. A `role="menu"` popover gets arrow-key, Home, End, typeahead, Escape and Tab handling from `mero.js`. A `dialog[data-mero-command]` holding a remote combobox opens on Cmd or Ctrl K and runs the chosen server option; use one per page, and not alongside the workspace Command. The local catalog includes htmx 4.0.2 and Geist with their license notices.
 
 ### Return focus after Back
 
@@ -44,17 +50,9 @@ Use the [theme studio](http://127.0.0.1:4173/themes) to try colors, fonts and ra
 
 Media uses `mero-gallery` assets. Collections use `mero-collections`. Workspace controls use `mero-workspace`. Charts and conversation examples use `mero-insights`. Presentation utilities use `mero-composition`. Each pair comprises a stylesheet and a deferred script. Two optional server helpers render charts and a small Markdown subset. Import them as `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown`.
 
-## Use htmx 4
+## Upgrade from 0.4
 
-The Mero scripts run on htmx 2.x and htmx 4.x. htmx 4 renamed its events and replaced the XHR in their detail with a fetch context. `mero.js` relays each htmx 4 event under its htmx 2 name and shape, so the other Mero scripts keep working. Load `mero.js` on every page that uses a Mero script.
-
-Three things differ on htmx 4:
-
-- **Inheritance.** The copyable markup sets `hx-target`, `hx-swap`, `hx-sync` and `hx-include` on a wrapper. htmx 4 only inherits attributes marked `:inherited`. Either add `<meta name="htmx-config" content='{"implicitInheritance":true}'>` or rename those wrapper attributes to `hx-target:inherited` and so on.
-- **Server responses.** Keep sending `HX-Trigger-After-Settle` for `mero:form-saved`. htmx 4 dropped that header and `mero.js` handles it. Read the `HX-Target` request header as `tag#id` (htmx 2 sends the bare id). An error response other than the documented 422, 409 or 413 is never swapped into a Mero component, although htmx 4 swaps error responses by default.
-- **The compatibility extension.** Do not load `htmx-2-compat` on a page with Mero scripts. It dispatches the old event names with the new detail, which the Mero handlers cannot read.
-
-Run the catalog and its tests on htmx 4 with `MERO_HTMX=4 npm start` and `MERO_HTMX=4 npm test`. CI runs both versions.
+Release 0.5 drops htmx 2. Load htmx 4, send `HX-Trigger` instead of `HX-Trigger-After-Settle`, and recopy templates that set `hx-*` attributes on a wrapper. The [changelog](CHANGELOG.md) lists every step.
 
 ## Upgrade from 0.2
 

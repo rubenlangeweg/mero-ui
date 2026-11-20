@@ -1,19 +1,21 @@
 /**
  * Optional HTMX form behavior. Server responses:
- * 422 + replacement form for validation, or HX-Trigger-After-Settle:
- * {"mero:form-saved":{"message":"Saved"}} after any successful swap.
+ * 422 + replacement form for validation, or HX-Trigger:
+ * {"mero:form-saved":{"message":"Saved"}}, which htmx 4 fires after the swap settles.
  * Standalone [data-mero-action] buttons get data-mero-action-state
  * pending|succeeded|rejected|unknown: 2xx succeeded, 4xx (not 408) rejected,
  * anything else unknown. Mero-Action-Outcome and Mero-Action-Message headers
  * override the state and text; a bubbling mero:action event reports each step.
- * Runs on htmx 2 and htmx 4: mero.js relays the htmx 4 events and that header.
  */
 (() => {
   const formSelector = "form[data-mero-form]";
   const requesting = new WeakMap();
+  const formRequests = new WeakMap();
+  // htmx 4 also reports requests a before:request listener cancelled: no response, still "issuing".
+  const cancelled = ctx => !ctx.response && !String(ctx.status).startsWith("error");
 
   function requestForm(event) {
-    const source = event.detail.requestConfig?.elt;
+    const source = event.detail.ctx?.sourceElement;
     if (source?.matches(formSelector)) return source;
     // A combobox or other independent request inside a form must not put the
     // whole form into its submission state or replace it on a field error.
@@ -22,13 +24,14 @@
     }
   }
 
-  document.addEventListener("htmx:beforeRequest", (event) => {
+  document.addEventListener("htmx:before:request", (event) => {
     const form = requestForm(event);
     if (!form) return;
     if (requesting.has(form)) {
       event.preventDefault();
       return;
     }
+    formRequests.set(event.detail.ctx, form);
     const buttons = [...form.elements].filter(control => !control.disabled && (control.type === "submit" || control.type === "image"));
     requesting.set(form, buttons);
     form.setAttribute("aria-busy", "true");
@@ -37,17 +40,18 @@
     if (error) error.hidden = true;
   });
 
-  document.addEventListener("htmx:beforeSwap", (event) => {
-    const status = event.detail.xhr.status;
-    if (status < 400 || !requestForm(event)) return;
+  document.addEventListener("htmx:before:swap", (event) => {
+    const status = event.detail.ctx.response?.status;
+    if (!(status >= 400) || !requestForm(event)) return;
     // htmx 4 swaps every error response. Only a 422 carries a replacement form.
-    event.detail.shouldSwap = status === 422;
-    if (status === 422) event.detail.isError = false;
+    if (status !== 422) event.preventDefault();
   });
 
-  document.addEventListener("htmx:afterSettle", (event) => {
-    if (event.detail.xhr?.status !== 422) return;
-    const form = event.target.closest(formSelector);
+  // after:swap, not after:settle: htmx 4 applies [autofocus] in the new form after settling.
+  // It fires on the source, which htmx points at the new form when the swap replaced it.
+  document.addEventListener("htmx:after:swap", (event) => {
+    if (event.detail.ctx.response?.status !== 422) return;
+    const form = event.target.closest?.(formSelector);
     const field = form?.querySelector('[aria-invalid="true"]');
     field?.focus();
   });
@@ -60,25 +64,26 @@
     }
   }
 
-  for (const errorEvent of ["htmx:sendError", "htmx:timeout"]) {
-    document.addEventListener(errorEvent, (event) => {
-      const form = requestForm(event);
-      if (form) showError(form, "The server could not be reached. Check whether the change was saved before retrying.");
-    });
-  }
-
-  document.addEventListener("htmx:afterRequest", (event) => {
-    const form = requestForm(event);
+  document.addEventListener("htmx:finally:request", (event) => {
+    const { ctx } = event.detail;
+    const form = formRequests.get(ctx);
+    // A cancelled duplicate has no entry, so it never releases the request still in flight.
     if (!form) return;
     form.removeAttribute("aria-busy");
     requesting.get(form)?.forEach((button) => { button.disabled = false; });
     requesting.delete(form);
-    if (!event.detail.failed || event.detail.xhr.status === 422) return;
-    showError(form, event.detail.xhr.getResponseHeader("Mero-Form-Error") || "The request could not be completed. Check the current state and try again.");
+    if (cancelled(ctx)) return;
+    const status = ctx.response?.status;
+    const signal = ctx.request.signal;
+    if (!ctx.response && (signal?.reason === "timeout" || !signal?.aborted)) {
+      showError(form, "The server could not be reached. Check whether the change was saved before retrying.");
+    } else if (!ctx.response || (status >= 400 && status !== 422)) {
+      showError(form, ctx.response?.headers.get("Mero-Form-Error") || "The request could not be completed. Check the current state and try again.");
+    }
   });
 
   document.addEventListener("mero:form-saved", (event) => {
-    const form = event.target.closest(formSelector);
+    const form = event.target.closest?.(formSelector);
     if (!form) return;
     const focus = [form.dataset.meroReturnFocus, form.dataset.meroFallbackFocus]
       .filter(Boolean).map((selector) => document.querySelector(selector)).find(Boolean);
@@ -92,7 +97,7 @@
     if (event.detail.message) window.MeroUI.toast(event.detail.message, { tone: "success" });
   });
 
-  const actionOf = event => event.detail.elt?.closest?.("[data-mero-action]");
+  const actionOf = event => event.target.closest?.("[data-mero-action]");
   const actionMessages = {
     succeeded: ["Done.", "success"],
     rejected: ["The server refused this action. Nothing changed.", "warning"],
@@ -102,20 +107,19 @@
 
   // htmx queues a click made during a request and sends it later, so the guard runs before its sync logic.
   // aria-disabled instead of disabled keeps focus on the button.
-  // htmx 4 fires confirm only with hx-confirm, but its configRequest also precedes the sync queue.
-  for (const name of ["htmx:confirm", "htmx:configRequest"]) document.addEventListener(name, (event) => {
+  // config:request precedes the sync queue, and a cancel there fires no finally:request.
+  document.addEventListener("htmx:config:request", (event) => {
     if (actionOf(event)?.dataset.meroActionState === "pending") event.preventDefault();
   });
 
-  // A swap can detach the button before afterRequest, so the request remembers its button and status.
+  // A swap can detach the button before finally:request, so the request remembers its button and status.
   const actionRequests = new WeakMap();
 
-  // beforeSend, not beforeRequest: a cancelled request never fires afterRequest and would stay pending.
-  document.addEventListener("htmx:beforeSend", (event) => {
+  document.addEventListener("htmx:before:request", (event) => {
     const action = actionOf(event);
-    if (!action || !event.detail.xhr) return;
+    if (!action || event.defaultPrevented) return;
     const output = actionStatus(action);
-    actionRequests.set(event.detail.xhr, { action, output });
+    actionRequests.set(event.detail.ctx, { action, output });
     action.dataset.meroActionState = "pending";
     action.setAttribute("aria-busy", "true");
     action.setAttribute("aria-disabled", "true");
@@ -123,20 +127,27 @@
     action.dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state: "pending" } }));
   });
 
-  // htmx fires afterRequest after load, error, abort and timeout alike.
-  document.addEventListener("htmx:afterRequest", (event) => {
-    const xhr = event.detail.xhr;
-    const request = xhr && actionRequests.get(xhr);
+  // htmx fires finally:request after load, error, abort and timeout alike.
+  document.addEventListener("htmx:finally:request", (event) => {
+    const { ctx } = event.detail;
+    const request = actionRequests.get(ctx);
     if (!request) return;
-    actionRequests.delete(xhr); // htmx fires afterRequest again on a connected element after a detaching swap
+    actionRequests.delete(ctx);
     const { action, output } = request;
-    const status = xhr.status;
-    const header = xhr.getResponseHeader("Mero-Action-Outcome");
+    if (cancelled(ctx)) {
+      // A later before:request listener cancelled it: nothing was sent.
+      action.removeAttribute("aria-busy");
+      action.removeAttribute("aria-disabled");
+      delete action.dataset.meroActionState;
+      return;
+    }
+    const status = ctx.response?.status ?? 0;
+    const header = ctx.response?.headers.get("Mero-Action-Outcome") ?? null;
     const state = Object.hasOwn(actionMessages, header) ? header
       : status >= 200 && status < 300 ? "succeeded"
       : status >= 400 && status < 500 && status !== 408 ? "rejected" : "unknown";
     const [fallback, tone] = actionMessages[state];
-    const message = xhr.getResponseHeader("Mero-Action-Message") || fallback;
+    const message = ctx.response?.headers.get("Mero-Action-Message") || fallback;
     action.removeAttribute("aria-busy");
     action.removeAttribute("aria-disabled");
     action.dataset.meroActionState = state;

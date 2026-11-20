@@ -86,7 +86,7 @@ test("action buttons report pending, succeeded, rejected and unknown outcomes",
 
     // A cancelled request never goes out, so the button must not stay pending.
     await page.evaluate(() => document.querySelector("[hx-post*=rejected]")
-      .addEventListener("htmx:beforeRequest", event => event.preventDefault(), { once: true }));
+      .addEventListener("htmx:before:request", event => event.preventDefault(), { once: true }));
     await revoke.click();
     await page.waitForTimeout(100);
     assert.equal(await state(revoke), "rejected");

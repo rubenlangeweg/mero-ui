@@ -35,6 +35,8 @@ test('Studio resolves the host, saved choice and direct link without adding a Ba
   await page.goto(task);
   await current('List').waitFor();
   assert.equal(new URL(page.url()).searchParams.get('task'), 'ST-103');
+  // The automatic view request swaps a workspace fragment, not a whole page.
+  assert.equal(await page.locator('main').count(), 1);
   // The direct entry replaces the forward entry left by Back.
   assert.equal(await page.evaluate(() => history.length), initialLength);
   await page.getByRole('link', { name: 'Board', exact: true }).click();
@@ -93,7 +95,10 @@ test('Studio resolves the host, saved choice and direct link without adding a Ba
   const pending = page.waitForRequest(isAlternate);
   await page.goto(base + '&view=board&compose=task', { waitUntil: 'domcontentloaded' });
   await pending;
-  await page.evaluate(() => document.addEventListener('htmx:sendAbort', () => { window.defaultViewAborted = true; }, { once: true }));
+  await page.evaluate(() => document.addEventListener('htmx:finally:request', event => {
+    const { ctx } = event.detail;
+    if (!ctx.response && ctx.request.signal?.aborted) window.defaultViewAborted = true;
+  }));
   const title = page.getByLabel('Task title');
   await title.fill('Keep this draft');
   held.resolve();

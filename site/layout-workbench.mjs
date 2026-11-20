@@ -20,7 +20,7 @@ const guides = {
     source: "site/inventory-routes.mjs",
   },
   settings: {
-    text: "POST /demo/settings returns the saved form. On a validation error it returns the submitted values and field errors with HTTP 422. On success the HX-Trigger-After-Settle header announces the save.",
+    text: "POST /demo/settings returns the saved form. On a validation error it returns the submitted values and field errors with HTTP 422. On success the HX-Trigger header announces the save after the swap settles.",
     source: "server.mjs",
   },
   mail: {

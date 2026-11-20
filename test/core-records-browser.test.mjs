@@ -180,7 +180,7 @@ test("filter chips add, remove and clear filters through the URL",
     await page.getByRole("link", { name: "Clear all filters" }).click();
     await page.waitForFunction(() => !document.querySelector(".mero-filter-chips"));
     assert.equal(new URL(page.url()).search, "?sort=-name");
-    await page.waitForFunction(() => document.activeElement?.id === "records-filter-add", null, { timeout: 2000 }); // the fallback runs at afterSettle, after the swap
+    await page.waitForFunction(() => document.activeElement?.id === "records-filter-add", null, { timeout: 2000 }); // the fallback runs at htmx:after:settle, after the swap
 
     assert.deepEqual(errors, []);
 

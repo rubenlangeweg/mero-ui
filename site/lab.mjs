@@ -90,7 +90,7 @@ export function renderWorkbench(store, { expanded = false, dashboard = false, in
       initialDialog = '<p class="lab-request-error" role="status">This product is no longer in the catalog.</p>';
     }
   }
-  return `<div class="lab${expanded ? " lab-expanded" : ""}" data-lab data-inventory-revision="${store.revision}"${context.instance ? ` hx-vals='${JSON.stringify({instance: context.instance})}'` : ""}>
+  return `<div class="lab${expanded ? " lab-expanded" : ""}" data-lab data-inventory-revision="${store.revision}"${context.instance ? ` hx-vals:inherited='${JSON.stringify({instance: context.instance})}'` : ""}>
     <header class="lab-header"><div class="lab-breadcrumb"><span class="lab-workspace" aria-hidden="true">${esc(brand.slice(0, 1))}</span><span>${esc(brand)}</span><span class="lab-slash">/</span><span>Inventory</span></div><span class="lab-live"><i></i> Live demo</span></header>
     <div class="lab-body">
       <div class="lab-heading"><div><h2>Products</h2><p>Manage your product catalog.</p></div>

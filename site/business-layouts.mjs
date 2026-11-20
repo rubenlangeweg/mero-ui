@@ -114,5 +114,5 @@ function finance(params) {
 }
 export function renderBusinessLayout(screen, searchParams = new URLSearchParams()) {
   if (!['crm', 'finance'].includes(screen)) throw new RangeError('Unknown business layout');
-  return `<div id="business-layout" class="bu-layout bu-${screen}" hx-target="#business-layout" hx-select="#business-layout" hx-swap="outerHTML show:none" hx-push-url="true" hx-sync="#business-layout:replace">${screen === 'crm' ? crm(searchParams) : finance(searchParams)}</div>`;
+  return `<div id="business-layout" class="bu-layout bu-${screen}" hx-target:inherited="#business-layout" hx-select:inherited="#business-layout" hx-swap:inherited="outerHTML show:none" hx-push-url:inherited="true" hx-sync:inherited="#business-layout:replace">${screen === 'crm' ? crm(searchParams) : finance(searchParams)}</div>`;
 }

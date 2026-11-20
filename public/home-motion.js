@@ -94,8 +94,9 @@
     schedule();
   });
   hero.addEventListener("pointercancel", reset);
-  document.addEventListener("htmx:beforeCleanupElement", event => {
-    if (event.detail.elt === stage) reset();
+  // htmx 4 fires this only on htmx-powered elements, so check the subtree.
+  document.addEventListener("htmx:before:cleanup", event => {
+    if (stage && event.target.contains(stage)) reset();
   });
   document.addEventListener("visibilitychange", () => { if (document.hidden) reset(); });
   motion.addEventListener("change", reset);

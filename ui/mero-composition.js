@@ -70,9 +70,9 @@
     tick = setTimeout(update, 1000);
   }
   update();
-  document.addEventListener("htmx:afterSwap", update);
-  document.addEventListener("htmx:beforeCleanupElement", (event) => {
-    const removed = event.detail.elt;
+  document.addEventListener("htmx:after:swap", update);
+  document.addEventListener("htmx:before:cleanup", (event) => {
+    const removed = event.target;
     for (const cycle of rotations.keys()) if (removed.contains(cycle)) stop(cycle);
   });
 })();

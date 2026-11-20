@@ -120,8 +120,8 @@ test("catalog discovery, exported previews and the HTTP inspector", options, asy
   await page.getByRole("button", { name:"slow" }).click();
   await page.getByRole("button", { name:"fast" }).click();
   await page.waitForFunction(() => document.querySelector("[data-exchange-body]").textContent.endsWith("new response"));
-  await page.evaluate(() => window.htmx.on("htmx:afterRequest", event => {
-    if (event.detail.pathInfo.requestPath.includes("audit-slow")) document.body.dataset.slowDone = "yes";
+  await page.evaluate(() => window.htmx.on("htmx:finally:request", event => {
+    if (event.detail.ctx.request.action.includes("audit-slow")) document.body.dataset.slowDone = "yes";
   }));
   release();
   await slow;

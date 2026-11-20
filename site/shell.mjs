@@ -57,12 +57,12 @@ export function embeddedLayout({title, content, assets, mode, tokens}) {
   });
   return `<!doctype html><html lang="en" data-theme="${theme === 'dark' ? 'dark' : 'light'}"${theme === 'brand' ? ' data-tenant-preview' : ''}${style}><head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false,"includeIndicatorCSS":false,"implicitInheritance":true}'>
+    <meta name="htmx-config" content='{"includeIndicatorCSS":false}'>
     <title>${escape(title)} · Mero UI preview</title>
     <meta name="robots" content="noindex">
     ${assetStyles([...new Set(['site-fonts.css','mero.css', ...assets, 'site.css','lab.css', ...(theme === 'brand' ? ['preview.css'] : [])])])}
     ${assetScripts([...new Set(['vendor/htmx.min.js','mero.js', ...assets, ...(!tokens ? ['layout-preview.js'] : [])])])}
-  </head><body class="site-body layout-embed" hx-headers='{"X-Mero-Embed":"1"}'><main id="main" aria-label="${escape(title)} preview">${markup}</main></body></html>`;
+  </head><body class="site-body layout-embed" hx-headers:inherited='{"X-Mero-Embed":"1"}'><main id="main" aria-label="${escape(title)} preview">${markup}</main></body></html>`;
 }
 
 export function shell({ title = 'Mero UI', description, path = '/', origin, indexable = true, body, nav = 'home', assets = [] }) {
@@ -73,7 +73,7 @@ export function shell({ title = 'Mero UI', description, path = '/', origin, inde
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#09090a">
   <script>try { if (localStorage.getItem("mero-theme") === "light") document.documentElement.dataset.theme = "light" } catch {}</script>
-  <meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false,"includeIndicatorCSS":false,"implicitInheritance":true}'>
+  <meta name="htmx-config" content='{"includeIndicatorCSS":false}'>
   ${seoHead({ title, description, path, origin, indexable })}
   <link rel="stylesheet" href="/site-fonts.css">
   ${assetStyles([...new Set(['mero.css', ...assets])])}
@@ -181,7 +181,7 @@ export function home({ workbench, componentCount, product, apps = [] }) {
       }).join('')}
     </div>
   </section>
-  <section class="site-wrap home-workbench home-app-workbench" hx-vals='{"studioShowcase":"1"}' aria-labelledby="workbench-title">
+  <section class="site-wrap home-workbench home-app-workbench" hx-vals:inherited='{"studioShowcase":"1"}' aria-labelledby="workbench-title">
     <div class="home-app-copy">
       <h2 id="workbench-title">Try a real HTMX workflow</h2>
       <p>Search the inventory, open an edit drawer, or add a product.</p>

@@ -9,7 +9,7 @@ import {escapeHtml as esc} from '../../site/html.mjs';
 
 const labels = {mero:'Mero UI', daisyui:'daisyUI', heroui:'HeroUI CSS'};
 const publicFiles = {
-  '/assets/htmx.js':new URL(process.env.MERO_HTMX==='4'?'../../public/vendor/htmx-4.min.js':'../../public/vendor/htmx.min.js',import.meta.url),
+  '/assets/htmx.js':new URL('../../public/vendor/htmx.min.js',import.meta.url),
   '/assets/mero.css':new URL('../../ui/mero.css',import.meta.url),
   '/assets/mero.js':new URL('../../ui/mero.js',import.meta.url),
   '/assets/mero-forms.js':new URL('../../ui/mero-forms.js',import.meta.url),
@@ -25,7 +25,7 @@ function record(item,oob=false) {
   return `<article id="record"${oob?' hx-swap-oob="outerHTML"':''}><div><h2>${esc(item.name)}</h2><p>${esc(item.sku)}</p></div><button id="edit-record" class="${primary}" type="button" commandfor="edit-dialog" command="show-modal" hx-get="/record/edit" hx-target="#editor" hx-sync="this:replace">Edit record</button></article>`;
 }
 function form(item, error = '') {
-  return `<form data-mero-form data-mero-return-focus="#edit-record" hx-post="/record" hx-target="this" hx-swap="outerHTML" hx-sync="this:drop" hx-disabled-elt="find button[type=submit]">
+  return `<form data-mero-form data-mero-return-focus="#edit-record" hx-post="/record" hx-target="this" hx-swap="outerHTML" hx-sync="this:drop" hx-disable="find button[type=submit]">
     <label>Name<input id="item-name" class="${input}" name="name" value="${esc(item.name)}" required maxlength="60" autofocus></label>
     <label>SKU<input id="item-sku" class="${input}" name="sku" value="${esc(item.sku)}" required maxlength="24"${error?' aria-invalid="true" aria-describedby="sku-error"':''}></label>
     ${error?`<p id="sku-error" class="compare-field-error">${esc(error)}</p>`:''}
@@ -80,7 +80,7 @@ export function comparisonApp() {
         if (!draft.name || !draft.sku || draft.name.length>60 || draft.sku.length>24) return send(res,400,'Invalid submission.','text/plain');
         if (draft.sku.toUpperCase()==='TAKEN') return send(res,422,form(draft,'Another product already uses this SKU.'));
         items.set(id,draft);
-        return send(res,200,record(draft,true),'text/html; charset=utf-8',{'HX-Reswap':'none','HX-Trigger-After-Settle':JSON.stringify({'mero:form-saved':{message:'Record saved'}})});
+        return send(res,200,record(draft,true),'text/html; charset=utf-8',{'HX-Reswap':'none','HX-Trigger':JSON.stringify({'mero:form-saved':{message:'Record saved'}})});
       }
       send(res,404,'Not found.','text/plain');
     } catch { if (!res.headersSent) send(res,500,'Comparison server error.','text/plain'); else res.end(); }

@@ -77,9 +77,6 @@ async function formBody(request) {
   return new URLSearchParams(Buffer.concat(chunks).toString("utf8"));
 }
 
-// MERO_HTMX=4 serves htmx 4 at the same path, so every page and test can run on either version.
-const htmxAsset = path => path === "vendor/htmx.min.js" && process.env.MERO_HTMX === "4" ? "vendor/htmx-4.min.js" : path;
-
 const fragmentVary = "HX-Request, HX-Target, HX-History-Restore-Request";
 const layoutVary = fragmentVary + ", Sec-Fetch-Dest, X-Mero-Embed";
 
@@ -185,7 +182,8 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
       options = { error: result.error, values: result.values || Object.fromEntries(form) };
       if (fragment && !result.error) {
         response.setHeader("HX-Replace-Url", location);
-        response.setHeader("HX-Trigger-After-Settle", JSON.stringify({ "studio:saved": { message: action.message } }));
+        // The outerHTML swap detaches the submitting form, so name a connected target.
+        response.setHeader("HX-Trigger", JSON.stringify({ "studio:saved": { target: "#studio-workspace", message: action.message } }));
       }
     }
     const content = renderStudio(studio, store, settings, params, options);
@@ -275,7 +273,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     const result = updateSettings(settings, params);
     if (result.error) return send(response, renderSettingsForm(result.values, result.error), { status: 422 });
     return send(response, renderSettingsForm(settings), { headers: {
-      "HX-Trigger-After-Settle": JSON.stringify({ "mero:form-saved": { target: "#layout-settings", message: "Settings saved" } }),
+      "HX-Trigger": JSON.stringify({ "mero:form-saved": { target: "#layout-settings", message: "Settings saved" } }),
     } });
   }
 
@@ -297,7 +295,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
   async function staticAsset({ response, pathname }) {
     const type = types[extname(pathname)];
     if (!type) return false;
-    const assetPath = htmxAsset(pathname.slice(1));
+    const assetPath = pathname.slice(1);
     const directory = libraryAsset.test(assetPath) ? "./ui/" : "./public/";
     const asset = await readFile(new URL(directory + assetPath, import.meta.url)).catch((error) => {
       if (error.code !== "ENOENT") throw error;

@@ -99,7 +99,7 @@ test("settings and inventory recover visibly from validation, offline requests a
   });
   await page.evaluate(() => {
     window.obsoleteSearchAppeared = false;
-    document.addEventListener("htmx:afterSwap", () => {
+    document.addEventListener("htmx:after:swap", () => {
       if (document.getElementById("obsolete-workflow-result")) window.obsoleteSearchAppeared = true;
     });
   });

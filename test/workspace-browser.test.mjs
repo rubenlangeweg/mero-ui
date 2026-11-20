@@ -72,7 +72,7 @@ test("workspace and gallery interactions survive hidden panels, resized viewport
   await picker.setInputFiles(file);
   await Promise.all([page.waitForRequest("**/demo/workspace/upload"),page.getByText("Check image").click()]);
   await picker.setInputFiles({...file,name:"B.png"});
-  await page.evaluate(() => document.addEventListener("htmx:afterRequest",() => { document.body.dataset.uploadSettled = "true"; },{once:true}));
+  await page.evaluate(() => document.addEventListener("htmx:finally:request",() => { document.body.dataset.uploadSettled = "true"; },{once:true}));
   completeUpload();
   await page.waitForFunction(() => document.body.dataset.uploadSettled === "true");
   assert.equal(await page.locator("output").textContent(),"");
