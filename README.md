@@ -2,7 +2,7 @@
 
 A component library for server-rendered HTML and HTMX. Browse working examples, copy the displayed template, and inspect the response from examples that make HTTP requests.
 
-[Website](https://mero-ui.invrse.studio) · [Component catalog](https://mero-ui.invrse.studio/components) · [Playground](https://mero-ui.invrse.studio/playground)
+[Website](https://mero-ui.rubenlangeweg.com) · [Component catalog](https://mero-ui.rubenlangeweg.com/components) · [Playground](https://mero-ui.rubenlangeweg.com/playground)
 
 ## Run locally
 
@@ -55,4 +55,6 @@ To inspect spacing and alignment, run `MERO_REVIEW_DIR=visual-review npm run aud
 
 ## Deploy the website
 
-Run `npm ci` and `npm run deploy` with Cloudflare credentials for the account that owns `invrse.studio`. The build includes the downloadable examples and the Worker serves the interactive routes.
+Run `npm ci` and `npm run deploy` with Cloudflare credentials for the account that owns `rubenlangeweg.com` and `invrse.studio`. The build includes the downloadable examples and the Worker serves the interactive routes.
+
+A Cloudflare Single Redirect on the `invrse.studio` zone sends requests for `mero-ui.invrse.studio` to `mero-ui.rubenlangeweg.com` with HTTP 308, preserving the path and query string.

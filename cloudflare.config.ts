@@ -6,7 +6,7 @@ export default defineConfig({
     entrypoint: "./worker.mjs",
     compatibilityDate: "2026-10-06",
     compatibilityFlags: ["nodejs_compat"],
-    domains: ["mero-ui.invrse.studio"],
+    domains: ["mero-ui.rubenlangeweg.com", "mero-ui.invrse.studio"],
     workersDev: false,
     assets: { htmlHandling: "none" },
   },
