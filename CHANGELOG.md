@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1 · 20 November 2026
+
+- The test runner executes two files at a time. This keeps the full Firefox suite responsive on hosts where Node would otherwise start nine browser-test files at once. All three engines run the same tests.
+
 ## 0.6.0 · 20 November 2026
 
 - Sortable Table and Filter Chips show labelled cards below 768 px. Sorting, row actions and focus on Back work in both layouts.

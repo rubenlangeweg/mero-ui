@@ -21,10 +21,10 @@ When serving the site on a public domain, set `MERO_SITE_ORIGIN` to its full ori
 Install the UI assets from the [GitHub release](https://github.com/rubenlangeweg/mero-ui/releases) and HTMX from npm:
 
 ```sh
-npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.6.0/rubenlangeweg-mero-ui-0.6.0.tgz htmx.org@4
+npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.6.1/rubenlangeweg-mero-ui-0.6.1.tgz htmx.org@4
 ```
 
-To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.6.0/ui/mero.css`.
+To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.6.1/ui/mero.css`.
 
 Mero targets htmx 4 only. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
 
@@ -79,7 +79,7 @@ MERO_BROWSER=webkit npm test
 npm run pack:ui
 ```
 
-The npm package contains the UI assets. The downloadable preview includes the reference server and example routes. Browser checks and their environment options are documented next to the tests.
+Each run uses two test files in parallel to keep browser sessions responsive on local machines. The npm package contains the UI assets. The downloadable preview includes the reference server and example routes. Browser checks and their environment options are documented next to the tests.
 
 For a catalog-wide check, run `npm run audit:catalog -- --all`. The command starts an isolated server and emits a JSON result. To use existing installations, set `MERO_PLAYWRIGHT_MODULE`, `MERO_CHROME` and `MERO_AXE_PATH` to their local paths. The [quality review](docs/quality-review.md) records the issues fixed and the checks that still need a person.
 
