@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+coverage/
+visual-review/
+*.tgz
+.env*
+dist/
+.cloudflare/
+.wrangler/
+.dev.vars*

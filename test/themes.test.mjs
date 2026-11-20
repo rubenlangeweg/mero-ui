@@ -1,0 +1,94 @@
+import { browserConfig } from "../scripts/browser-config.mjs";
+import test from "node:test";
+import assert from "node:assert/strict";
+import { createApp } from "../server.mjs";
+import { defaults, readTheme, themeTokens, themeCSS } from "../public/theme-model.mjs";
+import { themesPage } from "../site/themes.mjs";
+
+test("theme links preserve zero values and sanitize untrusted token settings", () => {
+  const neutral = readTheme(new URLSearchParams("base=0&chroma=0&formRadius=small&hue=0&lightness=0&radius=small"));
+  assert.deepEqual(neutral,{...defaults,base:"0",chroma:"0",formRadius:"small",hue:"0",lightness:"0",radius:"small"});
+  assert.deepEqual(readTheme(new URLSearchParams("base=constructor&font=__proto__&view=x&radius=toString&chroma=NaN&hue=Infinity")),defaults);
+  assert.equal(readTheme(new URLSearchParams("hue=999")).hue,"360");
+  const html = themesPage(new URLSearchParams("font=bad%22%3E%3C/script%3E&view=constructor"));
+  assert.doesNotMatch(html,/bad"|src="\/layouts\/constructor"/);
+  assert.match(themeCSS(neutral),/:root, \[data-theme="light"\]/);
+  assert.match(themeCSS(neutral), /\[data-theme="dark"\]/);
+  assert.equal(themeTokens(neutral)["--rl-radius-panel"],"0.5rem");
+  assert.equal(themeTokens(neutral)["--rl-radius"],"0.375rem");
+  assert.match(themesPage(new URLSearchParams("view=mail&mode=light&hue=72")), /src="\/layouts\/mail\?embed=1&amp;studio=1&amp;[^"]*hue=72[^"]*mode=light/);
+});
+
+const playwright = await import(browserConfig.playwrightModule || "playwright").catch(error => {
+  if (error.code === "ERR_MODULE_NOT_FOUND" && !browserConfig.playwrightModule) return null;
+  throw error;
+});
+const engine = browserConfig.engine || "chromium";
+test("theme settings survive reload and history, apply to working apps and export the previewed values", { skip: !playwright && "Install Playwright for the theme studio browser check" }, async t => {
+  const app = createApp();
+  await new Promise((resolve, reject) => app.once("error", reject).listen(0, "127.0.0.1", resolve));
+  const browser = await playwright[engine].launch({ executablePath: engine === "chromium" ? browserConfig.chromeExecutable : undefined });
+  t.after(async () => { await browser.close(); await new Promise(resolve => app.close(resolve)); });
+  const page = await browser.newPage({viewport:{width:1200,height:900},reducedMotion:"reduce"});
+  const errors = [];
+  page.on("pageerror",e => errors.push(e.message));
+  await page.goto("http://127.0.0.1:"+app.address().port+"/themes?base=0&chroma=0&formRadius=small&hue=0&lightness=0&radius=small");
+  await page.locator("[data-theme-studio][data-ready]").waitFor();
+  const canvas = page.locator("[data-ts-canvas]");
+  const accent = () => canvas.evaluate(x => getComputedStyle(x).getPropertyValue("--rl-accent").trim());
+  const original = await accent();
+  assert.equal(await page.getByRole("button",{name:"Graphite"}).getAttribute("aria-pressed"),"true");
+  await page.getByRole("button",{name:"Fern"}).click();
+  assert.notEqual(await accent(),original);
+  await page.getByRole("slider",{name:"Hue",exact:true}).focus();
+  await page.keyboard.press("ArrowRight");
+  assert.equal(new URL(page.url()).searchParams.get("hue"),"156");
+  await page.getByLabel("Surface radius").selectOption("large");
+  await page.getByLabel("Form radius").selectOption("none");
+  assert.equal(await canvas.locator(".rl-card").first().evaluate(el=>getComputedStyle(el).borderTopLeftRadius),"24px");
+  assert.equal(await canvas.locator(".rl-input").evaluate(el=>getComputedStyle(el).borderTopLeftRadius),"0px");
+  await page.reload();
+  await page.locator("[data-theme-studio][data-ready]").waitFor();
+  await page.getByRole("button",{name:"Export CSS"}).click();
+  const css = await page.getByLabel("Theme CSS").inputValue();
+  assert.equal(css,themeCSS(readTheme(new URL(page.url()).searchParams)));
+  const download = page.waitForEvent("download");
+  await page.getByRole("button",{name:"Download CSS"}).click();
+  assert.equal((await download).suggestedFilename(),"mero-theme.css");
+  await page.keyboard.press("Escape");
+  await page.getByRole("textbox",{name:"Email address"}).fill("demo@example.com");
+  await page.getByRole("button",{name:"Preview invitation"}).click();
+  await page.getByText("demo@example.com · Member invitation ready.").waitFor();
+  const screens = page.getByRole("navigation",{name:"Preview screens"});
+  for (const [text,path] of [["CRM","crm"],["Mail","mail"]]) {
+    await screens.getByRole("link",{name:text,exact:true}).click();
+    await page.waitForFunction(p => {
+      const doc = document.querySelector("[data-ts-app] iframe")?.contentDocument;
+      return doc?.location.pathname === "/layouts/"+p && Boolean(doc.documentElement?.style.getPropertyValue("--rl-accent")) && Boolean(doc.querySelector("main"));
+    },path);
+    const root = page.frameLocator("[data-ts-app] iframe").locator("html");
+    const insideAccent = () => root.evaluate(el=>getComputedStyle(el).getPropertyValue("--rl-accent").trim());
+    assert.equal(await insideAccent(),await accent());
+    await page.getByRole("radio",{name:"Light preview"}).check();
+    assert.equal(await root.getAttribute("data-theme"),"light");
+    await page.getByRole("button",{name:text === "CRM" ? "Clay" : "Graphite"}).click();
+    assert.equal(await insideAccent(),await accent());
+    assert.ok(await root.locator("main").innerText());
+    assert.equal(await page.locator("html").getAttribute("data-theme"),"dark");
+  }
+  await page.goBack();
+  await screens.getByRole("link",{name:"CRM",exact:true}).waitFor();
+  assert.equal(await screens.getByRole("link",{name:"CRM",exact:true}).getAttribute("aria-current"),"page");
+  await page.getByRole("button",{name:"Reset theme"}).click();
+  assert.equal(await page.getByRole("slider",{name:"Hue",exact:true}).inputValue(),defaults.hue);
+  await page.setViewportSize({width:320,height:740});
+  await screens.getByRole("link",{name:"Components",exact:true}).click();
+  const customize = page.getByRole("button",{name:"Customize"});
+  await customize.click();
+  assert.equal(await page.getByRole("button",{name:"Done"}).getAttribute("aria-expanded"),"true");
+  await page.getByRole("button",{name:"Fern"}).click();
+  await page.getByRole("button",{name:"Done"}).click();
+  assert.equal(await page.getByRole("slider",{name:"Hue",exact:true}).isVisible(),false);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  assert.deepEqual(errors,[]);
+});

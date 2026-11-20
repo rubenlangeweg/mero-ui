@@ -1,0 +1,6 @@
+.lab-page { width: min(100% - 36px, 930px); margin: clamp(36px, 7vw, 100px) auto; }
+.lab-page h1 { font-size: clamp(2.65rem, 6vw, 4.75rem); letter-spacing: -.065em; line-height: 1; margin: 0 0 13px; font-weight: 640; }
+.lab-page > header > p { margin: 0 0 31px; color: var(--rl-muted); line-height: 1.5; }
+.layout-examples { width: min(100% - 36px, 1140px); }
+.layout-examples-nav { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: 1.15rem; }
+.layout-examples .docs-example { margin-top: 1.5rem; }

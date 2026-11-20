@@ -1,0 +1,31 @@
+.pg-trace {
+  min-inline-size: 0;
+  padding: 18px;
+  border: 1px solid var(--site-line);
+  border-radius: var(--rl-radius-panel);
+  color: var(--site-fg);
+  background: var(--site-panel);
+}
+.pg-trace-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pg-trace-head h2 { margin: 0; font-size: 15px; font-weight: 620; letter-spacing: -.025em; }
+.pg-trace-head button {
+  min-block-size: 30px; padding: 3px 8px; border: 1px solid var(--site-line);
+  border-radius: 7px; color: var(--site-fg); background: transparent; font-size: 12px; cursor: pointer;
+}
+.pg-trace-head button:disabled { color: var(--site-muted); opacity: .65; cursor: default; }
+.pg-trace-empty, .pg-trace-hint { margin: 12px 0 0; color: var(--site-muted); font-size: 13px; line-height: 1.5; }
+.pg-trace-list { margin: 0; padding: 0; list-style: none; }
+.pg-trace-list:not(:empty) { margin-block-start: 12px; }
+.pg-trace-list li + li { margin-block-start: 3px; }
+.pg-trace-list button {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px;
+  inline-size: 100%; min-block-size: 40px; padding: 6px 8px; border: 1px solid transparent;
+  border-radius: 7px; text-align: start; color: var(--site-fg); background: transparent;
+  font: 11px/1.4 var(--site-mono); cursor: pointer;
+}
+.pg-trace-list button[aria-current], .pg-trace-list button:hover { background: var(--site-raised); }
+.pg-trace-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pg-trace-result { color: var(--site-muted); }
+.pg-trace-result[data-outcome="success"] { color: var(--rl-success); }
+.pg-trace-result[data-outcome="error"] { color: var(--rl-danger); }
+[data-trace-id] [role="tab"] { scroll-margin-block-start: 110px; }

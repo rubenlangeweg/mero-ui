@@ -1,0 +1,39 @@
+{
+  "name": "@rubenlangeweg/mero-ui",
+  "version": "0.2.0",
+  "type": "module",
+  "description": "HTML components and HTMX patterns for server-rendered interfaces.",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node --test",
+    "audit:catalog": "node scripts/audit-catalog.mjs",
+    "pack:ui": "npm pack --dry-run",
+    "build": "node scripts/build-assets.mjs && cf build",
+    "deploy": "npm run build && cf deploy --prebuilt"
+  },
+  "files": [
+    "public/mero*.css",
+    "public/mero*.js",
+    "public/insight-*.mjs",
+    "public/studio-lamp.webp",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "2.0.0-rc.2",
+    "cf": "1.0.0-rc.2",
+    "vite": "8.3.8"
+  },
+  "homepage": "https://mero-ui.invrse.studio",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rubenlangeweg/mero-ui.git"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}

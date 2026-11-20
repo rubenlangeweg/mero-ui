@@ -1,0 +1,226 @@
+import { catalogGroupId } from "./catalog.mjs";
+import { proStage } from "./pro-stage.mjs";
+import { seoHead } from "./seo.mjs";
+
+const escape = (value = '') => String(value).replace(/[&<>"']/g, character => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+})[character]);
+
+const siteLinks = [
+  ['start', '/start', 'Docs'],
+  ['components', '/components', 'Components'],
+  ['layouts', '/layouts', 'Layouts'],
+  ['themes', '/themes', 'Themes'],
+  ['playground', '/playground', 'Playground'],
+];
+
+const brand = `<a class="site-brand" href="/" aria-label="Mero UI home">
+  <span>Mero<span class="brand-suffix"> UI</span></span>
+</a>`;
+
+const footerGroups = [
+  ['Documentation', [
+    ['/start', 'Quick start'], ['/docs/design-principles', 'Design principles'], ['/docs/responsive-layouts', 'Responsive layouts'],
+    ['/themes', 'Theme studio'], ['/playground', 'Playground'],
+  ]],
+  ['Components', [
+    ['/components', 'All components'], ['/components/form', 'Form'],
+    ['/components/modal', 'Modal'], ['/components/data-grid', 'Data grid'],
+  ]],
+  ['Layouts', [
+    ['/layouts', 'Layout gallery'], ['/layouts/dashboard', 'Studio workspace'],
+    ['/layouts/mail', 'Mail layout'], ['/layouts/finance', 'Finance layout'],
+  ]],
+  ['Project', [
+    ['/about', 'About Mero UI'], ['/terms', 'Terms of use'],
+    ['/license', 'License'], ['/privacy', 'Privacy'],
+  ]],
+];
+
+export function assetStyles(assets) {
+  return assets.filter(name => name.endsWith('.css')).map(name => `<link rel="stylesheet" href="/${escape(name)}">`).join('\n');
+}
+
+export function assetScripts(assets) {
+  return assets.filter(name => name.endsWith('.js')).map(name => `<script defer src="/${escape(name)}"></script>`).join('\n');
+}
+
+export const previewTheme = mode => mode === "brand" || mode === "light" ? mode : "dark";
+
+export function embeddedLayout({title, content, assets, mode, tokens}) {
+  const style = tokens ? ' style="' + escape(Object.entries(tokens).map(([name, value]) => name + ':' + value).join(';')) + '"' : '';
+  const theme = previewTheme(mode);
+  // Regular links and native message forms keep the app-only view with JavaScript disabled.
+  const markup = tokens ? content : content.replace(/ (href="\/layouts\/[^"#]+|action="\/demo\/layouts\/(?:mail|chat)\/(?:reply|move|send))"/g, path => {
+    if (/[?;]embed=1(?:&|")/.test(path)) return path;
+    return path.slice(0, -1) + (path.includes("?") ? "&amp;" : "?") + 'embed=1&amp;theme=' + theme + '"';
+  });
+  return `<!doctype html><html lang="en" data-theme="${theme === 'dark' ? 'dark' : 'light'}"${theme === 'brand' ? ' data-tenant-preview' : ''}${style}><head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false}'>
+    <title>${escape(title)} · Mero UI preview</title>
+    <meta name="robots" content="noindex">
+    ${assetStyles([...new Set(['site-fonts.css','mero.css', ...assets, 'site.css','lab.css', ...(theme === 'brand' ? ['preview.css'] : [])])])}
+    ${assetScripts([...new Set(['vendor/htmx.min.js','mero.js', ...assets, ...(!tokens ? ['layout-preview.js'] : [])])])}
+  </head><body class="site-body layout-embed" hx-headers='{"X-Relay-Embed":"1"}'><main id="main" aria-label="${escape(title)} preview">${markup}</main></body></html>`;
+}
+
+export function shell({ title = 'Mero UI', description, path = '/', origin, indexable = true, body, nav = 'home', assets = [] }) {
+  return `<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09090a">
+  <script>try { if (localStorage.getItem("relay-theme") === "light") document.documentElement.dataset.theme = "light" } catch {}</script>
+  <meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false}'>
+  ${seoHead({ title, description, path, origin, indexable })}
+  <link rel="stylesheet" href="/site-fonts.css">
+  ${assetStyles([...new Set(['mero.css', ...assets])])}
+  <link rel="stylesheet" href="/site.css">
+  ${['components', 'layouts', 'playground'].includes(nav) ? '<link rel="stylesheet" href="/preview.css">' : ''}
+  ${['home', 'layouts', 'playground'].includes(nav) ? '<link rel="stylesheet" href="/lab.css">' : ''}
+  ${nav === 'home' ? '<link rel="stylesheet" href="/pro-stage.css">' : ''}
+  ${assetScripts([...new Set([...(assets.includes('vendor/htmx.min.js') ? ['vendor/htmx.min.js'] : []), 'mero.js', ...assets])])}
+  <script src="/site.js" defer></script>
+  ${nav === 'home' ? '<script src="/home-motion.js" defer></script>' : '<script src="/site-examples.js" defer></script>'}
+</head>
+<body class="site-body">
+  <a class="site-skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="site-wrap site-nav-frame">
+      ${brand}
+      <nav class="site-nav" aria-label="Main navigation">
+        ${siteLinks.map(([key, href, label]) => `<a href="${href}"${key === nav ? ' aria-current="page"' : ''}>${label}</a>`).join('')}
+      </nav>
+      <div class="site-nav-actions">
+        <button class="site-theme" type="button" data-theme-toggle aria-label="Switch to light theme" title="Switch to light theme">
+          <span class="theme-glyph" aria-hidden="true">☼</span>
+        </button>
+        <a class="rl-button rl-button-primary site-cta nav-start" href="/start">Get started</a>
+      </div>
+    </div>
+  </header>
+  <main id="main">${body}</main>
+  <footer class="site-footer">
+    <div class="site-wrap site-footer-inner">
+      <div class="footer-brand">${brand}<p>The UI kit for htmx.</p></div>
+      <nav aria-label="Footer">
+        ${footerGroups.map(([heading, links]) => `<div class="footer-group">
+          <h2>${heading}</h2>
+          <ul>${links.map(([href, label]) => `<li><a href="${href}">${label}</a></li>`).join('')}</ul>
+        </div>`).join('')}
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>`;
+}
+
+const featuredComponents = [
+  { id: 'line-chart', variant: 'Period picker', title: 'Dispatch report', description: 'Change the reporting period to redraw the chart from a server response.' },
+  { id: 'chat-conversation', title: 'Dispatch assistant', description: 'Ask about the same shipment data and inspect the reply in the component docs.' },
+];
+
+function homeLayouts(apps) {
+  if (!apps.length) return '';
+  return `<section class="site-wrap home-apps" id="pro" aria-labelledby="home-layouts-title">
+    <header class="showcase-heading"><h2 id="home-layouts-title">Application layouts</h2>
+      <a class="site-inline-link" href="/layouts">All layouts <span aria-hidden="true">→</span></a></header>
+    <fieldset class="home-app-picker"><legend class="home-app-sr">Choose an application preview</legend>
+      <div class="home-app-choices" style="--home-app-count:${apps.length}">${apps.map(({id,name,description}, index) => `
+        <input class="home-app-sr" type="radio" name="home-layout" id="home-layout-${id}" aria-controls="home-preview-${id}" ${index === 0 ? 'checked' : ''}>
+        <label for="home-layout-${id}">${escape(name)}</label>
+        <figure class="home-app-preview" id="home-preview-${id}">
+          <a href="/layouts/${id}" aria-label="Open ${escape(name)}" aria-describedby="home-description-${id}">
+            <span class="home-app-mat"><span class="home-app-shot">${['dark','light'].map(mode => `<picture class="home-app-${mode}">
+              <source media="(max-width: 38rem)" srcset="/example-${id}-${mode}-phone.webp" width="780" height="640">
+              <img src="/example-${id}-${mode}.webp" width="1620" height="900" loading="lazy" decoding="async" alt="">
+            </picture>`).join('')}</span></span>
+            <span class="home-app-caption"><span id="home-description-${id}">${escape(description)}</span><strong>Open ${escape(name)} <span aria-hidden="true">↗</span></strong></span>
+          </a>
+        </figure>`).join('')}</div>
+    </fieldset>
+  </section>`;
+}
+
+export function home({ workbench, componentCount, product, apps = [] }) {
+  return `<section class="hero">
+    <div class="site-wrap hero-frame">
+      <h1><span class="hero-line">The UI kit</span> <span class="hero-line hero-metal">for htmx.</span></h1>
+      <div class="hero-intro">
+        <p class="hero-description">Copy HTML components into your server templates. Loading states, keyboard controls, and focus handling come built in.</p>
+        <div class="hero-actions">
+          <a class="rl-button rl-button-primary site-cta" href="/components">Browse components</a>
+          <a class="rl-button rl-button-ghost site-cta" href="/playground">Try the playground <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </div>
+    ${proStage({ product })}
+  </section>
+  ${homeLayouts(apps)}
+  <section class="site-wrap showcase home-app-library" aria-labelledby="showcase-title">
+    <header class="showcase-heading">
+      <h2 id="showcase-title">Explore the library</h2>
+      <a class="site-inline-link" href="/components">All ${Number(componentCount) || ''} components <span aria-hidden="true">→</span></a>
+    </header>
+    <div class="feature-specimens">
+      ${featuredComponents.map(({ id, variant, title, description }) => {
+        const params = new URLSearchParams();
+        if (variant) params.set('variant', variant);
+        const docs = '/components/' + id + (variant ? '?' + params : '');
+        params.set('embed', '1');
+        return `<article>
+          <h3><a href="${escape(docs)}">${title} <span aria-hidden="true">↗</span></a></h3>
+          <p>${description}</p>
+          <iframe loading="lazy" data-live-specimen src="/preview/${id}?${escape(params)}" title="${title} live example"></iframe>
+        </article>`;
+      }).join('')}
+    </div>
+  </section>
+  <section class="site-wrap home-workbench home-app-workbench" hx-vals='{"studioShowcase":"1"}' aria-labelledby="workbench-title">
+    <div class="home-app-copy">
+      <h2 id="workbench-title">Try a real HTMX workflow</h2>
+      <p>Search the inventory, open an edit drawer, or add a product.</p>
+      <a class="site-inline-link" href="/playground">Open playground <span aria-hidden="true">→</span></a>
+    </div>
+    ${workbench}
+  </section>
+  <section class="site-wrap home-start home-app-start" aria-labelledby="home-start-title">
+    <div class="home-app-copy"><h2 id="home-start-title">Bring your own backend.</h2><p>Use the same component markup in a full page or an HTML fragment returned by your server.</p></div>
+    <a class="rl-button rl-button-primary site-cta" href="/start">Read the docs <span aria-hidden="true">→</span></a>
+  </section>`;
+}
+
+export function catalogLayout({ groups, active, content }) {
+  return `<div class="site-wrap catalog-shell">
+    <aside class="catalog-sidebar">
+      <div class="catalog-tools">
+        <label class="catalog-search"><span aria-hidden="true"></span>
+          <input type="search" aria-label="Filter components" placeholder="Find a component…" data-catalog-search autocomplete="off">
+        </label>
+        <label class="catalog-menu-toggle"><input type="checkbox" id="catalog-menu" aria-label="Browse components" aria-controls="catalog-index"><span>Browse</span></label>
+      </div>
+      <div class="catalog-filter-status"><output class="catalog-result-count" data-catalog-count></output><button type="button" data-catalog-clear hidden>Clear filters</button></div>
+      <div class="catalog-result-count" role="status" data-catalog-notice></div>
+      <nav id="catalog-index" class="catalog-index" aria-label="Component catalog">
+        <div class="catalog-general">
+          <div class="catalog-guide-links"><span>Getting started</span>
+            <a href="/start"${active === "" ? ' aria-current="page"' : ""}>Quick start</a>
+            <a href="/docs/design-principles"${active === "design-principles" ? ' aria-current="page"' : ""}>Design principles</a>
+            <a href="/docs/responsive-layouts"${active === "responsive-layouts" ? ' aria-current="page"' : ""}>Responsive layouts</a>
+          </div>
+          <div class="catalog-guide-links"><span>Explore</span>
+            <a href="/components"${active === undefined ? ' aria-current="page"' : ""}>All components</a>
+            <a href="/themes">Theme studio</a><a href="/layouts">Layouts</a><a href="/playground">Playground</a>
+          </div>
+        </div>
+        ${groups.map(({ name, items }) => `<section class="catalog-nav-group" data-catalog-group="${catalogGroupId(name)}">
+          <h2>${escape(name)}</h2>
+          ${items.map(({ id, name: itemName, description }) => `<a href="/components/${escape(id)}" data-catalog-link data-search-text="${escape([itemName, id, name, description].join(' '))}"${id === active ? ' aria-current="page"' : ''}>${escape(itemName)}</a>`).join('')}
+        </section>`).join('')}
+      </nav>
+    </aside>
+    <div id="catalog-content" class="catalog-content">${content}</div>
+  </div>`;
+}

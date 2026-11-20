@@ -1,0 +1,17 @@
+.design-guide { max-inline-size: 49rem; }
+.design-guide > section + section { margin-block-start: 2.25rem; padding-block-start: 1.75rem; border-block-start: 1px solid var(--site-line); }
+.design-guide section > h2 { margin: 0; color: var(--site-fg); font-size: clamp(1.3rem, 2.5vw, 1.7rem); font-weight: 620; line-height: 1.2; letter-spacing: -.035em; }
+.design-guide section > p { max-inline-size: 66ch; margin: .65rem 0 1rem; color: var(--site-muted); }
+.principle-actions { margin: 1.1rem 0 .65rem; padding: .25rem clamp(.85rem, 3vw, 1.5rem); border: 1px solid var(--site-line); border-radius: var(--rl-radius-panel); background: var(--site-panel); }
+.principle-actions > div { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding-block: .85rem; }
+.principle-actions > div + div, .principle-states > div + div { border-block-start: 1px solid var(--site-line); }
+.principle-actions dt, .principle-states dt { color: var(--site-fg); font-size: .92rem; font-weight: 600; }
+.design-guide dd { margin: 0; }
+.principle-code > summary { inline-size: fit-content; margin-block: .9rem; color: var(--site-fg); font-size: .87rem; cursor: pointer; }
+.principle-states { margin-block: .6rem; }
+.principle-states > div { display: grid; grid-template-columns: 7.25rem minmax(0, 1fr); gap: .6rem; padding-block: .65rem; }
+.principle-states dd { color: var(--site-muted); }
+.principle-links { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1.25rem; margin: 0; padding: 0; list-style: none; }
+@media (max-width: 38rem) {
+  .principle-states > div { grid-template-columns: 1fr; gap: .15rem; }
+}
