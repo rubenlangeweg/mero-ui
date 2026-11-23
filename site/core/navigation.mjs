@@ -1,4 +1,5 @@
-import { item, section } from "./helpers.mjs"
+import { escapeHtml } from "../html.mjs"
+import { item, rendered, section } from "./helpers.mjs"
 
 function disclosure(title, body, { open = false } = {}) {
   return `
@@ -19,6 +20,21 @@ function tabPanels(id, label, items, vertical = false) {
       </div>
       ${items.map(panel).join("\n      ")}
     </div>`
+}
+
+// Link tabs: the URL holds the view, so the server marks the current link and no script runs.
+function linkTabs(params) {
+  const views = [["attention", "Needs attention", 3], ["active", "In progress", 12], ["closed", "Completed"]]
+  const current = views.some(([key]) => key === params.get("view")) ? params.get("view") : "attention"
+  const href = key => {
+    const next = new URLSearchParams(params)
+    next.set("view", key)
+    return escapeHtml("?" + next)
+  }
+  return `
+    <nav class="mero-tabs-list" aria-label="Operation views">
+      ${views.map(([key, label, count]) => `<a class="mero-tab" href="${href(key)}"${key === current ? ' aria-current="page"' : ""}>${label}${count ? ` <span class="mero-tab-count">${count}</span>` : ""}</a>`).join("\n      ")}
+    </nav>`
 }
 
 export function pageLinks(page = 1) {
@@ -73,6 +89,8 @@ export const groups = [
         ["security", "Security", "Manage sign-in methods and active sessions."],
         ["mail", "Notifications", "Choose which updates reach your inbox."],
       ], true)],
+      ["Link tabs", rendered("tabs", "Tabs", "Switch between views of one page that the URL keeps.", linkTabs,
+        "Use links in a nav when each tab is its own URL, such as a filtered view of a list. The server puts aria-current=page on the current link. Tab and Enter work as on any link, so there is no tablist role, no arrow-key handling and no script. Add a mero-tab-count after the label for an optional count; it is read with the label. The tabs wrap on narrow screens.")],
     ]),
   ]),
 ]
