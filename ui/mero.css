@@ -519,6 +519,33 @@
   :where(.mero-table .mero-row-link) { font-weight: 600; }
 }
 
+/* Row peek. mero.js adds .mero-peek as the last child of [data-mero-peek] while a preview is open. */
+:where([data-mero-peek]:has(> .mero-peek)) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(15rem, 22rem); gap: 1rem; align-items: start; }
+:where([data-mero-peek] > :not(.mero-peek)) { grid-column: 1; }
+:where(.mero-peek) {
+  grid-column: 2; grid-row: 1; position: sticky; inset-block-start: 1rem; min-inline-size: 0;
+  border: 1px solid var(--mero-line); border-radius: var(--mero-radius); background: var(--mero-surface);
+  animation: mero-panel-in var(--mero-fast) var(--mero-ease) both;
+}
+:where(.mero-peek-header, .mero-peek-footer) { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .55rem .9rem; }
+:where(.mero-peek-header) { border-block-end: 1px solid var(--mero-line); }
+:where(.mero-peek-footer) { flex-wrap: wrap; border-block-start: 1px solid var(--mero-line); }
+:where(.mero-peek-title) { margin: 0; font-size: .9rem; font-weight: 600; overflow-wrap: anywhere; }
+:where(.mero-peek-body) { padding: .9rem; overflow-wrap: anywhere; }
+:where(.mero-peek-body dl) { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .35rem .9rem; margin: 0; }
+:where(.mero-peek-body dt) { color: var(--mero-muted); }
+:where(.mero-peek-body dd) { margin: 0; }
+:where(.mero-peek-hint) { color: var(--mero-muted); font-size: .76rem; }
+/* Below 768 px the preview is a bottom sheet over the cards; the padding lets the last card scroll clear of it. */
+@media (width < 48rem) {
+  :where([data-mero-peek]:has(> .mero-peek)) { display: block; padding-block-end: min(50dvh, 24rem); }
+  :where(.mero-peek) {
+    position: fixed; z-index: 5; inset: auto .5rem .5rem; max-block-size: min(50dvh, 24rem); overflow: auto;
+    box-shadow: var(--mero-shadow);
+  }
+  :where(:root:has(.mero-peek)) { scroll-padding-block-end: min(50dvh, 24rem); }
+}
+
 :where(.mero-calendar) { inline-size: min(100%, 20rem); }
 :where(.mero-calendar-table) { border-collapse: collapse; inline-size: 100%; margin-block-start: .55rem; table-layout: fixed; text-align: center; }
 :where(.mero-calendar-table th) { padding-block: .2rem .4rem; color: var(--mero-muted); font: 550 .69rem/1.2 var(--mero-font); }
@@ -871,7 +898,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root { --mero-fast: 0ms; --mero-enter: 0ms; }
-  :where(.mero-spinner, .mero-skeleton, .mero-dialog, .mero-toast, .mero-popover, .mero-menu, .mero-combo-list, [data-mero-tabs] [role="tabpanel"]) { animation: none; }
+  :where(.mero-spinner, .mero-skeleton, .mero-dialog, .mero-toast, .mero-popover, .mero-menu, .mero-combo-list, .mero-peek, [data-mero-tabs] [role="tabpanel"]) { animation: none; }
   .mero-dialog, .mero-dialog::backdrop { transition: none; }
 }
 

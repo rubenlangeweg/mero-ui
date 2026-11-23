@@ -389,6 +389,71 @@
     return item;
   }
 
+  // Row peek: one preview at a time, keyed by the row's id (or the link's href) so it can follow the row through swaps.
+  let peek = null;
+  const peekRegion = node => node?.closest?.("[data-mero-peek]");
+  const peekRow = link => link.closest('tr, [role="row"]');
+  const peekKey = link => peekRow(link)?.id || link.getAttribute("href");
+  const peekTemplate = link => peekRow(link)?.querySelector("template[data-mero-peek-body]");
+  const peekLinks = region => [...region.querySelectorAll(".mero-row-link")].filter(link => peekRegion(link) === region && link.getClientRects().length);
+
+  function peekLink(region = peek?.panel.parentElement) {
+    return region && [...region.querySelectorAll(".mero-row-link")].find(link => peekKey(link) === peek.key);
+  }
+
+  function peekPanel(region) {
+    const existing = region.querySelector(":scope > .mero-peek");
+    if (existing) return existing;
+    const panel = document.createElement("aside");
+    panel.className = "mero-peek";
+    panel.setAttribute("aria-label", "Preview");
+    panel.setAttribute("aria-live", "polite");
+    panel.innerHTML = '<div class="mero-peek-header"><h2 class="mero-peek-title"></h2>' +
+      '<button class="mero-button mero-button-ghost mero-button-sm" type="button" aria-label="Close preview" data-mero-peek-close>' +
+      '<span class="mero-dismiss-mark" aria-hidden="true"></span></button></div><div class="mero-peek-body"></div>' +
+      '<div class="mero-peek-footer"><a class="mero-button mero-button-primary mero-button-sm">Open</a>' +
+      '<span class="mero-peek-hint">Space or Esc closes · ↑ ↓ move</span></div>';
+    region.append(panel);
+    return panel;
+  }
+
+  function showPeek(link) {
+    const region = peekRegion(link), template = peekTemplate(link);
+    if (!region || !template) return false;
+    const panel = peekPanel(region);
+    if (peek && peek.panel !== panel) peek.panel.remove();
+    // Keep the header and footer nodes so focus on Close or Open survives an update.
+    const body = panel.querySelector(".mero-peek-body");
+    panel.querySelector(".mero-peek-title").textContent = link.textContent.trim();
+    panel.querySelector(".mero-peek-footer a").setAttribute("href", link.getAttribute("href"));
+    body.replaceChildren(template.content.cloneNode(true));
+    window.htmx?.process?.(body);
+    init(body);
+    peek = { panel, key: peekKey(link) };
+    // The bottom sheet's scroll padding keeps the row above it on phones.
+    if (document.activeElement === link) link.scrollIntoView({ block: "nearest" });
+    return true;
+  }
+
+  function closePeek(focusRow) {
+    if (!peek) return;
+    const link = peekLink();
+    const focusLost = peek.panel.contains(document.activeElement);
+    peek.panel.remove();
+    peek = null;
+    if (focusRow || focusLost) link?.focus();
+  }
+
+  // After a swap or morph, show the same row from the new markup, or close when it is gone.
+  function refreshPeek() {
+    const region = peek.panel.isConnected ? peek.panel.parentElement : null;
+    const link = peekLink(region) ?? [...document.querySelectorAll("[data-mero-peek]")].map(peekLink).find(Boolean);
+    if (link && showPeek(link)) return;
+    peek.panel.remove();
+    peek = null;
+    if (document.activeElement === document.body) region?.querySelector(".mero-row-link")?.focus({ preventScroll: true });
+  }
+
   function init(root = document, trigger, request) {
     scopeIds(root);
     initNativeGroups(root);
@@ -444,6 +509,7 @@
       return;
     }
     if (menuItem) menuItem.closest('[popover][role="menu"]').hidePopover();
+    if (target.closest("[data-mero-peek-close]")) closePeek(true);
     // No defaultPrevented check: hx-boost cancels the click but still navigates.
     const opened = target.closest("[data-mero-restore-focus] a[href]");
     if (opened && event.button === 0 && !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) {
@@ -519,6 +585,29 @@
         event.preventDefault();
         selectTab(candidate, true);
       }
+      return;
+    }
+    const region = peekRegion(target);
+    if (region && target.matches(".mero-row-link") && peekTemplate(target)) {
+      if (event.key === " ") {
+        event.preventDefault();
+        if (peek && peekLink() === target) closePeek();
+        else showPeek(target);
+        return;
+      }
+      if ((event.key === "ArrowDown" || event.key === "ArrowUp") && peek) {
+        const links = peekLinks(region);
+        const next = links[links.indexOf(target) + (event.key === "ArrowDown" ? 1 : -1)];
+        if (next) {
+          event.preventDefault();
+          next.focus();
+        }
+        return;
+      }
+    }
+    if (event.key === "Escape" && peek && (peek.panel.contains(target) || (target.matches(".mero-row-link") && region === peek.panel.parentElement))) {
+      event.preventDefault();
+      closePeek(true);
       return;
     }
     const popup = target.popoverTargetElement;
@@ -623,6 +712,13 @@
       filterCombo(input);
     }
   });
+
+  // An open preview follows focus to another row of the same table.
+  document.addEventListener("focusin", event => {
+    const link = event.target.closest?.(".mero-row-link");
+    if (peek && link && peekRegion(link) === peek.panel.parentElement && peekLink() !== link) showPeek(link);
+  });
+
   document.addEventListener("focusout", event => {
     const combo = event.target.closest?.("[data-mero-combo]");
     if (combo && !combo.contains(event.relatedTarget)) {
@@ -719,6 +815,8 @@
     // task.sourceElement stays the original opener; ctx.sourceElement moves to new content after an outerHTML swap.
     const opener = task.sourceElement;
     init(event.target, opener, remoteQueries.get(taskRequests.get(task)));
+    const peeked = peek?.panel.parentElement;
+    if (peek && (!peek.panel.isConnected || event.target.contains?.(peeked) || (peeked.contains(event.target) && !peek.panel.contains(event.target)))) refreshPeek();
     // HTMX restores focus before repeated fragment IDs receive their scoped names.
     const saved = swappedFocus.get(task);
     if (saved && document.activeElement === document.body) {

@@ -36,6 +36,25 @@ The Mero scripts listen to htmx 4 events and read `event.detail.ctx`. Load `mero
 
 Serve `ui/mero.css` and `ui/mero.js` from your app. Include htmx 4 for examples with `hx-*` attributes. Each component page lists the optional CSS and JavaScript its family uses. The copyable markup works in any server template. A sortable table sorts on the server through plain `?sort=` header links, so it works without JavaScript. Filter chips work the same way: each chip, the "+ Filter" menu items and "Clear all filters" are links to the URL with that query parameter changed. A `role="menu"` popover gets arrow-key, Home, End, typeahead, Escape and Tab handling from `mero.js` for its `menuitem`, `menuitemradio` and `menuitemcheckbox` items. A menu opens on its checked `menuitemradio`; render `aria-checked` on the server. A `dialog[data-mero-command]` holding a remote combobox opens on Cmd or Ctrl K and runs the chosen server option; use one per page, and not alongside the workspace Command. The local catalog includes htmx 4.0.2 and Geist with their license notices.
 
+### Preview a row
+
+Add `data-mero-peek` around a table wrapper whose rows have a `.mero-row-link`, and put each row's preview in a `<template data-mero-peek-body>` inside that row. With a row link focused, Space opens an `aside` named "Preview" with the row's heading, the template's content, a Close button and an Open link to the row's `href`. While it is open, Up and Down Arrow, or Tab to another row, show that row instead. Space or Escape closes it and returns focus to the row. Focus is never trapped, and the panel announces updates politely. Give each row a stable `id` so the preview stays on it when a sort, filter or morph swap changes the row links. Below 768 px the preview is a bottom sheet over the cards. Without `mero.js` the templates stay inert and Space keeps its native behaviour.
+
+```html
+<div data-mero-peek>
+  <div class="mero-table-wrap mero-table-cards">
+    <table class="mero-table">
+      <tbody>
+        <tr id="product-2">
+          <th scope="row"><a class="mero-row-link" href="/products/2">Halo Pendant</a><template data-mero-peek-body><dl><dt>SKU</dt><dd>RL-1002</dd></dl></template></th>
+          <td>Lighting</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+```
+
 ### Return focus after Back
 
 Add `data-mero-restore-focus` to a list container. When someone opens a link in it and then presses Back, `mero.js` focuses that link again. This works after a full page load and after an HTMX history restore. Links are matched by their `href`, so keep row hrefs unique on the page. Mark one control in the container with `data-mero-focus-fallback`. It gets focus when an HTMX swap removes the focused element.

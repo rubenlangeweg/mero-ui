@@ -162,6 +162,10 @@ test("the layout gallery downloads only matching viewport and theme captures", o
       if (image.startsWith("/example-")) art.add(image);
     });
     await gallery.goto(new URL("/layouts", page.url()).href);
+    // The shots are CSS backgrounds: WebKit can request them after the load event.
+    for (let waited = 0; art.size < 6 && waited < 5000; waited += 50) await gallery.waitForTimeout(50);
+    // Give any extra, wrongly matched capture time to show up before counting.
+    await gallery.waitForTimeout(250);
     assert.equal(art.size, 6);
     assert.ok([...art].every(path => path.endsWith("-" + suffix + ".webp")));
     await gallery.getByRole("link", { name: /^Mail Read, reply to/ }).and(gallery.locator("#example-mail")).waitFor();
