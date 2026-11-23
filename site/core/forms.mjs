@@ -50,6 +50,7 @@ export const groups = [
       </form>`,
       "This demo uses a read-only GET. Use POST for changes and keep validation on the server.", [
         ["One-time credential", `
+          <div class="mero-stack">
           <form class="mero-stack" method="post" action="/demo/catalog/form-credential" hx-post="/demo/catalog/form-credential"
             hx-target="#api-token-secret" data-mero-form data-mero-hold="Wait for the new token. Leaving now would lose it.">
             <div class="mero-field">
@@ -65,7 +66,8 @@ export const groups = [
             </div>
           </form>
           <div class="mero-stack" id="api-token-secret" data-mero-ephemeral
-            data-mero-hold="Copy the token before you leave. It is shown only once."></div>`, {
+            data-mero-hold="Copy the token before you leave. It is shown only once."></div>
+          </div>`, {
           description: "Create an API token and keep the page until the person has copied it.",
           notes: "While the request runs, and while the token is shown, Mero cancels boosted navigation and requests that would replace the token, undoes Back and asks before the page unloads. The token is cleared on I copied it, when a surrounding dialog closes and when the page is hidden. Render the secret only in this response, never in a page the server can send again.",
         }],

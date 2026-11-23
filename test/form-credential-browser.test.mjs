@@ -64,7 +64,7 @@ test("a held credential is never lost to navigation, Back or unload, and is clea
     release();
     await token.waitFor();
     await page.unroute("**/demo/catalog/form-credential");
-    const value = await token.textContent();
+    const value = await token.inputValue();
     assert.match(value, /^mtk_[0-9a-f]{24}$/);
     assert.equal(await page.evaluate(() => document.activeElement?.matches(".mero-alert")), true, "focus moves to the new token");
 
@@ -82,7 +82,7 @@ test("a held credential is never lost to navigation, Back or unload, and is clea
     await page.waitForTimeout(400);
     assert.ok(urls.some(url => !held(url)), "Back really left the entry: " + urls.join(", "));
     assert.ok(held(page.url()), "Back is undone: " + page.url());
-    assert.equal(await token.textContent(), value, "the token survives Back");
+    assert.equal(await token.inputValue(), value, "the token survives Back");
     assert.equal(left.length, 0);
 
     // A real unload attempt raises the browser's leave-page prompt.
@@ -93,7 +93,7 @@ test("a held credential is never lost to navigation, Back or unload, and is clea
     await dialog.dismiss();
     await page.waitForTimeout(200);
     assert.ok(held(page.url()));
-    assert.equal(await token.textContent(), value, "staying keeps the token");
+    assert.equal(await token.inputValue(), value, "staying keeps the token");
 
     // Dismissing clears the secret, releases the hold and puts focus on the named control.
     await page.getByRole("button", { name: "I copied it" }).click();
