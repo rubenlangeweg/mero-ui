@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Re-read after unknown:** `data-mero-action-reread="#region"` reads the current page again after an unknown outcome and morphs that region, so the person sees whether the action happened. Mero never repeats the action, and drops the answer when the page has moved on. The Action Button has a Re-read after unknown variant.
+
 ## 0.7.0 · 23 November 2026
 
 - Try six HTMX 4 workflows in the playground. Review price changes with keyboard approval and undo, correct a spreadsheet before import, assign records from the command menu, publish across pages, share saved views and move cards together on a live board. [Open the workflows](https://mero-ui.rubenlangeweg.com/premium) · [Watch the seven captioned walkthroughs](https://mero-ui.rubenlangeweg.com/premium/watch)

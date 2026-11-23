@@ -220,4 +220,56 @@
     }
     (action.isConnected ? action : document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message } }));
   });
+  // data-mero-action-reread="#region": after an unknown outcome, read the current page again with a GET
+  // and morph that region, so the person sees what actually happened. Mero never re-sends the action.
+  // The answer is dropped when the page moved on, the region is gone or a newer read started.
+  let rereads = 0;
+  document.addEventListener("mero:action", event => {
+    const { state, message } = event.detail;
+    const owner = event.target.closest?.("[data-mero-action-reread]");
+    if (state !== "unknown" || !owner || !window.htmx) return;
+    const selector = owner.getAttribute("data-mero-action-reread");
+    let region;
+    try { region = document.querySelector(selector); } catch { return; }
+    if (!region) return;
+    const action = event.target;
+    const id = ++rereads;
+    const url = location.href;
+    region.setAttribute("aria-busy", "true");
+    window.htmx.ajax("GET", url, {
+      target: region, select: selector, swap: "outerMorph",
+      headers: { "Mero-Reread": String(id) },
+    }).catch(() => {}).finally(() => {
+      region.removeAttribute("aria-busy");
+      if (id !== rereads) return;
+      // The morph can reset the button and its status to the server's markup: show the outcome again.
+      const element = action.isConnected ? action : action.id ? document.getElementById(action.id) : null;
+      const button = element?.matches("[data-mero-action]");
+      const output = button ? element.parentElement?.querySelector("[data-mero-action-status]") : element?.querySelector("[data-mero-form-error]");
+      if (button) element.dataset.meroActionState = "unknown";
+      if (output && message) {
+        output.hidden = false;
+        output.textContent = "";
+        output.textContent = message;
+        if (button) output.dataset.tone = "danger";
+        return;
+      }
+      // Mero already announced it once; repeat it only when the read removed where it was shown.
+      if (message && !element) window.MeroUI?.toast(message, { tone: "danger" });
+    });
+  });
+
+  document.addEventListener("htmx:before:swap", event => {
+    const { ctx, tasks } = event.detail;
+    const id = ctx.request.headers?.["Mero-Reread"];
+    if (!id) return;
+    const target = typeof ctx.target === "string" ? document.querySelector(ctx.target) : ctx.target;
+    const url = new URL(ctx.request.action, location.href);
+    // Only a successful read of the page still on screen may replace what the person sees.
+    if (Number(id) !== rereads || !target?.isConnected || url.href !== location.href.split("#")[0] || !(ctx.response?.status >= 200 && ctx.response.status < 300) ||
+      // A page without the region would otherwise morph it away.
+      !tasks.find(task => task.type === "main")?.fragment?.firstElementChild) {
+      event.preventDefault();
+    }
+  });
 })();
