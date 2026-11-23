@@ -1,0 +1,43 @@
+#cmd-work { --cmd-line: var(--mero-line); }
+.cmd-toolbar, .cmd-toolbar > div, .cmd-dialog-header { display:flex; align-items:center; justify-content:space-between; gap:.8rem; }
+.cmd-toolbar { padding:1rem 1.15rem; border-bottom:1px solid var(--cmd-line); }
+.cmd-toolbar > div { flex-wrap:wrap; justify-content:flex-start; }
+.cmd-toolbar strong { font-size:1rem; }
+#cmd-count, .cmd-table small, .cmd-choice small, #cmd-context { font-size:.8rem; color:var(--mero-muted); }
+.cmd-table { width:100%; border-collapse:collapse; text-align:left; }
+.cmd-table th, .cmd-table td { padding:.75rem .9rem; border-bottom:1px solid var(--cmd-line); }
+.cmd-table th:first-child, .cmd-table td:first-child { width:2.8rem; padding-right:.2rem; }
+.cmd-table input { inline-size:1.1rem; block-size:1.1rem; cursor:pointer; }
+.cmd-table small, .cmd-choice small { display:block; font-weight:400; }
+.cmd-table thead th { font-size:.78rem; }
+.cmd-owner { font-size:.9rem; }
+.cmd-message:not(:empty) { padding:.8rem 1.1rem; font-weight:550; }
+#cmd-dialog { width:min(30rem,calc(100vw - 2rem)); padding:1.15rem; max-height:80dvh; overflow:auto; }
+.cmd-dialog-header { margin-bottom:.85rem; }
+#cmd-heading { font-size:1.25rem; margin:0; }
+#cmd-dialog .mero-combo, #cmd-dialog input.mero-input { width:100%; }
+#cmd-options { position:static; margin-top:.55rem; padding:.25rem; max-height:40vh; overflow:auto; }
+#cmd-options[hidden], #cmd-back[hidden] { display:none; }
+.cmd-choice { display:grid; grid-template-columns:1fr auto; width:100%; background:transparent; color:inherit; border:0; border-radius:.4rem; text-align:left; padding:.6rem .75rem; cursor:pointer; font:inherit; }
+.cmd-choice strong, .cmd-choice small { grid-column:1; }
+.cmd-choice span { grid-column:2; grid-row:1 / 3; align-self:center; }
+.cmd-choice:hover, .cmd-choice[data-mero-active] { background:var(--mero-hover); }
+#cmd-back { margin-top:.65rem; }
+#cmd-dialog [data-mero-combo-status] { margin-top:.5rem; display:block; }
+#cmd-error:empty { display:none; }
+.cmd-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+@media (max-width:570px) {
+  .cmd-toolbar { align-items:flex-start; }
+  .cmd-toolbar > div { display:grid; gap:.12rem; }
+  .cmd-table th, .cmd-table td { padding:.7rem .4rem; }
+  #cmd-dialog[open] { position:fixed; inset:auto 0 0; margin:0; width:100%; max-width:none; border-radius:1rem 1rem 0 0; padding-bottom:max(1.15rem,env(safe-area-inset-bottom)); }
+}
+.cmd-heading { margin-bottom:1.5rem; }
+.cmd-heading h1 { margin:0; font-size:clamp(1.75rem,3vw,2.35rem); letter-spacing:-.045em; line-height:1.1; }
+.cmd-heading p { margin:.45rem 0 0; color:var(--mero-muted); }
+#cmd-records { overflow:hidden; border:1px solid var(--cmd-line); border-radius:.8rem; background:var(--mero-surface); }
+.cmd-table { margin:0; }
+.cmd-table thead { background:var(--mero-raised); }
+.cmd-table tr:has(input[name="record"]:checked) { background:color-mix(in srgb,var(--mero-accent) 5%,var(--mero-surface)); }
+.cmd-table tbody tr:last-child > * { border-bottom:0; }
+.cmd-message:not(:empty) { border-top:1px solid var(--cmd-line); }

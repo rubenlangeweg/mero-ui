@@ -1,0 +1,13 @@
+WEBVTT
+
+00:00:00.066 --> 00:00:01.966
+Open the first pending price change using the keyboard.
+
+00:00:01.966 --> 00:00:05.053
+Enter approves this price and moves focus to the next approval.
+
+00:00:05.053 --> 00:00:07.013
+Undo restores the last product and its place in the queue.
+
+00:00:07.013 --> 00:00:10.970
+Escape closes the sheet and returns focus to the restored row.

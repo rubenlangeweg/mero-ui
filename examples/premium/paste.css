@@ -1,0 +1,26 @@
+.paste-heading { margin-bottom: 1.5rem; }
+.paste-heading h1 { font-size: clamp(1.75rem, 3vw, 2.35rem); letter-spacing: -.045em; line-height: 1.15; margin: 0 0 .4rem; }
+.paste-heading p { margin: 0; color: var(--mero-muted); }
+.paste-workspace { padding: clamp(1rem, 2.5vw, 2rem); background: var(--mero-surface); border: 1px solid var(--mero-line); border-radius: var(--mero-radius-panel); }
+.paste-workspace { min-width: 0; color: var(--mero-text); }
+.paste-workspace .paste-form, .paste-workspace form { display: grid; gap: 1rem; }
+.paste-workspace label, .paste-workspace th { font-weight: 600; }
+.paste-workspace .paste-muted { color: var(--mero-muted); }
+.paste-workspace p { margin: 0; }
+.paste-workspace textarea { width: 100%; font: .9rem/1.6 ui-monospace, monospace; resize: vertical; tab-size: 10; }
+.paste-workspace .paste-actions, .paste-workspace .paste-summary { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; }
+.paste-workspace .paste-summary { justify-content: space-between; margin-bottom: 1rem; }
+.paste-workspace h2 { font-size: 1.25rem; margin: 0 0 .25rem; }
+.paste-workspace .paste-scroll { max-height: 24rem; overflow: auto; border: 1px solid var(--mero-line); border-radius: var(--mero-radius); }
+.paste-workspace table { width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
+.paste-workspace thead { position: sticky; top: 0; z-index: 1; background: var(--mero-surface); }
+.paste-workspace td, .paste-workspace th { padding: .6rem .85rem; text-align: start; border-bottom: 1px solid var(--mero-line); }
+.paste-workspace small, .paste-workspace .paste-error { display: block; font-size: .77rem; }
+.paste-workspace small { font-weight: 400; }
+.paste-workspace .paste-invalid { background: color-mix(in srgb, var(--mero-danger) 5%, var(--mero-surface)); }
+.paste-workspace .paste-error { color: var(--mero-danger); margin-top: .25rem; max-width: 20rem; }
+.paste-workspace input:not([type=hidden]) { width: 100%; min-width: 5.5rem; max-width: 12rem; }
+@media (max-width: 500px) {
+  .paste-workspace th, .paste-workspace td { padding: .45rem; font-size: .82rem; }
+  .paste-workspace .paste-scroll { max-height: 23rem; }
+}
