@@ -69,6 +69,12 @@
 
 :where(.mero-scope) { display: contents; }
 
+/* Text for screen readers only, such as the object of a short button label or what a count counts. */
+:where(.mero-sr-only) {
+  position: absolute; inline-size: 1px; block-size: 1px; margin: -1px; padding: 0; border: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
 :where([data-mero-combo-status]:not([data-mero-error])) {
   position: absolute;
   inline-size: 1px;
@@ -212,6 +218,12 @@
 :where(.mero-field-error, .mero-error-message) { color: var(--mero-danger); }
 :where(.mero-fieldset) { min-inline-size: 0; margin: 0; padding: .85rem; border: 1px solid var(--mero-line); border-radius: var(--mero-radius); }
 :where(.mero-fieldset legend) { padding-inline: .3rem; }
+/* Form grid: two field columns that stack below 768 px or in a container narrower than two fields. mero-field-wide spans the row. */
+:where(.mero-form-grid) { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, max(14rem, calc(50% - .5rem))), 1fr)); align-items: start; gap: .9rem 1rem; }
+:where(.mero-form-grid > .mero-field-wide) { grid-column: 1 / -1; }
+@media (width < 48rem) {
+  :where(.mero-form-grid) { grid-template-columns: minmax(0, 1fr); }
+}
 :where(.mero-date-range) { box-sizing: border-box; inline-size: min(100%, 22rem); }
 :where(.mero-date-range-fields) {
   display: grid;
@@ -344,7 +356,7 @@
 :where(.mero-card, .mero-section, .mero-surface) {
   --mero-panel-bg: var(--mero-surface);
   box-sizing: border-box;
-  padding: 1.06rem;
+  padding: var(--mero-panel-padding, 1.06rem);
   border: 1px solid var(--mero-line);
   border-radius: var(--mero-radius-panel);
   background: var(--mero-panel-bg);
@@ -354,7 +366,21 @@
 :where(.mero-card-title) { margin: 0; font-size: 1.05rem; font-weight: 650; }
 :where(.mero-card-description) { margin: .35rem 0 0; color: var(--mero-muted); }
 :where(.mero-card-header, .mero-card-footer) { display: flex; align-items: center; gap: .65rem; }
-:where(.mero-card-header) { margin-block-end: .7rem; }
+:where(.mero-card-header) { flex-wrap: wrap; margin-block-end: .7rem; }
+/* Header actions sit at the end of the header row and wrap under the title when it runs out of room. */
+:where(.mero-card-actions) { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-inline-start: auto; }
+/* A flush body reaches the card's edges, for a table that brings its own cell padding. */
+:where(.mero-card-flush) { margin-inline: calc(-1 * var(--mero-panel-padding, 1.06rem)); }
+:where(.mero-card-flush:last-child) {
+  margin-block-end: calc(-1 * var(--mero-panel-padding, 1.06rem));
+  border-end-start-radius: inherit; border-end-end-radius: inherit; overflow: clip;
+}
+@media (width < 48rem) {
+  :where(.mero-card-flush:has(> .mero-table-cards)) { margin: 0; overflow: visible; }
+}
+@media (width < 64rem) {
+  :where(.mero-card-flush:has(> .mero-table-cards-wide)) { margin: 0; overflow: visible; }
+}
 :where(.mero-card-footer) { margin-block-start: .8rem; }
 :where(.mero-separator) { align-self: stretch; margin: .75rem 0; border: 0; border-block-start: 1px solid var(--mero-line); }
 :where(.mero-stack > .mero-separator) { margin: 0; }
@@ -398,6 +424,20 @@
 }
 :where(.mero-alert-title) { font-weight: 650; }
 :where(.mero-alert p) { margin: 0; }
+
+/* Description list: one div per term and value. Below 768 px each label sits above its value. */
+:where(.mero-description-list) { display: grid; margin: 0; color: var(--mero-text); font: 400 .875rem/1.5 var(--mero-font); }
+:where(.mero-description-list > div) {
+  display: grid; grid-template-columns: minmax(7rem, 1fr) minmax(0, 2fr); align-items: baseline; gap: .15rem 1rem;
+  padding-block: .55rem; border-block-end: 1px solid var(--mero-line);
+}
+:where(.mero-description-list > div:last-child) { border-block-end: 0; }
+:where(.mero-description-list dt) { color: var(--mero-muted); }
+:where(.mero-description-list dd) { min-inline-size: 0; margin: 0; overflow-wrap: anywhere; }
+:where(.mero-description-list dd code) { font: 500 .8rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+@media (width < 48rem) {
+  :where(.mero-description-list > div) { grid-template-columns: minmax(0, 1fr); }
+}
 
 :where(.mero-live) { inline-size: min(100%, 22rem); }
 :where(.mero-live-status) { margin-block-start: .75rem; }
@@ -451,6 +491,21 @@
   background: linear-gradient(105deg, var(--mero-line) 30%, var(--mero-hover) 50%, var(--mero-line) 70%) 100% 0 / 250% 100%;
   animation: mero-shimmer 2.2s ease-in-out infinite;
 }
+/* Empty state: an optional glyph, a heading or strong title, a description and an optional action. */
+:where(.mero-empty-state) { padding: 1.1rem; text-align: center; color: var(--mero-text); }
+:where(.mero-empty-state) :where(h2, h3, h4, strong, p) { display: block; margin: .3rem 0 0; }
+:where(.mero-empty-state) :where(h2, h3, h4) { font-size: 1rem; font-weight: 650; line-height: 1.35; }
+:where(.mero-empty-state p) { color: var(--mero-muted); font-size: .79rem; }
+:where(.mero-empty-state > :is(.mero-button, .mero-row)) { margin-block-start: .85rem; }
+:where(.mero-empty-state > .mero-row) { justify-content: center; }
+:where(.mero-empty-glyph) { position: relative; display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: var(--mero-radius); background: var(--mero-raised); font: 1.6rem/1 system-ui; }
+:where(.mero-empty-glyph)::before { content: ""; box-sizing: border-box; width: .85rem; height: .85rem; border: 1.5px solid currentColor; border-radius: 50%; transform: translate(-.09rem, -.09rem); }
+:where(.mero-empty-glyph)::after { content: ""; position: absolute; width: .45rem; height: 1.5px; border-radius: 1px; background: currentColor; transform: translate(.35rem, .35rem) rotate(45deg); }
+@media (forced-colors: active) {
+  :where(.mero-empty-glyph) { border: 1px solid CanvasText; }
+  :where(.mero-empty-glyph)::after { forced-color-adjust: none; background: CanvasText; }
+}
+
 @keyframes mero-spin { to { transform: rotate(360deg); } }
 @keyframes mero-shimmer { 50%, 100% { background-position: 0 0; } }
 
@@ -462,7 +517,8 @@
   text-align: start;
   font: 400 .84rem/1.45 var(--mero-font);
 }
-:where(.mero-table-wrap) { max-inline-size: 100%; overflow-x: auto; }
+/* position: relative keeps absolutely positioned content, such as visually hidden text in a cell, inside the scroller instead of widening the page. */
+:where(.mero-table-wrap) { position: relative; max-inline-size: 100%; overflow-x: auto; }
 :where(.mero-table caption) { padding-block-end: .6rem; color: var(--mero-muted); text-align: start; }
 :where(.mero-table th, .mero-table td) { padding: .6rem .75rem; border-block-end: 1px solid var(--mero-line); text-align: start; white-space: nowrap; }
 :where(.mero-table th) { background: var(--mero-raised); color: var(--mero-muted); font-size: .76rem; font-weight: 600; }
@@ -475,6 +531,10 @@
 :where(.mero-table th a) { display: inline-flex; gap: .25rem; color: inherit; text-decoration: none; }
 :where(.mero-table th a):hover { color: var(--mero-text); }
 :where(.mero-table-compact) :where(th, td) { padding: .35rem .6rem; }
+:where(.mero-table .mero-table-num) { text-align: end; font-variant-numeric: tabular-nums; }
+:where(.mero-card-flush .mero-table :is(th, td):first-child, .mero-card-flush .mero-table caption) { padding-inline-start: var(--mero-panel-padding, 1.06rem); }
+:where(.mero-card-flush .mero-table :is(th, td):last-child) { padding-inline-end: var(--mero-panel-padding, 1.06rem); }
+:where(.mero-card-flush .mero-table th) { border-radius: 0; }
 /* One real link per row; its ::after covers the row while other controls sit above it. */
 :where(.mero-table tr:has(.mero-row-link)) { position: relative; cursor: pointer; }
 :where(.mero-row-link) { color: inherit; text-decoration: none; }
@@ -518,6 +578,8 @@
   :where(.mero-table td[colspan]) { display: block; }
   :where(.mero-table [data-mero-cell-label]) { display: inline; color: var(--mero-muted); font-size: .76rem; }
   :where(.mero-table .mero-row-link) { font-weight: 600; }
+  :where(.mero-table [data-mero-card-hidden]) { display: none; }
+  :where(.mero-table .mero-table-num) { text-align: start; }
 }
 
 /* Row peek. mero.js adds .mero-peek as the last child of [data-mero-peek] while a preview is open. */
@@ -584,6 +646,18 @@
 :where(.mero-breadcrumbs li + li)::before { content: "/"; margin-inline-end: .52rem; color: var(--mero-muted); }
 :where(.mero-pagination [aria-current="page"]) { background: var(--mero-accent); color: var(--mero-accent-ink); }
 
+/* Page header: optional breadcrumbs, the heading block, then actions at the end. Below 768 px the actions wrap under the heading. */
+:where(.mero-page-head) { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: .75rem; margin-block-end: 1.5rem; }
+:where(.mero-page-head) :where(h1, h2) { margin: 0; font-size: clamp(1.55rem, 3vw, 2.15rem); line-height: 1.12; letter-spacing: -.05em; overflow-wrap: anywhere; }
+:where(.mero-page-head) :where(p) { margin: .35rem 0 0; color: var(--mero-muted); font-size: .9rem; }
+:where(.mero-page-head > .mero-breadcrumbs) { flex-basis: 100%; margin-block-end: -.25rem; font-size: .84rem; }
+:where(.mero-page-head > :not(.mero-breadcrumbs, .mero-page-head-actions)) { flex: 1 1 16rem; min-inline-size: 0; }
+:where(.mero-page-head-title) { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .65rem; }
+:where(.mero-page-head-actions) { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+@media (width < 48rem) {
+  :where(.mero-page-head-actions) { flex-basis: 100%; }
+}
+
 :where(.mero-tabs-list, .mero-tabs > [role="tablist"]) {
   display: inline-flex;
   max-inline-size: 100%;
@@ -621,6 +695,18 @@
 :where(.mero-tabs-vertical > [role="tablist"]) { flex-direction: column; align-items: stretch; }
 :where(.mero-tabs-vertical .mero-tab) { text-align: start; }
 :where(.mero-tabs-vertical > [role="tabpanel"]:not([hidden])) { margin-block-start: 0; padding-block-start: .55rem; }
+/* Link tabs: nav.mero-tabs-list > a.mero-tab, with aria-current=page on the current view. */
+:where(nav.mero-tabs-list) { flex-wrap: wrap; }
+:where(a.mero-tab) { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; box-sizing: border-box; text-decoration: none; }
+:where(.mero-tab)[aria-current="page"] { background: var(--mero-surface); color: var(--mero-text); box-shadow: inset 0 0 0 1px var(--mero-line), 0 1px 3px #14192324; }
+:where(.mero-tab-count) {
+  min-inline-size: 1.25rem; box-sizing: border-box; padding: 0 .35rem; border-radius: 99rem;
+  background: var(--mero-hover); color: var(--mero-muted); font: 600 .7rem/1.45 var(--mero-font); font-variant-numeric: tabular-nums; text-align: center;
+}
+:where(.mero-tab[aria-current="page"] .mero-tab-count) { color: var(--mero-text); }
+@media (forced-colors: active) {
+  :where(.mero-tab)[aria-current="page"], :where(.mero-tab)[aria-selected="true"] { outline: 2px solid Highlight; outline-offset: -2px; }
+}
 
 :where(.mero-setting-switch) {
   display: flex;
@@ -707,6 +793,14 @@
   border-end-start-radius: var(--mero-radius-panel);
 }
 :where(.mero-drawer:dir(rtl)) { --mero-offset-x: -100%; }
+/* Start-edge drawer, such as app navigation on small screens. It opens from the left, or the right in RTL. */
+:where(.mero-dialog.mero-drawer.mero-drawer-start) {
+  --mero-offset-x: -100%;
+  inset-inline-start: 0; inset-inline-end: auto;
+  border-start-start-radius: 0; border-end-start-radius: 0;
+  border-start-end-radius: var(--mero-radius-panel); border-end-end-radius: var(--mero-radius-panel);
+}
+:where(.mero-drawer-start:dir(rtl)) { --mero-offset-x: 100%; }
 :where(.mero-drawer .mero-dialog-body) { padding: 1.5rem; }
 :where(.mero-dialog.mero-sheet) {
   --mero-offset-y: 100%;
@@ -815,6 +909,11 @@
 :where([data-mero-listbox] > [role="option"]) { flex-wrap: nowrap; }
 :where([data-mero-listbox] > [aria-selected="true"]) { background: color-mix(in srgb, var(--mero-accent) 9%, var(--mero-surface)); }
 :where([data-mero-listbox] > [aria-selected="true"], .mero-menu-item[aria-checked="true"])::after { content: ""; flex: none; inline-size: .6rem; block-size: .32rem; margin-inline-start: auto; margin-inline-end: .16rem; border-left: 1.5px solid; border-bottom: 1.5px solid; transform: translateY(-.08rem) rotate(-45deg); }
+/* A menu group named by its visible heading: role=group aria-labelledby the heading, which is aria-hidden so it is not read twice. */
+:where(.mero-menu [role="group"]:first-child > .mero-menu-heading) { padding-block-start: .2rem; }
+:where(.mero-menu > .mero-separator) { margin: .3rem .1rem; }
+:where(.mero-menu-item-danger) { color: var(--mero-danger); }
+:where(.mero-menu-item-danger:hover, .mero-menu-item-danger:focus) { background: color-mix(in srgb, var(--mero-danger) 12%, var(--mero-surface)); }
 :where(.mero-combo) { position: relative; inline-size: 100%; }
 :where(.mero-combo-list:not([hidden])) {
   position: absolute;
@@ -826,7 +925,7 @@
 /* Command results accept keyboard input immediately, including during entry. */
 :where(.mero-command) { --mero-enter-opacity: 1; inline-size: min(36rem, calc(100% - 2rem)); margin-block-start: 12vh; padding: .5rem; }
 :where(.mero-command .mero-combo-list:not([hidden])) { position: static; max-block-size: min(50vh, 24rem); margin-block-start: .35rem; box-shadow: none; }
-:where(.mero-command-heading) { margin: 0; padding: .55rem .56rem .15rem; color: var(--mero-muted); font-size: .78rem; font-weight: 600; }
+:where(.mero-command-heading, .mero-menu-heading) { margin: 0; padding: .55rem .56rem .15rem; color: var(--mero-muted); font-size: .78rem; font-weight: 600; }
 :where(.mero-command [role="group"] + [role="group"]) { margin-block-start: .3rem; border-block-start: 1px solid var(--mero-line); }
 :where(.mero-option small) { margin-inline-start: auto; color: var(--mero-muted); }
 :where(.mero-scroll-shadow) {

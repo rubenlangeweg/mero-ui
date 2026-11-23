@@ -13,5 +13,11 @@ export const groups = [
           <li>v1.3.0 • Initial catalog</li>
         </ul>
       </div>`),
+    item("visually-hidden", "Visually Hidden", "Give screen readers context that the visible text leaves implied.", `
+      <div class="mero-row">
+        <button class="mero-button mero-button-outline mero-button-sm" type="button" data-mero-toast="Release ID copied">Copy<span class="mero-sr-only"> release ID</span></button>
+        <span class="mero-badge mero-badge-warning">3<span class="mero-sr-only"> environments need attention</span></span>
+      </div>`,
+      "Put the hidden words inside the element they describe, with a leading space, so the accessible name reads as one phrase: Copy release ID. The text stays in the accessibility tree and in copied text, takes no space and never widens a scrolling container. Don't hide focusable elements this way."),
   ]),
 ]
