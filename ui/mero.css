@@ -212,6 +212,12 @@
 :where(.mero-field-error, .mero-error-message) { color: var(--mero-danger); }
 :where(.mero-fieldset) { min-inline-size: 0; margin: 0; padding: .85rem; border: 1px solid var(--mero-line); border-radius: var(--mero-radius); }
 :where(.mero-fieldset legend) { padding-inline: .3rem; }
+/* Form grid: two field columns that stack below 768 px or in a container narrower than two fields. mero-field-wide spans the row. */
+:where(.mero-form-grid) { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, max(14rem, calc(50% - .5rem))), 1fr)); align-items: start; gap: .9rem 1rem; }
+:where(.mero-form-grid > .mero-field-wide) { grid-column: 1 / -1; }
+@media (width < 48rem) {
+  :where(.mero-form-grid) { grid-template-columns: minmax(0, 1fr); }
+}
 :where(.mero-date-range) { box-sizing: border-box; inline-size: min(100%, 22rem); }
 :where(.mero-date-range-fields) {
   display: grid;
