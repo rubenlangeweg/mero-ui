@@ -834,6 +834,77 @@
     }
   });
 
+  // data-mero-boost="#main" on a boosted container: the newest boosted GET wins, a response without the
+  // region (and without an htmx redirect header) or a failed GET becomes a full page load, open
+  // non-static dialogs such as a navigation drawer close, and focus moves to the new region.
+  const boostRequests = new Set();
+  const supersededBoosts = new WeakSet();
+  const boostFocus = new WeakMap();
+  const unswappedBoosts = new WeakSet();
+  const boostRegion = ctx => ctx.request?.headers?.["HX-Boosted"] && ctx.sourceElement?.closest?.("[data-mero-boost]")?.getAttribute("data-mero-boost");
+  const isGet = ctx => ctx.request.method.toUpperCase() === "GET";
+
+  document.addEventListener("htmx:before:request", event => {
+    const { ctx } = event.detail;
+    if (event.defaultPrevented || !boostRegion(ctx)) return;
+    boostFocus.set(ctx, document.activeElement);
+    if (!isGet(ctx)) return;
+    // Only navigations are aborted, never a boosted form that changes data.
+    for (const older of boostRequests) {
+      supersededBoosts.add(older);
+      older.request.abort();
+    }
+    boostRequests.clear();
+    boostRequests.add(ctx);
+  });
+
+  document.addEventListener("htmx:before:swap", event => {
+    const { ctx } = event.detail;
+    const selector = boostRegion(ctx);
+    if (!selector || event.defaultPrevented) return;
+    if (supersededBoosts.has(ctx)) {
+      unswappedBoosts.add(ctx);
+      return event.preventDefault();
+    }
+    const page = document.createElement("template");
+    page.innerHTML = ctx.text ?? "";
+    let found;
+    try { found = page.content.querySelector(selector); } catch {}
+    if (!found) {
+      // A login page, an error page from a proxy or any other document: let the browser show it.
+      event.preventDefault();
+      unswappedBoosts.add(ctx);
+      location.assign(ctx.response?.raw?.url || ctx.request.action);
+      return;
+    }
+    const open = [...document.querySelectorAll("dialog[open]:not([data-mero-static], [role='alertdialog'])")];
+    // Closing a dialog moves focus to its opener; that move is Mero's, not the person's.
+    if (open.some(dialog => dialog.contains(boostFocus.get(ctx)))) boostFocus.set(ctx, null);
+    for (const dialog of open) close(dialog);
+  });
+
+  document.addEventListener("htmx:finally:request", event => {
+    const { ctx } = event.detail;
+    if (!boostRequests.delete(ctx) || supersededBoosts.has(ctx)) return;
+    // No response and not cancelled before sending: the network failed or timed out.
+    if (!ctx.response && String(ctx.status).startsWith("error") && isGet(ctx)) location.assign(ctx.request.action);
+  });
+
+  // After htmx's [autofocus]. Focus that the person moved during the load stays where they put it.
+  document.addEventListener("htmx:finally:swap", event => {
+    const { ctx } = event.detail;
+    const selector = boostRegion(ctx);
+    const before = boostFocus.get(ctx);
+    boostFocus.delete(ctx);
+    if (!selector || unswappedBoosts.has(ctx)) return;
+    const region = document.querySelector(selector);
+    const active = document.activeElement;
+    // null: focus was in a dialog Mero closed, so wherever the browser put it is not the person's choice.
+    if (!region || region.contains(active) || (before !== null && active && active !== document.body && active !== before && active.isConnected)) return;
+    if (!region.hasAttribute("tabindex")) region.tabIndex = -1;
+    region.focus({ preventScroll: true });
+  });
+
   // Focus continuity: when a swap or morph removes the focused element, focus would fall to <body>.
   // Mero puts it back on the same element, else the element with its ID, else the swapped region's
   // [data-mero-focus-fallback]. It only acts when focus was inside a swap target as the swap began and
