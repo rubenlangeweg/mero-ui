@@ -4,7 +4,7 @@ import { groups as buttons } from "./core/buttons.mjs"
 import { groups as forms } from "./core/forms.mjs"
 import { groups as dateTime, calendarMarkup } from "./core/date-time.mjs"
 import { groups as navigation, pageLinks } from "./core/navigation.mjs"
-import { groups as overlays, commandResults } from "./core/overlays.mjs"
+import { groups as overlays, commandResults, boostPage } from "./core/overlays.mjs"
 import { groups as collections } from "./core/collections.mjs"
 import { groups as controls } from "./core/controls.mjs"
 import { groups as feedback } from "./core/feedback.mjs"
@@ -28,6 +28,7 @@ export function catalogFragment(id, params) {
       ? `<p class="mero-alert mero-alert-success">Welcome, ${escapeHtml(name)}. Your form reached the server.</p>`
       : '<p class="mero-alert mero-alert-danger">Enter your name and try again.</p>'
   }
+  if (id === "boost-page") return boostPage(params.get("page"))
   if (id === "calendar") return calendarMarkup(params)
   if (id === "pagination") {
     const value = Number(params.get("page"))
