@@ -18,8 +18,7 @@ export const faviconLinks = `<link rel="icon" href="/favicon.ico" sizes="16x16 3
   <link rel="icon" href="/mero-mark.svg" type="image/svg+xml" sizes="any">`;
 
 const brand = `<a class="site-brand" href="/" aria-label="Mero UI home">
-  <img src="/mero-mark.svg" alt="" width="32" height="32">
-  <span>Mero<span class="brand-suffix"> UI</span></span>
+  <img src="/mero-wordmark.svg" alt="" width="102" height="32">
 </a>`;
 
 const footerGroups = [
