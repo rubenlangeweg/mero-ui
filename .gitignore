@@ -5,6 +5,7 @@ visual-review/
 *.tgz
 .env*
 dist/
+/agent-docs/
 .cloudflare/
 .wrangler/
 .dev.vars*

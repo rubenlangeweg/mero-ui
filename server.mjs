@@ -33,11 +33,12 @@ import {
 } from "./site/studio.mjs";
 import { studioUrl } from "./site/studio-links.mjs";
 import { startGuide } from "./site/start-guide.mjs";
+import { agentDocument } from "./site/agent-docs.mjs";
 import { referencePage } from "./site/reference.mjs";
 
 export const sourceArchiveEntries = [
   "LICENSE", ".gitignore", "README.md", "package.json", "package-lock.json", "server.mjs", "site", "ui", "public", "examples",
-  "test", "scripts", "docs", "worker.mjs", "vite.config.mjs", "cloudflare.config.ts",
+  "test", "scripts", "skills", "docs", "worker.mjs", "vite.config.mjs", "cloudflare.config.ts",
 ];
 // The files the npm package ships live in ui/. Site-only files stay in public/.
 const libraryAsset = /^(?:mero[a-z-]*\.(?:css|js)|insight-[a-z-]+\.mjs|studio-lamp\.webp)$/;
@@ -110,6 +111,13 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
 
   function robots({ response, origin }) {
     return send(response, robotsTxt(origin), { type: types[".txt"] });
+  }
+
+  function agentDocs({ pathname, response }) {
+    const body = agentDocument(pathname.slice(1));
+    if (body === undefined) return false;
+    const type = pathname.endsWith(".md") ? "text/markdown; charset=utf-8" : types[".txt"];
+    return send(response, body, { type, headers: { "X-Robots-Tag": "noindex" } });
   }
 
   function sitemap({ response, origin }) {
@@ -331,6 +339,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
   // A path is an exact string or a pattern. "*" matches every method: those handlers answer 405 themselves.
   // HEAD is answered by the GET routes.
   const routes = [
+    ["GET", /^\/(?:llms(?:-full|-components|-patterns)?\.txt|components\/[a-z0-9-]+\.md)$/, agentDocs],
     ["GET", "/robots.txt", robots],
     ["GET", "/sitemap.xml", sitemap],
     ...Array.from(infoPages.keys(), path => ["GET", path, infoPage]),
