@@ -319,6 +319,19 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     return send(response, "", { status, headers });
   }
 
+  async function formOutcomeDemo({ request, response }) {
+    const params = await formBody(request);
+    if (!params) return send(response, "Form is too large.", { status: 413 });
+    const responses = {
+      succeeded: [200, '<p class="mero-alert mero-alert-success" data-rotated-key>New key <code>mk_live_4c1e…9a07</code> is active.</p>'],
+      rejected: [403, "", { "Mero-Action-Message": "Your password did not match. Nothing changed." }],
+      unknown: [504],
+      incomplete: [200, '<p class="mero-alert">Rotation queued.</p>'],
+    };
+    const [status, body = "", headers] = responses[params.get("outcome")] ?? [400];
+    return send(response, body, { status, headers });
+  }
+
   function demoNotFound({ response }) {
     return send(response, "Demo route not found.", { status: 404 });
   }
@@ -373,6 +386,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     ["GET", /^\/demo\/catalog\//, catalogDemo],
     ["POST", "/demo/settings", saveSettings],
     ["POST", "/demo/catalog/action-button", actionDemo],
+    ["POST", "/demo/catalog/form-outcome", formOutcomeDemo],
     ["POST", "/demo/catalog/typed-confirmation", typedConfirmationDemo],
     ["*", /^\/demo\//, demoNotFound],
     ...(serveFiles ? [["GET", /^\/(?:fonts\/|vendor\/)?[a-z0-9.-]+$/i, staticAsset]] : []),

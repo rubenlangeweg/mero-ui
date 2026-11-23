@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Form outcomes:** `data-mero-form` reports `succeeded`, `rejected` or `unknown` like the Action Button. The submit button gets `data-mero-action-state`, the form fires `mero:action`, and `Mero-Action-Outcome` and `Mero-Action-Message` override the state and the text. A `mero:form-saved` trigger now acts only on a succeeded outcome, so an error or unknown response can never close the dialog or announce a save. The Form has an Action outcome variant.
+- **Outcome safety:** `data-mero-action-expect="selector"` turns a 2xx response without the expected content into `unknown` and skips its swap. `data-mero-action-unknown` sets the text for an unknown outcome or reveals a recovery panel. A request aborted after it was sent always reports `unknown`; only a request cancelled before it was sent clears the state. `data-mero-clear-passwords` empties a form's password fields after every response.
+
 ## 0.7.0 · 23 November 2026
 
 - Try six HTMX 4 workflows in the playground. Review price changes with keyboard approval and undo, correct a spreadsheet before import, assign records from the command menu, publish across pages, share saved views and move cards together on a live board. [Open the workflows](https://mero-ui.rubenlangeweg.com/premium) · [Watch the seven captioned walkthroughs](https://mero-ui.rubenlangeweg.com/premium/watch)

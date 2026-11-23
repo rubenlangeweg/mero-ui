@@ -49,6 +49,41 @@ export const groups = [
         <div class="mero-form-status" id="catalog-form-result" role="status"></div>
       </form>`,
       "This demo uses a read-only GET. Use POST for changes and keep validation on the server.", [
+        ["Action outcome", `
+          <form class="mero-stack" method="post" action="/demo/catalog/form-outcome" hx-post="/demo/catalog/form-outcome"
+            hx-target="#rotate-key-result" hx-headers='{"Idempotency-Key":"rotate-demo-7f3a"}'
+            data-mero-form data-mero-clear-passwords data-mero-action-expect="[data-rotated-key]" data-mero-action-unknown="#rotate-key-unknown">
+            <div class="mero-field">
+              <label class="mero-label" for="rotate-key-outcome">Simulated server response</label>
+              <select class="mero-select" id="rotate-key-outcome" name="outcome">
+                <option value="succeeded">Key rotated</option>
+                <option value="rejected">Refused: wrong password</option>
+                <option value="unknown">Gateway timeout</option>
+                <option value="incomplete">200 without the new key</option>
+              </select>
+            </div>
+            <div class="mero-field">
+              <label class="mero-label" for="rotate-key-password">Your password</label>
+              <input class="mero-input" id="rotate-key-password" name="password" type="password" autocomplete="current-password" required>
+            </div>
+            <p class="mero-field-error" data-mero-form-error role="alert" hidden></p>
+            <div id="rotate-key-unknown" hidden>
+              <div class="mero-alert mero-alert-warning">
+                <strong class="mero-alert-title">The key may have rotated</strong>
+                <p>Check the key list before you try again. A retry sends the same request ID, so the server will not rotate twice.</p>
+              </div>
+            </div>
+            <div class="mero-row">
+              <button class="mero-button mero-button-primary" type="submit">
+                <span class="mero-button-label">Rotate signing key</span>
+                <span class="mero-indicator mero-spinner" aria-hidden="true"></span>
+              </button>
+            </div>
+            <div class="mero-form-status" id="rotate-key-result" role="status"></div>
+          </form>`, {
+          description: "Rotate a key and report whether it succeeded, was refused or has an unknown result.",
+          notes: "The submit button gets data-mero-action-state. A 2xx response must contain data-mero-action-expect, otherwise the outcome is unknown and nothing is swapped. An unknown outcome reveals the data-mero-action-unknown panel and never closes the dialog or shows success, including a request aborted after it was sent. data-mero-clear-passwords empties password fields after every response. A retry resubmits the same form, so keep the idempotency key in the markup.",
+        }],
       ["Two columns", `
       <form class="mero-form" action="/demo/catalog/form" method="get" style="inline-size:min(100%,40rem)"
         hx-get="/demo/catalog/form" hx-target="#catalog-form-grid-result" hx-swap="innerHTML">

@@ -3,18 +3,55 @@
  * Optional HTMX form behavior. Server responses:
  * 422 + replacement form for validation, or HX-Trigger:
  * {"mero:form-saved":{"message":"Saved"}}, which htmx 4 fires after the swap settles.
- * Standalone [data-mero-action] buttons get data-mero-action-state
- * pending|succeeded|rejected|unknown: 2xx succeeded, 4xx (not 408) rejected,
- * anything else unknown. Mero-Action-Outcome and Mero-Action-Message headers
+ * Standalone [data-mero-action] buttons, and the submitter of a data-mero-form,
+ * get data-mero-action-state pending|succeeded|rejected|unknown: 2xx succeeded,
+ * 4xx (not 408) rejected, anything else unknown, including a request aborted
+ * after it was sent. Mero-Action-Outcome and Mero-Action-Message headers
  * override the state and text; a bubbling mero:action event reports each step.
+ * data-mero-action-expect turns a success without the expected content into unknown.
  */
 (() => {
   const formSelector = "form[data-mero-form]";
   const confirmSelector = "form[data-mero-form][data-mero-confirm]";
   const requesting = new WeakMap();
   const formRequests = new WeakMap();
+  // A swap can detach the button before finally:request, so the request remembers its button and status.
+  const actionRequests = new WeakMap();
   // htmx 4 also reports requests a before:request listener cancelled: no response, still "issuing".
+  // Once fetch has started, an abort (hx-sync, htmx:abort, timeout) lands in htmx's catch as "error: AbortError…",
+  // so a request that may have reached the server never counts as cancelled.
   const cancelled = ctx => !ctx.response && !String(ctx.status).startsWith("error");
+  const outcomes = ["succeeded", "rejected", "unknown"];
+  // A knob on the submitter wins over the same knob on its form.
+  const knob = (owners, name) => owners.find(owner => owner?.hasAttribute(name))?.getAttribute(name) ?? null;
+
+  // Outcome of a request that was sent. The client-side expect check can only lower success to unknown,
+  // and then the server's success message is not shown.
+  function serverOutcome(ctx) {
+    const status = ctx.response?.status ?? 0;
+    const header = ctx.response?.headers.get("Mero-Action-Outcome");
+    return outcomes.includes(header) ? header
+      : status >= 200 && status < 300 ? "succeeded"
+      : status >= 400 && status < 500 && status !== 408 ? "rejected" : "unknown";
+  }
+  function outcomeOf(ctx, owners) {
+    const state = serverOutcome(ctx);
+    const expect = knob(owners, "data-mero-action-expect");
+    if (state !== "succeeded" || !expect) return state;
+    const template = document.createElement("template");
+    template.innerHTML = ctx.text ?? "";
+    try { return template.content.querySelector(expect) ? state : "unknown"; } catch { return "unknown"; }
+  }
+
+  // data-mero-action-unknown is either the text to show or "#id" of a hidden recovery panel to reveal.
+  function unknownPanel(owners) {
+    const value = knob(owners, "data-mero-action-unknown");
+    return value?.startsWith("#") ? document.getElementById(value.slice(1)) : null;
+  }
+  function unknownText(owners) {
+    const value = knob(owners, "data-mero-action-unknown");
+    return value && !value.startsWith("#") ? value : null;
+  }
 
   function requestForm(event) {
     const source = event.detail.ctx?.sourceElement;
@@ -74,17 +111,47 @@
       event.preventDefault();
       return;
     }
-    formRequests.set(event.detail.ctx, form);
+    const { ctx } = event.detail;
+    formRequests.set(ctx, form);
     const buttons = [...form.elements].filter(control => !control.disabled && (control.type === "submit" || control.type === "image"));
-    requesting.set(form, { buttons, ctx: event.detail.ctx });
+    const submitter = ctx.request.submitter?.form === form ? ctx.request.submitter : null;
+    requesting.set(form, { buttons, ctx, owners: [submitter, form] });
     form.setAttribute("aria-busy", "true");
     buttons.forEach((button) => { button.disabled = true; });
     const error = form.querySelector("[data-mero-form-error]");
     if (error) error.hidden = true;
+    const panel = unknownPanel([submitter, form]);
+    if (panel) panel.hidden = true;
+    (submitter ?? form).dataset.meroActionState = "pending";
+    form.dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state: "pending" } }));
+  });
+
+  // Decide before htmx applies HX-Trigger: a response that is not a confirmed
+  // success must never close the dialog or announce "saved".
+  document.addEventListener("htmx:after:request", (event) => {
+    const { ctx } = event.detail;
+    const form = formRequests.get(ctx);
+    if (!form || !ctx.hx?.trigger) return;
+    if (outcomeOf(ctx, requesting.get(form)?.owners ?? [form]) === "succeeded") return;
+    try {
+      const triggers = JSON.parse(ctx.hx.trigger);
+      delete triggers["mero:form-saved"];
+      ctx.hx.trigger = JSON.stringify(triggers);
+    } catch {
+      ctx.hx.trigger = ctx.hx.trigger.split(",").map(name => name.trim()).filter(name => name !== "mero:form-saved").join(", ");
+    }
   });
 
   document.addEventListener("htmx:before:swap", (event) => {
-    const status = event.detail.ctx.response?.status;
+    const { ctx } = event.detail;
+    const form = formRequests.get(ctx);
+    const owners = form ? requesting.get(form)?.owners : actionRequests.get(ctx) && [actionRequests.get(ctx).action];
+    // A response that fails its expect check is not the page the server meant to send.
+    if (owners && knob(owners, "data-mero-action-expect") && serverOutcome(ctx) === "succeeded" && outcomeOf(ctx, owners) === "unknown") {
+      event.preventDefault();
+      return;
+    }
+    const status = ctx.response?.status;
     if (!(status >= 400) || !requestForm(event)) return;
     // htmx 4 swaps every error response. Only a 422 carries a replacement form.
     if (status !== 422) event.preventDefault();
@@ -112,27 +179,52 @@
     const form = formRequests.get(ctx);
     // A cancelled duplicate has no entry, so it never releases the request still in flight.
     if (!form) return;
+    const owners = requesting.get(form)?.owners ?? [form];
+    const holder = owners.find(Boolean);
     form.removeAttribute("aria-busy");
     requesting.get(form)?.buttons.forEach((button) => { button.disabled = false; });
     requesting.delete(form);
     const typed = form.matches(confirmSelector);
     if (typed) checkConfirmation(form);
-    if (cancelled(ctx)) return;
-    const status = ctx.response?.status;
-    if (typed) {
-      if (!status || status >= 500 || String(ctx.status).startsWith("error")) {
-        showError(form, "Outcome unknown. Check the current state before retrying.");
-      } else if (status >= 400 && status !== 422) {
-        showError(form, ctx.response.headers.get("Mero-Form-Error") || "The server rejected this action.");
-      }
+    if (cancelled(ctx)) {
+      delete holder.dataset.meroActionState;
       return;
     }
-    const signal = ctx.request.signal;
-    if (!ctx.response && (signal?.reason === "timeout" || !signal?.aborted)) {
-      showError(form, "The server could not be reached. Check whether the change was saved before retrying.");
-    } else if (!ctx.response || (status >= 400 && status !== 422)) {
-      showError(form, ctx.response?.headers.get("Mero-Form-Error") || "The request could not be completed. Check the current state and try again.");
+    // After a 422 swap htmx points the source at the replacement form.
+    const live = form.isConnected ? form : ctx.sourceElement?.matches?.(formSelector) && ctx.sourceElement.isConnected ? ctx.sourceElement : null;
+    if (form.hasAttribute("data-mero-clear-passwords")) {
+      for (const node of new Set([form, live])) {
+        node?.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; });
+      }
     }
+    const state = outcomeOf(ctx, owners);
+    const status = ctx.response?.status ?? 0;
+    const headerMessage = state === serverOutcome(ctx) && ctx.response?.headers.get("Mero-Action-Message") || null;
+    if (holder.isConnected) holder.dataset.meroActionState = state;
+    const explicit = outcomes.includes(ctx.response?.headers.get("Mero-Action-Outcome"));
+    let message = headerMessage;
+    if (state === "succeeded") {
+      if (message) window.MeroUI?.toast(message, { tone: "success", trigger: live ?? undefined });
+    } else if (state === "rejected" && status === 422 && !explicit) {
+      // The replacement form shows its own field errors.
+    } else {
+      if (state === "unknown") {
+        message ||= unknownText(owners);
+        const panel = unknownPanel(owners);
+        if (panel) panel.hidden = false;
+      }
+      message ||= ctx.response?.headers.get("Mero-Form-Error") || null;
+      if (!message) {
+        const signal = ctx.request.signal;
+        message = typed
+          ? (state === "unknown" ? "Outcome unknown. Check the current state before retrying." : "The server rejected this action.")
+          : !ctx.response && (signal?.reason === "timeout" || !signal?.aborted)
+            ? "The server could not be reached. Check whether the change was saved before retrying."
+            : "The request could not be completed. Check the current state and try again.";
+      }
+      if (live) showError(live, message);
+    }
+    (live ?? document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message } }));
   });
 
   document.addEventListener("mero:form-saved", (event) => {
@@ -171,8 +263,6 @@
     if (actionOf(event)?.dataset.meroActionState === "pending") event.preventDefault();
   });
 
-  // A swap can detach the button before finally:request, so the request remembers its button and status.
-  const actionRequests = new WeakMap();
 
   document.addEventListener("htmx:before:request", (event) => {
     const action = actionOf(event);
@@ -183,6 +273,8 @@
     action.setAttribute("aria-busy", "true");
     action.setAttribute("aria-disabled", "true");
     if (output) { output.textContent = ""; delete output.dataset.tone; }
+    const panel = unknownPanel([action]);
+    if (panel) panel.hidden = true;
     action.dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state: "pending" } }));
   });
 
@@ -201,12 +293,14 @@
       return;
     }
     const status = ctx.response?.status ?? 0;
-    const header = ctx.response?.headers.get("Mero-Action-Outcome") ?? null;
-    const state = Object.hasOwn(actionMessages, header) ? header
-      : status >= 200 && status < 300 ? "succeeded"
-      : status >= 400 && status < 500 && status !== 408 ? "rejected" : "unknown";
+    const state = outcomeOf(ctx, [action]);
     const [fallback, tone] = actionMessages[state];
-    const message = ctx.response?.headers.get("Mero-Action-Message") || fallback;
+    const headerMessage = state === serverOutcome(ctx) && ctx.response?.headers.get("Mero-Action-Message");
+    const message = headerMessage || (state === "unknown" && unknownText([action])) || fallback;
+    if (state === "unknown") {
+      const panel = unknownPanel([action]);
+      if (panel) panel.hidden = false;
+    }
     action.removeAttribute("aria-busy");
     action.removeAttribute("aria-disabled");
     action.dataset.meroActionState = state;
