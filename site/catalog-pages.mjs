@@ -1,7 +1,7 @@
 import { components, groups, moduleAssets, catalogGroupId } from "./catalog.mjs";
 import { codePanel, interactiveExample, selectVariant } from "./examples.mjs";
 import { escapeHtml as esc } from "./html.mjs";
-import { assetStyles, assetScripts } from "./shell.mjs";
+import { assetStyles, assetScripts, faviconLinks } from "./shell.mjs";
 
 export function catalogIndex() {
   return `<header class="docs-heading"><h1>Components</h1><p>Explore ${components.size} interactive HTML examples. Open a component to try it, inspect its markup and get the assets.</p></header>
@@ -54,6 +54,7 @@ export function standalonePage(item, search) {
   const theme = search.get("theme");
   return `<!doctype html><html lang="en" data-theme="${theme === "light" || theme === "brand" ? "light" : "dark"}"${theme === "brand" ? " data-tenant-preview" : ""}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="htmx-config" content='{"includeIndicatorCSS":false}'>
+    ${faviconLinks}
     <title>${esc(item.name)} · Mero UI</title>
     <meta name="robots" content="noindex">
     ${assetStyles(["site-fonts.css",...assets, "preview.css"])}

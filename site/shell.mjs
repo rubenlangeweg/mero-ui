@@ -14,8 +14,11 @@ const siteLinks = [
   ['playground', '/playground', 'Playground'],
 ];
 
+export const faviconLinks = `<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+  <link rel="icon" href="/mero-mark.svg" type="image/svg+xml" sizes="any">`;
+
 const brand = `<a class="site-brand" href="/" aria-label="Mero UI home">
-  <span>Mero<span class="brand-suffix"> UI</span></span>
+  <img src="/mero-wordmark.svg" alt="" width="102" height="32">
 </a>`;
 
 const footerGroups = [
@@ -58,6 +61,7 @@ export function embeddedLayout({title, content, assets, mode, tokens}) {
   return `<!doctype html><html lang="en" data-theme="${theme === 'dark' ? 'dark' : 'light'}"${theme === 'brand' ? ' data-tenant-preview' : ''}${style}><head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="htmx-config" content='{"includeIndicatorCSS":false}'>
+    ${faviconLinks}
     <title>${escape(title)} · Mero UI preview</title>
     <meta name="robots" content="noindex">
     ${assetStyles([...new Set(['site-fonts.css','mero.css', ...assets, 'site.css','lab.css', ...(theme === 'brand' ? ['preview.css'] : [])])])}
@@ -71,6 +75,7 @@ export function shell({ title = 'Mero UI', description, path = '/', origin, inde
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  ${faviconLinks}
   <meta name="theme-color" content="#09090a">
   <script>try { if (localStorage.getItem("mero-theme") === "light") document.documentElement.dataset.theme = "light" } catch {}</script>
   <meta name="htmx-config" content='{"includeIndicatorCSS":false}'>

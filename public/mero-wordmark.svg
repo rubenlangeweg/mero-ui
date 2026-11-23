@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="204" height="64" viewBox="0 0 204 64">
+  <title>Mero UI · Flatcut wordmark</title>
+  <style>
+    :root { color: #181819; }
+    @media (prefers-color-scheme: dark) { :root { color: #f5f4f1; } }
+  </style>
+  <g fill="currentColor">
+    <path fill-rule="evenodd" d="M4 54V10h13l13 16h4l13-16h13v44H46V32L36 44h-8L18 32v22z"/>
+    <g transform="translate(62 0)"><path fill-rule="evenodd" d="M38 40H12c1 5 4 7 9 7 4 0 7-1 10-4l6 6c-4 5-10 7-17 7C8 56 1 49 1 38s8-19 19-19c12 0 19 8 19 19v2z M12 33h16c-1-4-4-6-8-6s-7 2-8 6z"/></g>
+    <g transform="translate(103 0)"><path fill-rule="evenodd" d="M2 55V20h10v6c3-5 8-7 15-7v11h-3c-7 0-11 4-11 12v13z"/></g>
+    <g transform="translate(131 0)"><path fill-rule="evenodd" d="M20 19c12 0 20 7 20 18.5S32 56 20 56 0 49 0 37.5 8 19 20 19z M20 28c-5 0-9 3.5-9 9.5s4 9.5 9 9.5 9-3.5 9-9.5-4-9.5-9-9.5z"/></g>
+    <g transform="translate(179 38)"><path fill-rule="evenodd" d="M0 0h3.5v8.6c0 2.8 1.1 4 3.5 4s3.5-1.2 3.5-4V0H14v8.8c0 4.6-2.4 7.2-7 7.2s-7-2.6-7-7.2z M18 0h3.5v16H18z"/></g>
+  </g>
+</svg>
