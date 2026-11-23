@@ -178,6 +178,8 @@ test("mobile catalog navigation closes Browse, supports HTMX across families and
   assert.equal(await menu.isChecked(), true);
   assert.equal(await search.inputValue(), "cell switch");
   await page.getByRole("button", {name:"Clear filters"}).click();
+  // Clearing re-lists every family; click Holo Card only once it is listed again.
+  await nav.getByRole("link", {name:"Holo Card",exact:true}).waitFor();
 
   const release = Promise.withResolvers();
   await page.route("**/components/holo-card", async route => {
