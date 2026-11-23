@@ -1,4 +1,4 @@
-/*! @rubenlangeweg/mero-ui 0.7.0 | MIT */
+/*! @rubenlangeweg/mero-ui 0.8.0 | MIT */
 // Optional polling for a read-only status fragment. htmx owns each GET and swap.
 // With data-mero-live-follow, an error response carrying HX-Redirect, HX-Location or HX-Refresh
 // (such as a 401 after the session expired) is handed to htmx instead of retried.

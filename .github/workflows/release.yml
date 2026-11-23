@@ -31,10 +31,10 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           tarball="rubenlangeweg-mero-ui-$version.tgz"
           {
-            echo "Install the UI assets directly from this release:"
+            echo "Install the UI assets from npm:"
             echo
             echo '```sh'
-            echo "npm install https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/$tarball"
+            echo "npm install @rubenlangeweg/mero-ui@$version"
             echo '```'
             echo
             # The changelog section for this version, without its heading.
@@ -46,3 +46,23 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
         run: npm publish "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz"
+  publish-npm:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Download the release tarball
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --pattern "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz"
+      - name: Publish to npm with provenance
+        run: |
+          npm publish "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz" \
+            --registry=https://registry.npmjs.org --access public --provenance
