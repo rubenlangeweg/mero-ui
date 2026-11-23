@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { pathToFileURL } from "node:url";
+import { createPremiumHandler } from "./examples/premium/server.mjs";
 import { confirmationResponse } from "./site/core/typed-confirmation.mjs";
 import { catalogFragment } from "./site/core-components.mjs";
 import { groups, components, moduleAssets } from "./site/catalog.mjs";
@@ -101,6 +102,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
   const store = createLabStore();
   const studio = createStudio();
   const communication = createCommunicationLayouts();
+  const premium = serveFiles ? createPremiumHandler() : null;
   const settings = { name: "Studio", digest: true };
 
   // Each handler gets { request, response, url, pathname, searchParams, origin, page }.
@@ -348,6 +350,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     ["GET", /^\/(?:components|preview)\//, catalogPage],
     // Cloudflare serves the files itself (scripts/build-assets.mjs), so the worker runs without the file routes.
     ...(serveFiles ? [
+      ["*", /^\/(?:premium(?:\/|$)|premium-assets\/|recordings\/)/, ({ request, response }) => premium(request, response)],
       ["GET", /^\/source\//, sourceFile],
       ["GET", "/downloads/mero-ui.tar.gz", sourceArchive],
     ] : []),

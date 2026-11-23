@@ -23,8 +23,20 @@ function search(step, query, count) {
     <small>${option.team}</small><span aria-hidden="true">${step === "assignee" ? "↵" : "→"}</span></button>`).join("");
 }
 
-export function createFeature() {
-  const records = initialRecords.map(([id, name]) => ({ id, name, owner: "" }));
+async function assignmentParams(req) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > 8192) return null;
+    chunks.push(chunk);
+  }
+  return new URLSearchParams(Buffer.concat(chunks).toString());
+}
+
+export function createFeature(saved) {
+  const assignments = new Map(saved?.assignments);
+  const records = initialRecords.map(([id, name]) => ({ id, name }));
   function table(checked = new Set(), message = "") {
     return `<div class="cmd-toolbar"><div><strong>Catalog inventory</strong><span id="cmd-count" aria-live="polite">${checked.size} selected</span></div>
       <button id="cmd-launch" type="button" class="mero-button mero-button-outline" data-mero-open="cmd-dialog"
@@ -32,7 +44,7 @@ export function createFeature() {
       <table class="mero-table cmd-table"><thead><tr><th scope="col"><input type="checkbox" aria-label="Select all six records" id="cmd-all" ${checked.size === records.length ? "checked" : ""}></th>
         <th scope="col">Product</th><th scope="col">Assignee</th></tr></thead><tbody>${records.map(row => `<tr><td><input type="checkbox" name="record"
          value="${row.id}" aria-label="Select ${row.name}" ${checked.has(row.id) ? "checked" : ""}></td>
-        <th scope="row">${row.name}<small>${row.id}</small></th><td><span class="cmd-owner">${row.owner || "Unassigned"}</span></td></tr>`).join("")}</tbody></table>
+        <th scope="row">${row.name}<small>${row.id}</small></th><td><span class="cmd-owner">${teammates.find(person => person.id === assignments.get(row.id))?.name ?? "Unassigned"}</span></td></tr>`).join("")}</tbody></table>
         <div class="cmd-message" role="status">${message}</div>`;
   }
 
@@ -65,19 +77,23 @@ export function createFeature() {
       return;
     }
     if (url.pathname === prefix + "/assign" && req.method === "POST") {
-      const data = await new Request("http://localhost" + req.url, { method: "POST", headers: req.headers, body: req, duplex: "half" }).formData();
+      const data = await assignmentParams(req);
+      if (!data) {
+        res.writeHead(413).end("The assignment form is too large.");
+        return;
+      }
       const selected = new Set(data.getAll("record"));
       const member = teammates.find(person => person.id === data.get("assignee"));
       if (!member || !selected.size || [...selected].some(id => !records.some(row => row.id === id))) {
         res.writeHead(422).end("Choose existing records and a teammate.");
         return;
       }
-      for (const row of records) if (selected.has(row.id)) row.owner = member.name;
+      for (const id of selected) assignments.set(id, member.id);
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "HX-Trigger": "cmd:assigned" });
       res.end(table(selected, `Assigned ${selected.size} ${plural(selected.size)} to ${member.name}.`));
       return;
     }
     res.writeHead(404).end();
   }
-  return { render, handle };
+  return { render, handle, snapshot: () => ({ assignments: [...assignments] }) };
 }

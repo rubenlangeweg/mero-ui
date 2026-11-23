@@ -80,7 +80,8 @@ export function playgroundPage({ store, settings, params, workflowInstall }) {
   const install = id === "report" ? reportInstall(assets) : workflowInstall(id, assets);
   const body = `<section class="site-wrap pg-page" data-playground="${id}" aria-labelledby="pg-title">
     <header class="pg-heading"><h1 id="pg-title">Playground</h1>
-      <p>Try a workflow and inspect the HTML behind each request.</p></header>
+      <p>Try a workflow and inspect the HTML behind each request.</p>
+      <a class="site-inline-link" href="/premium">Explore six advanced workflows <span aria-hidden="true">→</span></a></header>
     ${workflowNav(id)}
     <div class="pg-workspace">
       <section class="pg-canvas" aria-labelledby="pg-workflow-heading">

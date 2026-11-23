@@ -79,7 +79,7 @@
     reader.dispatchEvent(new Event("board-refresh",{bubbles:true}));
   }
   function connect() {
-    source = new EventSource("/premium/board/events");
+    source = new EventSource(board.dataset.boardEvents);
     source.onopen = () => { connection.textContent = "Live"; connection.dataset.live = ""; };
     source.onerror = () => { connection.textContent = "Reconnecting…"; delete connection.dataset.live; };
     source.onmessage = event => {

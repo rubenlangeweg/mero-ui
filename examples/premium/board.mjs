@@ -17,10 +17,18 @@ function cardMarkup(card) {
   </li>`;
 }
 
-export function createFeature() {
-  const cards = seed.map(([id,title,team,owner,lane]) => ({id,title,team,owner,lane,version:1}));
+export function createFeature(saved) {
+  const savedCards = new Map(saved?.cards?.map(card => [card.id,card]));
+  const cards = seed.map(([id,title,team,owner,lane]) => {
+    const previous = savedCards.get(id);
+    return {id,title,team,owner,lane:previous?.lane ?? lane,version:previous?.version ?? 1};
+  });
   const subscribers = new Set();
-  let revision = 1;
+  let revision = saved?.revision ?? 1;
+
+  function snapshot() {
+    return {cards:cards.map(({id,lane,version}) => ({id,lane,version})), revision};
+  }
 
   function columns() {
     return Object.entries(lanes).map(([key,label]) => {
@@ -33,7 +41,7 @@ export function createFeature() {
   }
 
   function render() {
-    return `<section id="planning-board" data-revision="${revision}" aria-label="Shared planning board">
+    return `<section id="planning-board" data-revision="${revision}" data-board-events="${root}/events" aria-label="Shared planning board">
       <h1 class="board-title">Planning board</h1><div class="board-toolbar"><p>Drag a card or choose its title to move it.</p><div><span id="board-connection" role="status">Connecting…</span> <a href="${root}" target="_blank" rel="noopener">Open second board ↗</a></div></div>
       <div id="board-reader" hx-get="${root}/columns" hx-trigger="board-refresh" hx-target="#board-columns" hx-swap="innerMorph"></div>
       <div class="board-columns" id="board-columns">${columns()}</div>
@@ -88,5 +96,5 @@ export function createFeature() {
     respond(res,200,message);
     for (const client of subscribers) client.write(`data: ${JSON.stringify({revision,message})}\n\n`);
   }
-  return {render,handle};
+  return {render,handle,snapshot};
 }

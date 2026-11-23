@@ -194,9 +194,28 @@ function update(run, action, params) {
   run.message = number(rows.filter(row => isSelected(run, row)).length) + ' products selected.';
 }
 
-export function createFeature() {
-  const runs = new Map();
+const savedRunLimit = 5;
+
+function packRun(run) {
   return {
+    ...run, ids: [...run.ids], failed: [...run.failed], published: [...run.published],
+    unlocked: [...run.unlocked], snapshot: run.snapshot.map(row => row.id),
+  };
+}
+
+function unpackRun(run) {
+  return {
+    ...run, ids: new Set(run.ids), failed: new Set(run.failed), published: new Set(run.published),
+    unlocked: new Set(run.unlocked), snapshot: run.snapshot.map(id => catalog[id - 1]),
+  };
+}
+
+export function createFeature(saved) {
+  const runs = new Map((saved?.runs ?? []).slice(-savedRunLimit).map(run => [run.key, unpackRun(run)]));
+  return {
+    snapshot() {
+      return { runs: [...runs.values()].slice(-savedRunLimit).map(packRun) };
+    },
     render() {
       const run = {
         key: randomUUID(), revision: 0, stage: 'select', category: 'All', page: 1, previewPage: 1,
@@ -223,6 +242,9 @@ export function createFeature() {
       if (params.get('v') === String(run.revision) || sameRowView) {
         update(run, action, params);
         run.revision++;
+        // Map iteration order keeps recently used tabs in the persisted working set.
+        runs.delete(key);
+        runs.set(key, run);
       }
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
       res.end(markup(run));

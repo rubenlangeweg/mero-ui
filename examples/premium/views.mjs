@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { escapeHtml as esc } from "../../site/html.mjs";
 
 const page = "/premium/views";
+const maxViews = 32;
+const maxNameLength = 60;
 const filters = { all: "All stock levels", low: "Low stock (1–9)", empty: "Out of stock", available: "In stock" };
 const sorts = { ascending: "Stock, low to high", descending: "Stock, high to low", name: "Product, A–Z" };
 const columns = { sku: "SKU", quantity: "On hand", price: "Unit price" };
@@ -62,12 +64,19 @@ async function readBody(req) {
   return new URLSearchParams(Buffer.concat(chunks).toString());
 }
 
-export function createFeature() {
+export function createFeature(saved) {
   const views = new Map();
   for (const [id, name, filter, sort, visible] of [
     ["low-stock", "Low stock", "low", "ascending", ["sku", "quantity", "price"]],
     ["all-products", "All products", "all", "name", ["quantity", "price"]],
   ]) views.set(id, { id, name, version: 1, config: { filter, sort, columns: visible } });
+
+  for (const view of saved?.views ?? []) views.set(view.id, structuredClone(view));
+
+  function copyName(view) {
+    const suffix = " copy";
+    return view.name.slice(0, maxNameLength - suffix.length).trimEnd() + suffix;
+  }
 
   function render(url, message = "", draftName = "") {
     const params = url?.searchParams ?? new URLSearchParams();
@@ -100,7 +109,7 @@ export function createFeature() {
         <input type="hidden" name="filter" value="${config.filter}"><input type="hidden" name="sort" value="${config.sort}">${config.columns.map(key => `<input type="hidden" name="column" value="${key}">`).join("")}
         <div class="sv-update"><button class="mero-button mero-button-primary" name="action" value="update" ${dirty ? "" : "disabled"}>Update view</button>${dirty ? `<a class="mero-button" href="${esc(savedLink)}">Reset changes</a>` : ""}</div>
         <div class="sv-duplicate"><label class="mero-label" for="sv-copy-name">New view name</label>
-        <input id="sv-copy-name" class="mero-input" name="name" maxlength="60" placeholder="${esc(view.name)} copy" value="${esc(draftName)}">
+        <input id="sv-copy-name" class="mero-input" name="name" maxlength="${maxNameLength}" placeholder="${esc(copyName(view))}" value="${esc(draftName)}">
         <button class="mero-button" name="action" value="copy">Save a copy</button></div>
       </form>
       <p id="sv-message" role="status" aria-live="polite">${esc(message)}</p>
@@ -131,9 +140,11 @@ export function createFeature() {
           message = "Saved changes to " + view.name + ".";
         } else message = "This view changed in another tab. Review your settings before updating it again.";
       } else if (action === "copy") {
-        draftName = (params.get("name") || "").trim().slice(0, 60);
-        const name = draftName || view.name + " copy";
-        if ([...views.values()].some(item => item.name.toLowerCase() === name.toLowerCase())) {
+        draftName = (params.get("name") || "").trim().slice(0, maxNameLength);
+        const name = draftName || copyName(view);
+        if (views.size >= maxViews) {
+          message = `This demo room has reached its limit of ${maxViews} saved views.`;
+        } else if ([...views.values()].some(item => item.name.toLowerCase() === name.toLowerCase())) {
           message = "That view name is already in use. Choose a different name.";
         } else {
           view = { id: randomUUID(), name, config, version: 1 };
@@ -147,5 +158,5 @@ export function createFeature() {
     if (!req.headers["hx-request"]) return respond(303, "", { Location: location });
     return respond(200, render(new URL(location, url), message, draftName), { "HX-Replace-Url": location });
   }
-  return { render, handle };
+  return { render, handle, snapshot: () => ({ views: structuredClone([...views.values()]) }) };
 }

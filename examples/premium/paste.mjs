@@ -107,9 +107,12 @@ function send(res, html, status = 200) {
   return true;
 }
 
-export function createFeature() {
-  const inventory = new Map(productNames.map((name, i) => [`MRO-${1001 + i}`, { name, cents: 1700 + i * 425 }]));
-  let revision = 1;
+export function createFeature(saved) {
+  const inventory = new Map(productNames.map((name, i) => {
+    const sku = `MRO-${1001 + i}`;
+    return [sku, { name, cents: saved?.prices?.[sku] ?? 1700 + i * 425 }];
+  }));
+  let revision = saved?.revision ?? 1;
 
   async function handle(req, res, url) {
     const path = url.pathname;
@@ -141,7 +144,7 @@ export function createFeature() {
     for (const row of changes) row.product.cents = row.cents;
     if (changes.length) revision++;
     return send(res, `<section id="paste-workspace" class="paste-workspace" aria-label="Price import receipt">
-      <div class="paste-summary"><div><h2 tabindex="-1" data-paste-focus>${changes.length} price change${changes.length === 1 ? "" : "s"} applied</h2><p class="paste-muted">Saved to the local demo inventory.</p></div>
+      <div class="paste-summary"><div><h2 tabindex="-1" data-paste-focus>${changes.length} price change${changes.length === 1 ? "" : "s"} applied</h2><p class="paste-muted">Saved to this demo inventory.</p></div>
       <button type="button" class="mero-button mero-button-outline" hx-get="${base}/start" ${target}>Start another import</button></div>
       <div class="paste-scroll"><table class="mero-table"><thead><tr><th scope="col">Product</th><th scope="col">Previous</th><th scope="col">Saved</th></tr></thead><tbody>${receipt}</tbody></table></div></section>`);
   }
@@ -150,5 +153,8 @@ export function createFeature() {
     return `<header class="paste-heading"><h1>Import prices</h1><p>Review and apply spreadsheet changes to your inventory.</p></header>${entry()}`;
   }
 
-  return { render, handle };
+  function snapshot() {
+    return { revision, prices: Object.fromEntries([...inventory].map(([sku, item]) => [sku, item.cents])) };
+  }
+  return { render, handle, snapshot };
 }

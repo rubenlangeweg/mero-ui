@@ -37,8 +37,8 @@ function inspector(p, last) {
     ${last ? `<small>Last approved · ${last.name}</small>` : ""}</footer>`;
 }
 
-export function createFeature() {
-  const approvals = [];
+export function createFeature(saved) {
+  const approvals = [...(saved?.approvals ?? [])];
   const pending = () => products.filter(p => !approvals.includes(p.id));
   const lastApproved = () => products.find(p => p.id === approvals.at(-1));
 
@@ -84,5 +84,5 @@ export function createFeature() {
     res.end(partial("pq-count", items.length + " pending") + partial("pq-list", list(items, selected?.id, lastApproved())) +
       partial("pq-inspector", inspector(selected, lastApproved())) + partial("pq-status", detail));
   }
-  return { render, handle };
+  return { render, handle, snapshot: () => ({ approvals: [...approvals] }) };
 }

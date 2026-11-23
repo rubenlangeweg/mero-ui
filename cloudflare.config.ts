@@ -1,4 +1,4 @@
-import { defineConfig } from "cf/config";
+import { bindings, defineConfig, exports } from "cf/config";
 
 export default defineConfig({
   worker: {
@@ -8,6 +8,12 @@ export default defineConfig({
     compatibilityFlags: ["nodejs_compat"],
     domains: ["mero-ui.rubenlangeweg.com", "mero-ui.invrse.studio"],
     workersDev: false,
+    exports: {
+      PremiumWorkspace: exports.durableObject({ storage: "sqlite" }),
+    },
+    env: {
+      PREMIUM_WORKSPACE: bindings.durableObject({ worker: "mero-ui", exportName: "PremiumWorkspace" }),
+    },
     assets: { htmlHandling: "none" },
   },
 });
