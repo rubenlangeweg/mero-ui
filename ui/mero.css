@@ -786,7 +786,7 @@
 :where(.mero-listbox, .mero-list-box) :where([role="option"]) { inline-size: auto; }
 :where([data-mero-listbox] > [role="option"]) { flex-wrap: nowrap; }
 :where([data-mero-listbox] > [aria-selected="true"]) { background: color-mix(in srgb, var(--mero-accent) 9%, var(--mero-surface)); }
-:where([data-mero-listbox] > [aria-selected="true"])::after { content: ""; flex: none; inline-size: .6rem; block-size: .32rem; margin-inline-start: auto; margin-inline-end: .16rem; border-left: 1.5px solid; border-bottom: 1.5px solid; transform: translateY(-.08rem) rotate(-45deg); }
+:where([data-mero-listbox] > [aria-selected="true"], .mero-menu-item[aria-checked="true"])::after { content: ""; flex: none; inline-size: .6rem; block-size: .32rem; margin-inline-start: auto; margin-inline-end: .16rem; border-left: 1.5px solid; border-bottom: 1.5px solid; transform: translateY(-.08rem) rotate(-45deg); }
 :where(.mero-combo) { position: relative; inline-size: 100%; }
 :where(.mero-combo-list:not([hidden])) {
   position: absolute;

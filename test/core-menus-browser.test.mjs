@@ -115,3 +115,62 @@ test("menu button follows the APG keyboard pattern across instances and swaps",
 
     assert.deepEqual(errors, []);
   });
+
+test("menu button treats radio and checkbox items like menu items",
+  { skip: !playwright && "Install Playwright to run the browser regression" }, async t => {
+    const variant = groups.flatMap(({ items }) => items).find(({ id }) => id === "menu-button").variants.find(({ name }) => name === "Choice items");
+    assert.equal(variant.code.match(/role="menuitemradio"/g).length, 3);
+    assert.match(variant.code, /role="menuitemcheckbox" aria-checked="false"/);
+
+    const server = createApp();
+    await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+    t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
+    const base = "http://127.0.0.1:" + server.address().port;
+    const engine = browserConfig.engine || "chromium";
+    const browser = await playwright[engine].launch({ executablePath: engine === "chromium" ? browserConfig.chromeExecutable : undefined });
+    t.after(() => browser.close());
+    const page = await browser.newPage();
+    page.setDefaultTimeout(5000);
+    const errors = [];
+    page.on("pageerror", error => errors.push(error.message));
+    await page.goto(base + "/preview/menu-button?variant=Choice%20items");
+
+    const button = page.getByRole("button", { name: "Sort: Category" });
+    const menu = page.locator('[role="menu"][aria-label="View options"]');
+    const focused = text => page.waitForFunction(text => document.activeElement?.textContent.trim() === text, text);
+    const isOpen = () => menu.evaluate(node => node.matches(":popover-open"));
+
+    await button.focus();
+    await page.keyboard.press("Enter");
+    await focused("Category");
+    assert.equal(await button.getAttribute("aria-expanded"), "true");
+    await page.keyboard.press("ArrowDown");
+    await focused("Status");
+    await page.keyboard.press("ArrowDown");
+    await focused("Active only");
+    await page.keyboard.press("ArrowDown");
+    await focused("Product");
+    await page.keyboard.press("End");
+    await focused("Active only");
+    await page.keyboard.press("Home");
+    await focused("Product");
+    await page.keyboard.press("s");
+    await focused("Status");
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(() => document.activeElement?.textContent.trim() === "Sort: Category");
+    assert.equal(await isOpen(), false);
+
+    await page.keyboard.press("ArrowUp");
+    await focused("Active only");
+    await page.keyboard.press("Tab");
+    assert.equal(await isOpen(), false);
+    assert.equal(await page.evaluate(() => document.activeElement.closest('[role="menu"]')), null);
+
+    await button.click();
+    await focused("Category");
+    await page.keyboard.press("ArrowUp");
+    await focused("Product");
+    await page.keyboard.press(" ");
+    await page.waitForURL(/\/components\/sortable-table\?sort=name$/);
+    assert.deepEqual(errors, []);
+  });

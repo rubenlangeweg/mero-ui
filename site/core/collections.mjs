@@ -33,7 +33,22 @@ export const groups = [
           </div>
         </li>
       </ul>`,
-      "Each Actions button names its record and identifies its menu with aria-controls. Enter, Space or Down Arrow opens the menu on its first item, and Up Arrow on its last. Arrow keys, Home, End and a typed letter move between items. Escape closes the menu and returns focus to the button. Tab and Shift+Tab close it and continue in the browser’s tab order."),
+      "Each Actions button names its record and identifies its menu with aria-controls. Enter, Space or Down Arrow opens the menu on its first item, and Up Arrow on its last. Arrow keys, Home, End and a typed letter move between items. Escape closes the menu and returns focus to the button. Tab and Shift+Tab close it and continue in the browser’s tab order.",
+      [["Choice items", `
+      <button class="mero-button mero-button-outline mero-button-sm" type="button" popovertarget="view-menu" aria-haspopup="menu" aria-controls="view-menu" aria-expanded="false">Sort: Category</button>
+      <div class="mero-popover mero-menu" id="view-menu" popover role="menu" aria-label="View options">
+        <div role="group" aria-label="Sort by">
+          <a class="mero-menu-item" role="menuitemradio" aria-checked="false" href="/components/sortable-table?sort=name">Product</a>
+          <a class="mero-menu-item" role="menuitemradio" aria-checked="true" href="/components/sortable-table?sort=category">Category</a>
+          <a class="mero-menu-item" role="menuitemradio" aria-checked="false" href="/components/sortable-table?sort=status">Status</a>
+        </div>
+        <div role="group" aria-label="Show">
+          <a class="mero-menu-item" role="menuitemcheckbox" aria-checked="false" href="/components/filter-chips?status=Active">Active only</a>
+        </div>
+      </div>`, {
+        description: "Choose one sort order or switch an option from a menu that shows the current state.",
+        notes: "Use role=menuitemradio for one choice in a group and role=menuitemcheckbox for an option that is on or off. Render aria-checked on the server; Mero shows a check mark but never changes it, so each item links to the URL with the new state. The menu opens on the checked radio item, or on the first item when none is checked. Up Arrow still opens it on the last item. The keys work as in the default Menu Button.",
+      }]]),
     item("list-box", "List Box", "Present a selectable collection with arrow-key navigation.", `
       <ul class="mero-listbox" role="listbox" aria-label="Workspace" data-mero-listbox>
         <li class="mero-option" id="listbox-atlas" role="option" aria-selected="true" tabindex="0">Atlas</li>
