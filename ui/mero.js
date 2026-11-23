@@ -115,7 +115,7 @@
       }
       if (!aliases.size) continue;
       scopeAliases.set(scope, aliases);
-      const selectors = ["hx-target", "data-mero-return-focus", "data-mero-fallback-focus", "data-mero-action-reread"];
+      const selectors = ["hx-target", "data-mero-return-focus", "data-mero-fallback-focus", "data-mero-ephemeral-dismiss", "data-mero-action-unknown", "data-mero-action-reread"];
       const attributes = ["for", "aria-controls", "aria-labelledby", "aria-describedby", "aria-activedescendant", "popovertarget", "data-mero-open", ...selectors];
       for (const node of scope.querySelectorAll(attributes.map(attr => "[" + attr + "]").join(","))) {
         if (node.closest(selector) !== scope) continue;
