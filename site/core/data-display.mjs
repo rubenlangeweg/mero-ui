@@ -116,6 +116,15 @@ export const groups = [
       </div>`),
     item("chip", "Chip", "Display a lightweight label for an attribute or filter value.", `
       <span class="mero-chip">Europe West</span>`),
+    item("description-list", "Description List", "Show a record’s fields as label and value pairs.", `
+      <dl class="mero-description-list">
+        <div><dt>Environment</dt><dd>Production</dd></div>
+        <div><dt>Status</dt><dd><span class="mero-badge mero-badge-success">Live</span></dd></div>
+        <div><dt>Release</dt><dd><code>rel_01HZX3K9Q4F7WM2D8B6N</code></dd></div>
+        <div><dt>Region</dt><dd>Europe West</dd></div>
+        <div><dt>Owner</dt><dd><a class="mero-link" href="/components/sortable-table">Studio North</a></dd></div>
+      </dl>`,
+      "Wrap each dt and its dd in a div. Labels and values share a row from 768 px and stack below it. Put identifiers, hashes and keys in code for a monospace value; long values wrap instead of widening the page. Values can hold badges, links and other inline components."),
     item("table", "Table", "Show comparable records in a native table with column headers.", `
       <div class="mero-table-wrap">
         <table class="mero-table">
@@ -126,7 +135,50 @@ export const groups = [
             <tr><td>v1.4.0</td><td>Staging</td><td><span class="mero-badge mero-badge-warning">Review</span></td></tr>
           </tbody>
         </table>
-      </div>`),
+      </div>`,
+      "Use scope on the headers. The wrapper scrolls a wide table sideways instead of widening the page.", [
+      ["Cards on phones", `
+      <div class="mero-table-wrap mero-table-cards">
+        <table class="mero-table" role="table">
+          <caption>Environments</caption>
+          <thead role="rowgroup">
+            <tr role="row">
+              <th role="columnheader" scope="col">Environment</th>
+              <th role="columnheader" scope="col" data-mero-card-hidden>Region</th>
+              <th role="columnheader" scope="col">Status</th>
+              <th role="columnheader" scope="col" class="mero-table-num">Deploys</th>
+              <th role="columnheader" scope="col" class="mero-table-num">Error rate</th>
+            </tr>
+          </thead>
+          <tbody role="rowgroup">
+            <tr role="row">
+              <th role="rowheader" scope="row"><span data-mero-cell-label aria-hidden="true">Environment</span>acme-production</th>
+              <td role="cell" data-mero-card-hidden><span data-mero-cell-label aria-hidden="true">Region</span>Europe West</td>
+              <td role="cell"><span data-mero-cell-label aria-hidden="true">Status</span><span class="mero-badge mero-badge-success">Live</span></td>
+              <td role="cell" class="mero-table-num"><span data-mero-cell-label aria-hidden="true">Deploys</span>1,284</td>
+              <td role="cell" class="mero-table-num"><span data-mero-cell-label aria-hidden="true">Error rate</span>0.02%</td>
+            </tr>
+            <tr role="row">
+              <th role="rowheader" scope="row"><span data-mero-cell-label aria-hidden="true">Environment</span>acme-staging</th>
+              <td role="cell" data-mero-card-hidden><span data-mero-cell-label aria-hidden="true">Region</span>Europe West</td>
+              <td role="cell"><span data-mero-cell-label aria-hidden="true">Status</span><span class="mero-badge mero-badge-warning">Review</span></td>
+              <td role="cell" class="mero-table-num"><span data-mero-cell-label aria-hidden="true">Deploys</span>96</td>
+              <td role="cell" class="mero-table-num"><span data-mero-cell-label aria-hidden="true">Error rate</span>1.40%</td>
+            </tr>
+            <tr role="row">
+              <th role="rowheader" scope="row"><span data-mero-cell-label aria-hidden="true">Environment</span>globex-production</th>
+              <td role="cell" data-mero-card-hidden><span data-mero-cell-label aria-hidden="true">Region</span>US East</td>
+              <td role="cell"><span data-mero-cell-label aria-hidden="true">Status</span><span class="mero-badge mero-badge-success">Live</span></td>
+              <td role="cell" class="mero-table-num"><span data-mero-cell-label aria-hidden="true">Deploys</span>12</td>
+              <td role="cell" class="mero-table-num"><span data-mero-cell-label aria-hidden="true">Error rate</span>0.00%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`, {
+        description: "Show rows as labelled cards on phones, with numbers aligned for comparison.",
+        notes: "Add mero-table-cards to the wrapper for cards below 768 px, keep the table roles so screen readers still navigate rows and cells, and start each cell with its data-mero-cell-label. Put data-mero-card-hidden on a column's header and cells to leave it out of the cards. Give numeric headers and cells mero-table-num so they end-align with tabular figures in the table; in a card the value follows its label.",
+      }],
+    ]),
     rendered("sortable-table", "Sortable Table", "Sort server-rendered rows from the column headers and open a row from anywhere in it.", params => records(params),
       "Each header links to ?sort=column. A leading minus sorts descending. The server marks the current column with aria-sort. Below 768 px, mero-table-cards shows each row as a card and keeps the sort links above it. Use mero-table-cards-wide for a 1024 px breakpoint. Render each data-mero-cell-label from its column heading and give it aria-hidden=true. Keep the table roles in the copied markup so screen readers retain row and column navigation. The row link opens the record and Back returns focus to it. Actions opens the row menu. Remove mero-table-compact for regular density.",
       [["Row peek", rendered("sortable-table", "Sortable Table", "Preview a row beside the table without leaving it.", params => records(params, { peek: true }),
