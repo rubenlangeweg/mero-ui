@@ -35,9 +35,17 @@ test("the shared wordmark is a single text link and the homepage works without s
   await page.getByRole("contentinfo").getByRole("link", { name: "Mero UI home" }).focus();
   await page.keyboard.press("Enter");
   await page.waitForURL(base + "/");
-  const heading = page.getByRole("heading", { level: 1, name: "The UI kit for htmx.", exact: true });
+  const heading = page.getByRole("heading", { level: 1, name: "The UI kit for HTMX.", exact: true });
   assert.ok(await heading.isVisible());
   assert.ok(await page.getByRole("link", { name: "Browse components", exact: true }).isVisible());
+  for (const name of ["Go", "Rust"]) {
+    const link = page.locator(".hero-intro").getByRole("link", { name, exact: true });
+    assert.equal(await link.getAttribute("href"), "/start#" + name.toLowerCase());
+  }
+  const question = page.getByText("What does my server return?", { exact: true });
+  await question.focus();
+  await page.keyboard.press("Enter");
+  assert.ok(await page.getByText("Return the part of the page that changed", { exact: false }).isVisible());
   const stage = page.locator("#studio-feature");
   assert.ok(await stage.getByRole("heading", { name: "Arc Task Lamp" }).isVisible());
   assert.equal(await stage.getByRole("radio", { disabled: false }).count(), 0);

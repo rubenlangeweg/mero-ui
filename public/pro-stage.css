@@ -483,8 +483,11 @@
 .home-app-workbench, .home-app-start { padding-block: clamp(60px, 8vw, 112px); }
 .home-app-workbench .home-app-copy p { max-width: 29ch; }
 .home-app-copy p { font-size: clamp(15px, 1.2vw, 17px); line-height: 1.55; }
-.home-app-start .home-app-copy p { max-width: 52ch; margin-bottom: 0; }
-.home-app-start .site-cta { flex: none; min-height: 44px; padding-inline: 20px; }
+.home-app-start { align-items: flex-start; }
+.home-app-start .site-inline-link { margin-top: 1rem; }
+.home-questions { width: min(100%, 36rem); line-height: 1.55; }
+.home-questions .mero-disclosure { border-color: var(--site-line); }
+.home-questions summary { min-height: 44px; }
 
 @media (prefers-reduced-motion: no-preference) {
   .home-app-choices input:checked + label + figure .home-app-shot {

@@ -1,6 +1,6 @@
 import { escapeHtml } from "./html.mjs";
 
-const productDescription = "Mero UI is a UI kit for htmx. Copy HTML components into your server templates with loading states, keyboard controls and focus handling built in.";
+const productDescription = "Mero UI is a UI kit for HTMX. Use its components with Go, Rust or any backend that renders HTML. Explore the catalog and run a working example.";
 
 const descriptions = new Map([
   ["/", productDescription],
