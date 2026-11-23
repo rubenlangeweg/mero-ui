@@ -621,6 +621,18 @@
 :where(.mero-tabs-vertical > [role="tablist"]) { flex-direction: column; align-items: stretch; }
 :where(.mero-tabs-vertical .mero-tab) { text-align: start; }
 :where(.mero-tabs-vertical > [role="tabpanel"]:not([hidden])) { margin-block-start: 0; padding-block-start: .55rem; }
+/* Link tabs: nav.mero-tabs-list > a.mero-tab, with aria-current=page on the current view. */
+:where(nav.mero-tabs-list) { flex-wrap: wrap; }
+:where(a.mero-tab) { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; box-sizing: border-box; text-decoration: none; }
+:where(.mero-tab)[aria-current="page"] { background: var(--mero-surface); color: var(--mero-text); box-shadow: inset 0 0 0 1px var(--mero-line), 0 1px 3px #14192324; }
+:where(.mero-tab-count) {
+  min-inline-size: 1.25rem; box-sizing: border-box; padding: 0 .35rem; border-radius: 99rem;
+  background: var(--mero-hover); color: var(--mero-muted); font: 600 .7rem/1.45 var(--mero-font); font-variant-numeric: tabular-nums; text-align: center;
+}
+:where(.mero-tab[aria-current="page"] .mero-tab-count) { color: var(--mero-text); }
+@media (forced-colors: active) {
+  :where(.mero-tab)[aria-current="page"], :where(.mero-tab)[aria-selected="true"] { outline: 2px solid Highlight; outline-offset: -2px; }
+}
 
 :where(.mero-setting-switch) {
   display: flex;
