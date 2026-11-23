@@ -116,6 +116,15 @@ export const groups = [
       </div>`),
     item("chip", "Chip", "Display a lightweight label for an attribute or filter value.", `
       <span class="mero-chip">Europe West</span>`),
+    item("description-list", "Description List", "Show a record’s fields as label and value pairs.", `
+      <dl class="mero-description-list">
+        <div><dt>Environment</dt><dd>Production</dd></div>
+        <div><dt>Status</dt><dd><span class="mero-badge mero-badge-success">Live</span></dd></div>
+        <div><dt>Release</dt><dd><code>rel_01HZX3K9Q4F7WM2D8B6N</code></dd></div>
+        <div><dt>Region</dt><dd>Europe West</dd></div>
+        <div><dt>Owner</dt><dd><a class="mero-link" href="/components/sortable-table">Studio North</a></dd></div>
+      </dl>`,
+      "Wrap each dt and its dd in a div. Labels and values share a row from 768 px and stack below it. Put identifiers, hashes and keys in code for a monospace value; long values wrap instead of widening the page. Values can hold badges, links and other inline components."),
     item("table", "Table", "Show comparable records in a native table with column headers.", `
       <div class="mero-table-wrap">
         <table class="mero-table">

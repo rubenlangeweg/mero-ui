@@ -425,6 +425,20 @@
 :where(.mero-alert-title) { font-weight: 650; }
 :where(.mero-alert p) { margin: 0; }
 
+/* Description list: one div per term and value. Below 768 px each label sits above its value. */
+:where(.mero-description-list) { display: grid; margin: 0; color: var(--mero-text); font: 400 .875rem/1.5 var(--mero-font); }
+:where(.mero-description-list > div) {
+  display: grid; grid-template-columns: minmax(7rem, 1fr) minmax(0, 2fr); align-items: baseline; gap: .15rem 1rem;
+  padding-block: .55rem; border-block-end: 1px solid var(--mero-line);
+}
+:where(.mero-description-list > div:last-child) { border-block-end: 0; }
+:where(.mero-description-list dt) { color: var(--mero-muted); }
+:where(.mero-description-list dd) { min-inline-size: 0; margin: 0; overflow-wrap: anywhere; }
+:where(.mero-description-list dd code) { font: 500 .8rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+@media (width < 48rem) {
+  :where(.mero-description-list > div) { grid-template-columns: minmax(0, 1fr); }
+}
+
 :where(.mero-live) { inline-size: min(100%, 22rem); }
 :where(.mero-live-status) { margin-block-start: .75rem; }
 :where(.mero-live [data-mero-live-retry][hidden]) { display: none; }
