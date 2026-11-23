@@ -1,4 +1,4 @@
-/*! @rubenlangeweg/mero-ui 0.6.2 | MIT */
+/*! @rubenlangeweg/mero-ui 0.7.0 | MIT */
 // Render a small Markdown subset for messages with no raw HTML or embeds.
 function escape(value) {
   return String(value).replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[character]));

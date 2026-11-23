@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0 · 23 November 2026
+
+- Try six HTMX 4 workflows in the playground. Review price changes with keyboard approval and undo, correct a spreadsheet before import, assign records from the command menu, publish across pages, share saved views and move cards together on a live board. [Open the workflows](https://mero-ui.rubenlangeweg.com/premium) · [Watch the seven captioned walkthroughs](https://mero-ui.rubenlangeweg.com/premium/watch)
+- Run the workflows locally with `npm run demo:premium` from the source checkout. The Go and Rust quick starts each serve an inventory component and return an HTML fragment from a working handler. [Go example](https://mero-ui.rubenlangeweg.com/start#go) · [Rust example](https://mero-ui.rubenlangeweg.com/start#rust)
+- The UI package now includes an offline component reference in `agent-docs/`. The repository also includes skills for building with Mero and contributing to the library. [Browse the component reference](https://mero-ui.rubenlangeweg.com/llms.txt)
+- The catalog has a new wordmark and favicon. The header fits zoomed layouts, and the playground respects reduced motion when switching between workflows.
+
 ## 0.6.2 · 23 November 2026
 
 - **Menu Button:** `menuitemradio` and `menuitemcheckbox` items get the same arrow-key, Home, End, typeahead, Escape and Tab handling as `menuitem`. The menu opens on its checked radio item, and checked items show a check mark. Mero does not change `aria-checked`; render it on the server.

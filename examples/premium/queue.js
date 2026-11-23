@@ -8,6 +8,8 @@
   document.addEventListener("premium:queue-ready", event => {
     const queue = event.target.closest("#pq-queue");
     if (!queue) return;
+    // The replacement actions become focusable once htmx has attached their handlers.
+    queue.querySelector("#pq-inspector footer")?.removeAttribute("inert");
     queue.setAttribute("data-inspecting", "");
     (queue.querySelector("#pq-approve") || queue.querySelector("#pq-undo"))?.focus({preventScroll: true});
   });
