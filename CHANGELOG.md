@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Focus continuity:** when any htmx swap or morph removes the focused element, focus returns to the same element, else the element with its ID, else the target's `data-mero-focus-fallback`, instead of falling to the page body. Mero acts only when focus was inside the swap target and is on the body afterwards, so it never takes focus from where the person moved it, and a server `autofocus` still wins. Add `data-mero-focus-manual` to keep handling focus yourself.
+
 ## 0.7.0 · 23 November 2026
 
 - Try six HTMX 4 workflows in the playground. Review price changes with keyboard approval and undo, correct a spreadsheet before import, assign records from the command menu, publish across pages, share saved views and move cards together on a live board. [Open the workflows](https://mero-ui.rubenlangeweg.com/premium) · [Watch the seven captioned walkthroughs](https://mero-ui.rubenlangeweg.com/premium/watch)
