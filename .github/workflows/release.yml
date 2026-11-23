@@ -46,3 +46,23 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
         run: npm publish "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz"
+  publish-npm:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Download the release tarball
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --pattern "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz"
+      - name: Publish to npm with provenance
+        run: |
+          npm publish "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz" \
+            --registry=https://registry.npmjs.org --access public --provenance
