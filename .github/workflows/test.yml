@@ -14,8 +14,6 @@ jobs:
     env:
       MERO_BROWSER: ${{ matrix.browser }}
     runs-on: ubuntu-latest
-    # Match the Playwright version in package-lock.json. The image includes all three browsers and OS dependencies.
-    container: mcr.microsoft.com/playwright:v1.65.1-resolute-amd64
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -24,6 +22,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npx playwright install --with-deps "${{ matrix.browser }}"
       - run: npm test
       - if: matrix.browser == 'chromium'
         run: npm run pack:ui
