@@ -31,10 +31,10 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           tarball="rubenlangeweg-mero-ui-$version.tgz"
           {
-            echo "Install the UI assets directly from this release:"
+            echo "Install the UI assets from npm:"
             echo
             echo '```sh'
-            echo "npm install https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/$tarball"
+            echo "npm install @rubenlangeweg/mero-ui@$version"
             echo '```'
             echo
             # The changelog section for this version, without its heading.

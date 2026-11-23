@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 · 23 November 2026
 
 - **Copy:** any button can copy a value with `data-mero-copy="…"` or another element's value or text with `data-mero-copy-target`, and confirms it with a notification. When the clipboard is blocked, Mero selects the text instead. The Button has a Copy to clipboard variant.
 - **Local time:** `time[data-mero-time]` shows its `datetime` in the reader's locale and time zone, as an absolute date and time, a date, a time or a relative time that refreshes every minute. Typography has a Local time variant.
