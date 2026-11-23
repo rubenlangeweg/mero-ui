@@ -49,6 +49,28 @@ export const groups = [
         <div class="mero-form-status" id="catalog-form-result" role="status"></div>
       </form>`,
       "This demo uses a read-only GET. Use POST for changes and keep validation on the server.", [
+        ["One-time credential", `
+          <div class="mero-stack">
+          <form class="mero-stack" method="post" action="/demo/catalog/form-credential" hx-post="/demo/catalog/form-credential"
+            hx-target="#api-token-secret" data-mero-form data-mero-hold="Wait for the new token. Leaving now would lose it.">
+            <div class="mero-field">
+              <label class="mero-label" for="api-token-name">Token name</label>
+              <input class="mero-input" id="api-token-name" name="name" required maxlength="40" value="Deploy bot">
+            </div>
+            <p class="mero-field-error" data-mero-form-error role="alert" hidden></p>
+            <div class="mero-row">
+              <button class="mero-button mero-button-primary" type="submit" id="api-token-create">
+                <span class="mero-button-label">Create token</span>
+                <span class="mero-indicator mero-spinner" aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+          <div class="mero-stack" id="api-token-secret" data-mero-ephemeral
+            data-mero-hold="Copy the token before you leave. It is shown only once."></div>
+          </div>`, {
+          description: "Create an API token and keep the page until the person has copied it.",
+          notes: "While the request runs, and while the token is shown, Mero cancels boosted navigation and requests that would replace the token, undoes Back and asks before the page unloads. The token is cleared on I copied it, when a surrounding dialog closes and when the page is hidden. Render the secret only in this response, never in a page the server can send again.",
+        }],
         ["Action outcome", `
           <form class="mero-stack" method="post" action="/demo/catalog/form-outcome" hx-post="/demo/catalog/form-outcome"
             hx-target="#rotate-key-result" hx-headers='{"Idempotency-Key":"rotate-demo-7f3a"}'

@@ -314,4 +314,111 @@
     }
     (action.isConnected ? action : document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message } }));
   });
+  // One-time credentials. [data-mero-ephemeral] content is cleared when its dialog closes, on a
+  // [data-mero-ephemeral-dismiss] click and when the page is hidden. data-mero-hold keeps the page
+  // while a held request is pending, or while a held ephemeral element shows content: requests that
+  // would replace the page or the held content are cancelled, Back is undone and unload asks first.
+  const pendingHolds = new Map();
+  let steady = { url: location.href, key: window.navigation?.currentEntry?.key };
+  const remember = () => { steady = { url: location.href, key: window.navigation?.currentEntry?.key }; };
+  const holdFallback = "Copy what is shown before you leave this page. It cannot be shown again.";
+  const shown = node => node.isConnected && (node.childElementCount > 0 || node.textContent.trim() !== "");
+  const heldEphemeral = () => [...document.querySelectorAll("[data-mero-ephemeral][data-mero-hold]")].filter(shown);
+
+  function hold() {
+    for (const [ctx, owner] of pendingHolds) {
+      return { elements: [owner, ...heldEphemeral()], message: owner.getAttribute("data-mero-hold") || holdFallback, ctx };
+    }
+    const elements = heldEphemeral();
+    return elements.length ? { elements, message: elements[0].getAttribute("data-mero-hold") || holdFallback } : null;
+  }
+
+  function warnHeld(message) {
+    window.MeroUI?.toast(message, { tone: "warning" });
+  }
+
+  function clearEphemeral(root) {
+    const nodes = root.matches?.("[data-mero-ephemeral]") ? [root] : [...root.querySelectorAll("[data-mero-ephemeral]")];
+    for (const node of nodes) node.replaceChildren();
+  }
+
+  document.addEventListener("htmx:before:request", event => {
+    const { ctx } = event.detail;
+    if (event.defaultPrevented) return;
+    const owner = ctx.sourceElement?.closest?.("form[data-mero-hold], [data-mero-action][data-mero-hold]");
+    if (!owner) return;
+    // The entry a held page returns to after Back, even if the app pushed it itself.
+    if (!hold()) remember();
+    pendingHolds.set(ctx, owner);
+  });
+  document.addEventListener("htmx:finally:request", event => {
+    pendingHolds.delete(event.detail.ctx);
+  });
+
+  // config:request runs before htmx queues or sends anything, so a cancel here sends nothing.
+  document.addEventListener("htmx:config:request", event => {
+    const held = hold();
+    const { ctx } = event.detail;
+    if (!held || event.defaultPrevented) return;
+    const source = ctx.sourceElement;
+    // Controls inside the held content may act on it, for example to acknowledge it.
+    if (held.elements.some(node => node !== source && node.contains?.(source) && node.matches("[data-mero-ephemeral]"))) return;
+    const target = typeof ctx.target === "string" ? document.querySelector(ctx.target) : ctx.target;
+    const replacesPage = ctx.request.headers["HX-Boosted"] || ctx.request.headers["HX-History-Restore-Request"] ||
+      target === document.body || target === document.documentElement;
+    if (replacesPage || (target && held.elements.some(node => target.contains(node)))) {
+      event.preventDefault();
+      warnHeld(held.message);
+    }
+  });
+
+  // htmx restores history after the URL has changed, so a held page puts its own entry back.
+  // Cancelling the navigate event instead would break htmx's own intercept() in WebKit.
+  document.addEventListener("htmx:after:history:push", remember);
+  document.addEventListener("htmx:after:history:replace", remember);
+  window.navigation?.addEventListener("currententrychange", event => {
+    if (event.navigationType !== "traverse") remember();
+  });
+  // popstate covers every same-document traversal, including entries htmx did not stamp.
+  addEventListener("popstate", () => {
+    const held = hold();
+    if (!held) return remember();
+    if (location.href === steady.url) return;
+    warnHeld(held.message);
+    const entry = steady.key && window.navigation?.entries().find(item => item.key === steady.key);
+    // Let the interrupted traversal settle before going back to the held entry.
+    setTimeout(() => entry ? window.navigation.traverseTo(entry.key) : history.pushState({ htmx: true }, "", steady.url));
+  });
+  document.addEventListener("htmx:before:history:restore", event => {
+    if (hold()) event.preventDefault();
+  });
+
+  addEventListener("beforeunload", event => {
+    if (!hold()) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
+  // A page left anyway, or kept in the back-forward cache, must not show the secret again.
+  addEventListener("pagehide", () => clearEphemeral(document));
+
+  document.addEventListener("close", event => {
+    if (event.target instanceof HTMLDialogElement) clearEphemeral(event.target);
+  }, true);
+
+  document.addEventListener("click", event => {
+    const dismiss = event.target.closest?.("[data-mero-ephemeral-dismiss]");
+    const container = dismiss?.closest("[data-mero-ephemeral]");
+    if (!container) return;
+    const focused = container.contains(document.activeElement);
+    clearEphemeral(container);
+    if (!focused && document.activeElement !== document.body) return;
+    const next = dismiss.getAttribute("data-mero-ephemeral-dismiss");
+    const focus = next ? document.querySelector(next) : null;
+    if (focus) {
+      focus.focus({ preventScroll: true });
+    } else {
+      if (!container.hasAttribute("tabindex")) container.tabIndex = -1;
+      container.focus({ preventScroll: true });
+    }
+  });
 })();

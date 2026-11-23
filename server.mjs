@@ -319,6 +319,23 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     return send(response, "", { status, headers });
   }
 
+  async function formCredentialDemo({ request, response }) {
+    const params = await formBody(request);
+    if (!params) return send(response, "Form is too large.", { status: 413 });
+    const name = esc((params.get("name") ?? "").trim().slice(0, 40) || "New token");
+    const token = "mtk_" + Array.from(crypto.getRandomValues(new Uint8Array(12)), byte => byte.toString(16).padStart(2, "0")).join("");
+    return send(response, `<div class="mero-alert mero-alert-success" tabindex="-1" autofocus>
+        <strong class="mero-alert-title">Copy ${name} now</strong>
+        <p>This token is shown once.</p>
+      </div>
+      <div class="mero-field">
+        <label class="mero-label" for="api-token-value">New token</label>
+        <input class="mero-input" id="api-token-value" value="${token}" readonly spellcheck="false" data-api-token>
+      </div>
+      <div class="mero-row"><button class="mero-button mero-button-secondary" type="button" data-mero-ephemeral-dismiss="#api-token-create">I copied it</button></div>`,
+    { headers: { "Cache-Control": "no-store" } });
+  }
+
   async function formOutcomeDemo({ request, response }) {
     const params = await formBody(request);
     if (!params) return send(response, "Form is too large.", { status: 413 });
@@ -386,6 +403,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     ["GET", /^\/demo\/catalog\//, catalogDemo],
     ["POST", "/demo/settings", saveSettings],
     ["POST", "/demo/catalog/action-button", actionDemo],
+    ["POST", "/demo/catalog/form-credential", formCredentialDemo],
     ["POST", "/demo/catalog/form-outcome", formOutcomeDemo],
     ["POST", "/demo/catalog/typed-confirmation", typedConfirmationDemo],
     ["*", /^\/demo\//, demoNotFound],
