@@ -58,10 +58,12 @@ test("row peek opens on Space, follows focus, closes back to the row and survive
     assert.match(await panel.textContent(), /RL-2002/);
     await page.keyboard.press("ArrowUp");
     await page.waitForFunction(() => document.querySelector(".mero-peek-title")?.textContent === "Arc Task Lamp");
-    // Tab passes the row's Actions button, then reaches the next row.
-    await page.keyboard.press("Tab");
+    // macOS WebKit uses Option+Tab to include links in keyboard navigation.
+    const tab = engine === "webkit" && process.platform === "darwin" ? "Alt+Tab" : "Tab";
+    await page.keyboard.press(tab);
+    assert.equal(await focused(), "Actions");
     assert.equal(await title(), "Arc Task Lamp");
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tab);
     assert.equal(await focused(), "Ash Lounge Chair");
     await page.waitForFunction(() => document.querySelector(".mero-peek-title")?.textContent === "Ash Lounge Chair");
 
