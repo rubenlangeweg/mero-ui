@@ -1,19 +1,11 @@
 name: Publish to npm
 
-# Two ways in, one publish:
-# - release.yml calls this after tests on a v* tag. That workflow creates the
-#   GitHub Release with GITHUB_TOKEN, and GitHub does not start a new workflow
-#   from events caused by GITHUB_TOKEN, so this release trigger does not run again.
-# - A release published by a person (not GITHUB_TOKEN) starts this workflow directly.
-# Do not create that release with a PAT or GitHub App token unless this release
-# trigger is removed. Both paths would publish the same version.
+# npm trusted publishing records the workflow that starts the run. release.yml
+# calls this file, so the npmjs.com workflow filename is release.yml.
+# A release event on this file would be a different filename and would not
+# match that one publisher. This file is only a workflow_call.
 on:
   workflow_call:
-    secrets:
-      NPM_TOKEN:
-        required: true
-  release:
-    types: [published]
 
 permissions:
   contents: read
@@ -23,31 +15,50 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      # A release event checks out the default branch unless the tag is set.
-      # workflow_call from a tag push already has that tag as github.ref.
+      # Caller is the v* tag push, so github.ref is that tag.
       - name: Checkout the release tag
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.release.tag_name || github.ref }}
 
       # engines.node is ">=22". No .nvmrc, .node-version, volta, or packageManager.
+      # Trusted publishing needs Node >= 22.14. Node 22's bundled npm is older
+      # than 11.5.1, so the next step replaces it.
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           registry-url: https://registry.npmjs.org
 
+      - name: Install npm 11.21.3
+        run: |
+          npm install -g npm@11.21.3
+          node --version
+          npm --version
+          node <<'EOF'
+          const { execSync } = require("node:child_process");
+          const node = process.versions.node.split(".").map(Number);
+          if (node[0] < 22 || (node[0] === 22 && node[1] < 14)) {
+            console.error(`Node ${process.version} is below 22.14.0`);
+            process.exit(1);
+          }
+          const npm = execSync("npm --version", { encoding: "utf8" }).trim().split(".").map(Number);
+          const min = [11, 5, 1];
+          for (let i = 0; i < min.length; i++) {
+            if (npm[i] > min[i]) break;
+            if (npm[i] < min[i]) {
+              console.error(`npm ${npm.join(".")} is below 11.5.1`);
+              process.exit(1);
+            }
+          }
+          EOF
+
       - name: Check the tag matches package.json
-        env:
-          RELEASE_TAG: ${{ github.event.release.tag_name || github.ref_name }}
-        run: test "$RELEASE_TAG" = "v$(node -p 'require("./package.json").version')"
+        run: test "$GITHUB_REF_NAME" = "v$(node -p 'require("./package.json").version')"
 
       - run: npm ci
       # Site build (Cloudflare worker). package.json "files" keeps it out of the tarball.
       - run: npm run build
       - run: npm run pack:ui
 
+      # OIDC from id-token: write. Provenance is added by the registry for this path.
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public --provenance
+        run: npm publish --access public
