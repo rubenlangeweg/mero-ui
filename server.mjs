@@ -4,6 +4,7 @@ import { extname } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createPremiumHandler } from "./examples/premium/server.mjs";
 import { confirmationResponse } from "./site/core/typed-confirmation.mjs";
+import { nightlyExport } from "./site/core/buttons.mjs";
 import { catalogFragment } from "./site/core-components.mjs";
 import { groups, components, moduleAssets } from "./site/catalog.mjs";
 import { catalogIndex, componentPage, exampleAssets, standalonePage } from "./site/catalog-pages.mjs";
@@ -315,6 +316,11 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
       unknown: [503],
     };
     const outcome = searchParams.get("outcome");
+    // The change happens, but the answer is lost on the way back.
+    if (outcome === "lost") {
+      nightlyExport.restarts += 1;
+      return send(response, "", { status: 504 });
+    }
     const [status, headers] = Object.hasOwn(outcomes, outcome) ? outcomes[outcome] : [400];
     return send(response, "", { status, headers });
   }
