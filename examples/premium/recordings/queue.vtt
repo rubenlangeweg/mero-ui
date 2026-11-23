@@ -1,0 +1,10 @@
+WEBVTT
+
+00:00:00.184 --> 00:00:02.116
+Open the first pending price change using the keyboard.
+
+00:00:02.116 --> 00:00:05.203
+Enter approves this price and moves focus to the next approval.
+
+00:00:05.203 --> 00:00:09.248
+Undo restores the last product and its place in the queue.

@@ -1,0 +1,10 @@
+WEBVTT
+
+00:00:00.707 --> 00:00:02.738
+Drag the card to In progress. A second browser updates live.
+
+00:00:02.738 --> 00:00:04.752
+While this dialog is open, another teammate moves the card to Done.
+
+00:00:04.752 --> 00:00:08.790
+Mero shows the conflict and returns focus. Move it again using the keyboard.

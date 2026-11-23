@@ -1,0 +1,10 @@
+WEBVTT
+
+00:00:00.120 --> 00:00:02.185
+Six records selected. Open Commands with Ctrl+K or ⌘K.
+
+00:00:02.185 --> 00:00:05.363
+Enter opens the teammate picker. Backspace returns one step.
+
+00:00:05.363 --> 00:00:09.368
+Assign all six to Noor. Selection and keyboard focus survive.
