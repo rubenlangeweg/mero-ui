@@ -1,3 +1,4 @@
+/*! @rubenlangeweg/mero-ui 0.6.1 | MIT */
 (() => {
   const rotations = new Map();
   function advance(cycle) {

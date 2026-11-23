@@ -1,3 +1,4 @@
+/*! @rubenlangeweg/mero-ui 0.6.1 | MIT */
 /**
  * Optional HTMX form behavior. Server responses:
  * 422 + replacement form for validation, or HX-Trigger:

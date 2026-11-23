@@ -4,6 +4,7 @@
 
 - **Menu Button:** `menuitemradio` and `menuitemcheckbox` items get the same arrow-key, Home, End, typeahead, Escape and Tab handling as `menuitem`. The menu opens on its checked radio item, and checked items show a check mark. Mero does not change `aria-checked`; render it on the server.
 - **Row peek:** add `data-mero-peek` around a table and a `<template data-mero-peek-body>` to each row. Space on a row link shows that row in a Preview panel beside the table, or in a bottom sheet below 768 px. The panel follows focus between rows, and Space or Escape closes it back to the row. It keeps its row through htmx swaps and morphs. The Sortable Table has a Row peek variant.
+- Every script and stylesheet in `ui/` starts with `/*! @rubenlangeweg/mero-ui <version> | MIT */`, so a copied file shows which release it came from. `npm version` updates the line.
 
 ## 0.6.1 · 20 November 2026
 

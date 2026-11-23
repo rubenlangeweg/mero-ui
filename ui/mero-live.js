@@ -1,3 +1,4 @@
+/*! @rubenlangeweg/mero-ui 0.6.1 | MIT */
 // Optional polling for a read-only status fragment. htmx owns each GET and swap.
 (() => {
   const selector = "[data-mero-live]";
