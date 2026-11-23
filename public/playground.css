@@ -77,6 +77,28 @@
 .pg-run svg { color: var(--site-mint); }
 .pg-run:hover { background: var(--site-raised); }
 .pg-canvas .doc-lab { margin: 0; overflow-wrap: anywhere; }
+/* Keep the preview controls' space when they wrap onto a second line. */
+.pg-canvas .doc-lab-head:has(.doc-tab-list button:first-child[aria-selected="false"]) .doc-lab-options {
+  display: flex;
+  visibility: hidden;
+}
+.pg-canvas .doc-lab > [role="tabpanel"] {
+  margin-block-start: 0;
+  animation: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pg-canvas .doc-tab-list button { transition: background-color 140ms ease, color 140ms ease; }
+  .pg-canvas .doc-lab[data-mero-tabs-ready] > [role="tabpanel"]:not([hidden]) {
+    animation: pg-panel-in 160ms ease-out;
+  }
+  @view-transition { navigation: auto; }
+  .pg-workspace { view-transition-name: playground-workspace; }
+  ::view-transition-group(*) { animation-duration: 0s; }
+  ::view-transition-old(root), ::view-transition-old(playground-workspace) { display: none; }
+  ::view-transition-new(root) { animation: none; }
+  ::view-transition-new(playground-workspace) { animation: pg-panel-in 160ms ease-out; }
+}
+@keyframes pg-panel-in { from { opacity: .7; } }
 .pg-canvas .docs-preview { padding: clamp(15px, 2.4vw, 30px); }
 .pg-canvas .lab { min-width: 0; border-radius: 15px; }
 .pg-page[data-playground="inventory"] .docs-preview { display: block; min-height: 0; }

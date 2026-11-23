@@ -101,3 +101,35 @@ test("phone visitors can inspect a filtered report, return by history and follow
   await plain.getByRole("combobox", { name: "Reporting period" }).waitFor();
   assert.equal(new URL(plain.url()).searchParams.get("scenario"), "report");
 });
+
+test("the phone tab bar stays still while panels resize and rapid switches settle", options, async t => {
+  const { page } = await openPlayground(t, 320);
+  const lab = page.locator(".pg-canvas > .doc-lab");
+  const toolbar = lab.locator(".doc-lab-head");
+  const tab = name => lab.getByRole("tab", { name, exact: true });
+  await page.evaluate(() => document.fonts.ready);
+  const previewToolbar = await toolbar.boundingBox();
+  await tab("Preview").press("End");
+  assert.deepEqual(await toolbar.boundingBox(), previewToolbar);
+  assert.equal(await lab.evaluate(el => el.getAnimations().length), 0);
+  assert.equal(await page.getByRole("combobox", { name: "Preview theme" }).count(), 0);
+
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const [before, start, end] = await lab.evaluate(async el => {
+    const before = el.offsetHeight;
+    el.querySelector('[aria-controls$="-preview"]').click();
+    await Promise.resolve();
+    const frames = el.getAnimations()[0].effect.getKeyframes();
+    return [before, parseFloat(frames[0].height), parseFloat(frames.at(-1).height)];
+  });
+  assert.ok(Math.abs(start - before) <= 1 && end > start);
+  await lab.evaluate(el => {
+    el.querySelector('[aria-controls$="-source"]').click();
+    el.querySelector('[aria-controls$="-http"]').click();
+  });
+  await page.waitForFunction(() => !document.querySelector(".pg-canvas > .doc-lab").getAnimations().length);
+  assert.equal(await lab.locator('[role="tabpanel"]:visible').count(), 1);
+  assert.equal(await tab("HTTP exchange").getAttribute("aria-selected"), "true");
+  assert.equal(await lab.evaluate(el => el.offsetHeight), before);
+  assert.deepEqual(await toolbar.boundingBox(), previewToolbar);
+});
