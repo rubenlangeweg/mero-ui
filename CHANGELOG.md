@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Copy:** any button can copy a value with `data-mero-copy="…"` or another element's value or text with `data-mero-copy-target`, and confirms it with a notification. When the clipboard is blocked, Mero selects the text instead. The Button has a Copy to clipboard variant.
+- **Local time:** `time[data-mero-time]` shows its `datetime` in the reader's locale and time zone, as an absolute date and time, a date, a time or a relative time that refreshes every minute. Typography has a Local time variant.
+- **Keyboard shortcuts:** `data-mero-shortcut` binds a single key or a two-key sequence to a control, and `data-mero-shortcuts-toggle` turns single-key shortcuts off, as WCAG 2.1.4 requires. The Kbd has a Keyboard shortcuts variant.
+- **Form state:** `data-mero-show-when="field=value"` shows and enables a branch only for the chosen values, and `form[data-mero-dirty]` enables submitting only after a change. The Fieldset has a Conditional fields variant.
+
 ## 0.7.0 · 23 November 2026
 
 - Try six HTMX 4 workflows in the playground. Review price changes with keyboard approval and undo, correct a spreadsheet before import, assign records from the command menu, publish across pages, share saved views and move cards together on a live board. [Open the workflows](https://mero-ui.rubenlangeweg.com/premium) · [Watch the seven captioned walkthroughs](https://mero-ui.rubenlangeweg.com/premium/watch)

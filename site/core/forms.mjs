@@ -37,7 +37,34 @@ export const groups = [
           ${field("demo-fieldset-name", "Name", 'autocomplete="name"').trim()}
           ${field("demo-fieldset-email", "Email address", 'autocomplete="email"', { type: "email" }).trim()}
         </div>
-      </fieldset>`),
+      </fieldset>`, undefined, [
+        ["Conditional fields", `
+          <form class="mero-stack" action="/demo/stock-summary" method="get" hx-get="/demo/stock-summary" hx-target="find output"
+            data-mero-form data-mero-dirty>
+            <fieldset class="mero-fieldset">
+              <legend class="mero-label">Owner</legend>
+              <div class="mero-radio-group">
+                <label><input class="mero-radio" type="radio" name="owner" value="me" checked> Only me</label>
+                <label><input class="mero-radio" type="radio" name="owner" value="team"> A team</label>
+                <label><input class="mero-radio" type="radio" name="owner" value="org"> The organisation</label>
+              </div>
+            </fieldset>
+            <fieldset class="mero-fieldset" data-mero-show-when="owner=team org" hidden disabled>
+              <legend class="mero-label">Sharing</legend>
+              <div class="mero-field">
+                <label class="mero-label" for="branch-demo-team">Team name</label>
+                <input class="mero-input" id="branch-demo-team" name="team" required>
+              </div>
+            </fieldset>
+            <div class="mero-row">
+              <button class="mero-button mero-button-primary" type="submit" disabled>Apply</button>
+              <output class="mero-description mero-form-status" aria-live="polite"></output>
+            </div>
+          </form>`, {
+          description: "Show fields for the chosen option and enable Apply only after a change.",
+          notes: "data-mero-show-when names a field and the values that show the branch. A hidden branch is disabled, so its required fields neither block nor join the submission. Use a fieldset so its controls keep their own disabled state. data-mero-dirty keeps the submit buttons disabled until a field differs from the value the server rendered, and again after it is changed back. Render both states on the server so the form is right before scripts run.",
+        }],
+      ]),
     item("form", "Form", "Submit native fields to the server and render an HTML response in place.", `
       <form class="mero-stack" action="/demo/catalog/form" method="get"
         hx-get="/demo/catalog/form" hx-target="#catalog-form-result" hx-swap="innerHTML">
