@@ -21,12 +21,12 @@ When serving the site on a public domain, set `MERO_SITE_ORIGIN` to its full ori
 Install the UI assets from the [GitHub release](https://github.com/rubenlangeweg/mero-ui/releases) and HTMX from npm:
 
 ```sh
-npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.6.1/rubenlangeweg-mero-ui-0.6.1.tgz htmx.org@4
+npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.6.2/rubenlangeweg-mero-ui-0.6.2.tgz htmx.org@4
 ```
 
-To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.6.1/ui/mero.css`.
+To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.6.2/ui/mero.css`.
 
-Mero targets htmx 4 only. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. The first line of each file names its release, for example `/*! @rubenlangeweg/mero-ui 0.6.1 | MIT */`, so a copied file shows which version it is. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
+Mero targets htmx 4 only. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. The first line of each file names its release, for example `/*! @rubenlangeweg/mero-ui 0.6.2 | MIT */`, so a copied file shows which version it is. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
 
 The Mero scripts listen to htmx 4 events and read `event.detail.ctx`. Load `mero.js` on every page that uses a Mero script.
 

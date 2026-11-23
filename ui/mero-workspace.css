@@ -1,4 +1,4 @@
-/*! @rubenlangeweg/mero-ui 0.6.1 | MIT */
+/*! @rubenlangeweg/mero-ui 0.6.2 | MIT */
 /* Workspace forms, navigation and editing tools. Uses the host's Mero tokens. */
 :where(.mero-ws-cell,.mero-ws-labeled,.mero-ws-cardform,.mero-ws-inline,.mero-ws-upload,.mero-ws-editor,.mero-ws-shell,.mero-ws-navbar,.mero-ws-command,.mero-ws-context,.mero-ws-segment,.mero-ws-wizard,.mero-ws-split,.mero-ws-emoji,.mero-ws-filter,.mero-ws-dock,.mero-ws-mega,.mero-ws-fab) {
   box-sizing:border-box; max-inline-size:100%; color:var(--mero-text); font:400 .9rem/1.45 var(--mero-font);

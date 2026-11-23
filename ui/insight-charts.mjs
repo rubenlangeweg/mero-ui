@@ -1,4 +1,4 @@
-/*! @rubenlangeweg/mero-ui 0.6.1 | MIT */
+/*! @rubenlangeweg/mero-ui 0.6.2 | MIT */
 // Optional server-side helper. Render the result in a full page or an HTMX response.
 // Each row is {label, values: [number, ...]}. Values are finite and nonnegative.
 const chartTypes = new Set(['line', 'area', 'bar', 'composed', 'pie', 'radar', 'radial']);
