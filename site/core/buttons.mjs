@@ -12,9 +12,9 @@ export const groups = [
           <div class="mero-stack">
             <div class="mero-field">
               <label class="mero-label" for="copy-demo-key">Publishable key</label>
-              <div class="mero-row">
+              <div class="mero-input-group">
                 <input class="mero-input" id="copy-demo-key" value="pk_live_51HcX2eDeploy" readonly>
-                <button class="mero-button mero-button-outline" type="button" data-mero-copy-target="#copy-demo-key" aria-label="Copy publishable key">Copy</button>
+                <button class="mero-button mero-button-ghost mero-button-sm" type="button" data-mero-copy-target="#copy-demo-key" aria-label="Copy publishable key">Copy</button>
               </div>
             </div>
             <p class="mero-row">Environment <code>env_7f3a91</code>
