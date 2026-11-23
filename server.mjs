@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { createPremiumHandler } from "./examples/premium/server.mjs";
 import { confirmationResponse } from "./site/core/typed-confirmation.mjs";
 import { searchResults } from "./site/core/forms.mjs";
+import { nightlyExport } from "./site/core/buttons.mjs";
 import { catalogFragment } from "./site/core-components.mjs";
 import { groups, components, moduleAssets } from "./site/catalog.mjs";
 import { catalogIndex, componentPage, exampleAssets, standalonePage } from "./site/catalog-pages.mjs";
@@ -278,6 +279,8 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     const now = Date.now();
     const since = Number(searchParams.get("started"));
     const started = since > 0 && since <= now ? since : now;
+    // The Stale status variant fails every read after the first.
+    if (searchParams.has("outage") && since > 0) return send(response, "Status store unavailable.", { status: 503, headers: { "Cache-Control": "no-store" } });
     const done = now - started >= 5000;
     const body = `<span class="mero-badge mero-badge-dot">${done ? "Succeeded" : "Running"}</span>
       <input type="hidden" name="started" value="${started}">`;
@@ -316,6 +319,11 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
       unknown: [503],
     };
     const outcome = searchParams.get("outcome");
+    // The change happens, but the answer is lost on the way back.
+    if (outcome === "lost") {
+      nightlyExport.restarts += 1;
+      return send(response, "", { status: 504 });
+    }
     const [status, headers] = Object.hasOwn(outcomes, outcome) ? outcomes[outcome] : [400];
     return send(response, "", { status, headers });
   }
@@ -324,6 +332,36 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     const status = searchParams.get("status") ?? "";
     if (status === "archived") return send(response, "<p>Search is unavailable.</p>", { status: 503 });
     return send(response, searchResults((searchParams.get("q") ?? "").slice(0, 80), status));
+  }
+
+  async function formCredentialDemo({ request, response }) {
+    const params = await formBody(request);
+    if (!params) return send(response, "Form is too large.", { status: 413 });
+    const name = esc((params.get("name") ?? "").trim().slice(0, 40) || "New token");
+    const token = "mtk_" + Array.from(crypto.getRandomValues(new Uint8Array(12)), byte => byte.toString(16).padStart(2, "0")).join("");
+    return send(response, `<div class="mero-alert mero-alert-success" tabindex="-1" autofocus>
+        <strong class="mero-alert-title">Copy ${name} now</strong>
+        <p>This token is shown once.</p>
+      </div>
+      <div class="mero-field">
+        <label class="mero-label" for="api-token-value">New token</label>
+        <input class="mero-input" id="api-token-value" value="${token}" readonly spellcheck="false" data-api-token>
+      </div>
+      <div class="mero-row"><button class="mero-button mero-button-secondary" type="button" data-mero-ephemeral-dismiss="#api-token-create">I copied it</button></div>`,
+    { headers: { "Cache-Control": "no-store" } });
+  }
+
+  async function formOutcomeDemo({ request, response }) {
+    const params = await formBody(request);
+    if (!params) return send(response, "Form is too large.", { status: 413 });
+    const responses = {
+      succeeded: [200, '<p class="mero-alert mero-alert-success" data-rotated-key>New key <code>mk_live_4c1e…9a07</code> is active.</p>'],
+      rejected: [403, "", { "Mero-Action-Message": "Your password did not match. Nothing changed." }],
+      unknown: [504],
+      incomplete: [200, '<p class="mero-alert">Rotation queued.</p>'],
+    };
+    const [status, body = "", headers] = responses[params.get("outcome")] ?? [400];
+    return send(response, body, { status, headers });
   }
 
   function demoNotFound({ response }) {
@@ -381,6 +419,8 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     ["GET", /^\/demo\/catalog\//, catalogDemo],
     ["POST", "/demo/settings", saveSettings],
     ["POST", "/demo/catalog/action-button", actionDemo],
+    ["POST", "/demo/catalog/form-credential", formCredentialDemo],
+    ["POST", "/demo/catalog/form-outcome", formOutcomeDemo],
     ["POST", "/demo/catalog/typed-confirmation", typedConfirmationDemo],
     ["*", /^\/demo\//, demoNotFound],
     ...(serveFiles ? [["GET", /^\/(?:fonts\/|vendor\/)?[a-z0-9.-]+$/i, staticAsset]] : []),

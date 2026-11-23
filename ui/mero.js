@@ -115,7 +115,7 @@
       }
       if (!aliases.size) continue;
       scopeAliases.set(scope, aliases);
-      const selectors = ["hx-target", "data-mero-return-focus", "data-mero-fallback-focus"];
+      const selectors = ["hx-target", "data-mero-return-focus", "data-mero-fallback-focus", "data-mero-ephemeral-dismiss", "data-mero-action-unknown", "data-mero-action-reread"];
       const attributes = ["for", "aria-controls", "aria-labelledby", "aria-describedby", "aria-activedescendant", "popovertarget", "data-mero-open", ...selectors];
       for (const node of scope.querySelectorAll(attributes.map(attr => "[" + attr + "]").join(","))) {
         if (node.closest(selector) !== scope) continue;
@@ -931,6 +931,35 @@
       // control when its ID survives the swap, then use the designated fallback.
       if (opener.id) region.querySelector("#" + CSS.escape(opener.id))?.focus({ preventScroll: true });
       if (document.activeElement === document.body) region.querySelector("[data-mero-focus-fallback]")?.focus({ preventScroll: true });
+    }
+  });
+
+  // Focus continuity: when a swap or morph removes the focused element, focus would fall to <body>.
+  // Mero puts it back on the same element, else the element with its ID, else the swapped region's
+  // [data-mero-focus-fallback]. It only acts when focus was inside a swap target as the swap began and
+  // is on <body> once every task has settled, so it never moves focus the person put somewhere else.
+  const lostFocus = new WeakMap();
+  const focusLost = () => !document.activeElement || document.activeElement === document.body;
+  document.addEventListener("htmx:before:swap", event => {
+    const { ctx, tasks } = event.detail;
+    const active = document.activeElement;
+    if (focusLost() || event.defaultPrevented) return;
+    const targets = tasks.map(task => typeof task.target === "string" ? document.querySelector(task.target) : task.target)
+      .filter(target => target?.contains(active) && !target.closest("[data-mero-focus-manual]"));
+    if (targets.length) lostFocus.set(ctx, { element: active, id: active.id, targets });
+  });
+  // finally:swap follows every task's settle and htmx's own [autofocus], so both keep precedence.
+  document.addEventListener("htmx:finally:swap", event => {
+    const saved = lostFocus.get(event.detail.ctx);
+    lostFocus.delete(event.detail.ctx);
+    if (!saved || !focusLost()) return;
+    const regions = saved.targets.map(target => target.isConnected ? target : target.id && document.getElementById(target.id)).filter(Boolean);
+    const candidates = [saved.element, saved.id && document.getElementById(saved.id),
+      ...regions.map(region => region.querySelector("[data-mero-focus-fallback]"))];
+    for (const candidate of candidates) {
+      if (!candidate?.isConnected || !candidate.getClientRects().length) continue;
+      candidate.focus({ preventScroll: true });
+      if (document.activeElement === candidate) return;
     }
   });
 
