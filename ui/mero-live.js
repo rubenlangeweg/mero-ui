@@ -1,5 +1,7 @@
 /*! @rubenlangeweg/mero-ui 0.7.0 | MIT */
 // Optional polling for a read-only status fragment. htmx owns each GET and swap.
+// With data-mero-live-follow, an error response carrying HX-Redirect, HX-Location or HX-Refresh
+// (such as a 401 after the session expired) is handed to htmx instead of retried.
 (() => {
   const selector = "[data-mero-live]";
   const states = new WeakMap();
@@ -19,7 +21,8 @@
 
   function init(region) {
     if (states.has(region)) return;
-    const state = { timer: null, request: null };
+    // The server rendered the region, so the page load counts as the first good read.
+    const state = { timer: null, request: null, goodAt: Date.now(), followed: false };
     states.set(region, state);
     schedule(region, state);
   }
@@ -78,8 +81,17 @@
   document.addEventListener("htmx:before:response", event => {
     const { ctx } = event.detail;
     if (!ctx.sourceElement?.matches(selector)) return;
+    const state = states.get(ctx.sourceElement);
+    if (state?.request !== ctx) return event.preventDefault();
+    if (ctx.response.raw.ok) return;
+    // htmx acts on these headers before any swap, so the error body is never shown.
+    if (ctx.sourceElement.hasAttribute("data-mero-live-follow") && (ctx.hx?.redirect || ctx.hx?.location || ctx.hx?.refresh === "true")) {
+      state.followed = true;
+      ctx.hx = { redirect: ctx.hx.redirect, location: ctx.hx.location, refresh: ctx.hx.refresh };
+      return;
+    }
     // Stop before htmx interprets swap or redirect headers from an error response.
-    if (states.get(ctx.sourceElement)?.request !== ctx || !ctx.response.raw.ok) event.preventDefault();
+    event.preventDefault();
   });
 
   document.addEventListener("htmx:before:swap", event => {
@@ -99,11 +111,20 @@
     if (!state || state.request !== ctx) return;
     state.request = null;
     region.removeAttribute("aria-busy");
+    // The page is leaving or htmx is loading the new location: polling ends here.
+    if (state.followed) {
+      region.setAttribute("data-mero-live-done", "");
+      return;
+    }
     // A cancelled before:request also fires finally in htmx 4.
     if (ctx.response || String(ctx.status).startsWith("error")) {
       const failed = !ctx.response?.raw.ok || String(ctx.status).startsWith("error");
       const error = region.querySelector("[data-mero-live-error]");
-      const message = failed ? "Couldn't refresh. Retrying…" : "";
+      if (!failed) state.goodAt = Date.now();
+      // The author's text may name the last good read: "Couldn't refresh. Showing the status from {time}."
+      const template = error?.getAttribute("data-mero-live-error");
+      const time = new Date(state.goodAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      const message = !failed ? "" : template ? template.replaceAll("{time}", time) : "Couldn't refresh. Retrying…";
       if (error && error.textContent !== message) error.textContent = message;
       const retry = region.querySelector("[data-mero-live-retry]");
       if (retry) {

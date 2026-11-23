@@ -3,6 +3,7 @@
 ## Unreleased
 
 - **Focus continuity:** when any htmx swap or morph removes the focused element, focus returns to the same element, else the element with its ID, else the target's `data-mero-focus-fallback`, instead of falling to the page body. Mero acts only when focus was inside the swap target and is on the body afterwards, so it never takes focus from where the person moved it, and a server `autofocus` still wins. Add `data-mero-focus-manual` to keep handling focus yourself.
+- **Live Progress:** `data-mero-live-follow` lets htmx act on `HX-Redirect`, `HX-Location` or `HX-Refresh` from an error response and stops polling, so a 401 for an expired session goes to the login page instead of retrying forever. A `data-mero-live-error` value replaces the default failure text, and `{time}` in it shows when the status was last confirmed. Live Progress has a Stale status variant.
 
 ## 0.7.0 · 23 November 2026
 
