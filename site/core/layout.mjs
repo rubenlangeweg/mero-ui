@@ -7,7 +7,46 @@ export const groups = [
         <strong>Starter workspace</strong>
         <p class="mero-description">A place to plan and ship the next release.</p>
         <a class="mero-button mero-button-secondary" href="/playground">Open playground</a>
-      </article>`),
+      </article>`,
+      "Put a title and optional description in mero-card-header. Use a section with aria-labelledby on the title when the card is a page region.", [
+      ["Header actions and table", `
+      <section class="mero-card" aria-labelledby="card-releases-title">
+        <header class="mero-card-header">
+          <h2 class="mero-card-title" id="card-releases-title">Recent releases</h2>
+          <div class="mero-card-actions">
+            <a class="mero-button mero-button-ghost mero-button-sm" href="/components/sortable-table">View all</a>
+            <button class="mero-button mero-button-outline mero-button-sm" type="button" data-mero-toast="Release draft created">New release</button>
+          </div>
+        </header>
+        <div class="mero-card-flush">
+          <div class="mero-table-wrap mero-table-cards">
+            <table class="mero-table" role="table" aria-labelledby="card-releases-title">
+              <thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">Version</th><th role="columnheader" scope="col">Environment</th><th role="columnheader" scope="col">Status</th></tr></thead>
+              <tbody role="rowgroup">
+              <tr role="row">
+                <th role="rowheader" scope="row"><span data-mero-cell-label aria-hidden="true">Version</span><a class="mero-link" href="/components/sortable-table">v1.4.0</a></th>
+                <td role="cell"><span data-mero-cell-label aria-hidden="true">Environment</span>Staging</td>
+                <td role="cell"><span data-mero-cell-label aria-hidden="true">Status</span><span class="mero-badge mero-badge-warning">Review</span></td>
+              </tr>
+              <tr role="row">
+                <th role="rowheader" scope="row"><span data-mero-cell-label aria-hidden="true">Version</span><a class="mero-link" href="/components/sortable-table">v1.3.0</a></th>
+                <td role="cell"><span data-mero-cell-label aria-hidden="true">Environment</span>Production</td>
+                <td role="cell"><span data-mero-cell-label aria-hidden="true">Status</span><span class="mero-badge mero-badge-success">Live</span></td>
+              </tr>
+              <tr role="row">
+                <th role="rowheader" scope="row"><span data-mero-cell-label aria-hidden="true">Version</span><a class="mero-link" href="/components/sortable-table">v1.2.2</a></th>
+                <td role="cell"><span data-mero-cell-label aria-hidden="true">Environment</span>Production</td>
+                <td role="cell"><span data-mero-cell-label aria-hidden="true">Status</span><span class="mero-badge">Retired</span></td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>`, {
+        description: "Give a card actions at the end of its header and let a table reach its edges.",
+        notes: "Put actions in mero-card-actions as the header's last child; they stay at the inline end and wrap under the title on narrow cards. Wrap a table in mero-card-flush so its rows and borders run to the card's edges while the first and last cells keep the card's padding. Below 768 px, a mero-table-cards table inside the flush body returns to the card padding and shows labelled cards. If you change the card padding, set --mero-panel-padding instead so the flush body follows.",
+      }],
+    ]),
     item("page-header", "Page Header", "Open a page with its title, a short description and the page’s main actions.", `
       <header class="mero-page-head">
         <div>

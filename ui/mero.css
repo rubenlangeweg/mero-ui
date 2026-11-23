@@ -350,7 +350,7 @@
 :where(.mero-card, .mero-section, .mero-surface) {
   --mero-panel-bg: var(--mero-surface);
   box-sizing: border-box;
-  padding: 1.06rem;
+  padding: var(--mero-panel-padding, 1.06rem);
   border: 1px solid var(--mero-line);
   border-radius: var(--mero-radius-panel);
   background: var(--mero-panel-bg);
@@ -360,7 +360,21 @@
 :where(.mero-card-title) { margin: 0; font-size: 1.05rem; font-weight: 650; }
 :where(.mero-card-description) { margin: .35rem 0 0; color: var(--mero-muted); }
 :where(.mero-card-header, .mero-card-footer) { display: flex; align-items: center; gap: .65rem; }
-:where(.mero-card-header) { margin-block-end: .7rem; }
+:where(.mero-card-header) { flex-wrap: wrap; margin-block-end: .7rem; }
+/* Header actions sit at the end of the header row and wrap under the title when it runs out of room. */
+:where(.mero-card-actions) { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-inline-start: auto; }
+/* A flush body reaches the card's edges, for a table that brings its own cell padding. */
+:where(.mero-card-flush) { margin-inline: calc(-1 * var(--mero-panel-padding, 1.06rem)); }
+:where(.mero-card-flush:last-child) {
+  margin-block-end: calc(-1 * var(--mero-panel-padding, 1.06rem));
+  border-end-start-radius: inherit; border-end-end-radius: inherit; overflow: clip;
+}
+@media (width < 48rem) {
+  :where(.mero-card-flush:has(> .mero-table-cards)) { margin: 0; overflow: visible; }
+}
+@media (width < 64rem) {
+  :where(.mero-card-flush:has(> .mero-table-cards-wide)) { margin: 0; overflow: visible; }
+}
 :where(.mero-card-footer) { margin-block-start: .8rem; }
 :where(.mero-separator) { align-self: stretch; margin: .75rem 0; border: 0; border-block-start: 1px solid var(--mero-line); }
 :where(.mero-stack > .mero-separator) { margin: 0; }
@@ -483,6 +497,9 @@
 :where(.mero-table th a):hover { color: var(--mero-text); }
 :where(.mero-table-compact) :where(th, td) { padding: .35rem .6rem; }
 :where(.mero-table .mero-table-num) { text-align: end; font-variant-numeric: tabular-nums; }
+:where(.mero-card-flush .mero-table :is(th, td):first-child, .mero-card-flush .mero-table caption) { padding-inline-start: var(--mero-panel-padding, 1.06rem); }
+:where(.mero-card-flush .mero-table :is(th, td):last-child) { padding-inline-end: var(--mero-panel-padding, 1.06rem); }
+:where(.mero-card-flush .mero-table th) { border-radius: 0; }
 /* One real link per row; its ::after covers the row while other controls sit above it. */
 :where(.mero-table tr:has(.mero-row-link)) { position: relative; cursor: pointer; }
 :where(.mero-row-link) { color: inherit; text-decoration: none; }
