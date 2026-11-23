@@ -73,7 +73,8 @@ const attributes = [
     ["data-mero-peek-body", "On a <code>&lt;template&gt;</code> inside a row of a <code>data-mero-peek</code> table. Holds the server-rendered preview for that row. Give the row a stable <code>id</code> so the preview follows it through swaps; otherwise Mero matches the row link’s <code>href</code>."],
     ["*data-mero-peek-close", "On the Close button of the Preview panel Mero adds."],
     ["data-mero-restore-focus", "On a list container. After Back to this page, focuses the link in it that was opened. Links are matched by <code>href</code>."],
-    ["data-mero-focus-fallback", "On one control inside a <code>data-mero-restore-focus</code> container. Gets focus after an htmx swap when the initiating control has no focusable replacement with the same ID."],
+    ["data-mero-focus-fallback", "On one focusable element inside an htmx swap target, or inside a <code>data-mero-restore-focus</code> container. When a swap or morph removes the focused element and leaves focus on the page body, Mero focuses the same element if it survived, else the element with its ID, else this fallback. Mero only acts when focus was inside the target as the swap began, never after the person moved focus elsewhere, and a server <code>autofocus</code> wins."],
+    ["data-mero-focus-manual", "On an htmx swap target, or an ancestor. Mero leaves focus after swaps inside it to your own code."],
     ["data-mero-pending", "On any element. Shows a <code>.mero-indicator</code> inside it, as <code>.htmx-request</code> does."],
     ["data-mero-request", "With a pending state. Sets a progress cursor on the element."],
   ]],
@@ -105,9 +106,10 @@ const attributes = [
   ["Live progress", "mero-live.js", [
     ["data-mero-live", "On a region with <code>hx-get</code> and <code>hx-trigger=\"mero:refresh\"</code>. Its value is the interval in milliseconds, 3000 by default. Polling pauses while the page is hidden. Send <code>Mero-Live: done</code> on the final successful response."],
     ["data-mero-live-status", "Use this polite status region as the innerHTML target. Return a status label as an HTML fragment. Mero skips a repeated label so it is announced once."],
-    ["data-mero-live-error", "An initially empty status region that announces a failed read. The last good status stays visible until a successful read."],
+    ["data-mero-live-error", "An initially empty status region that announces a failed read. The last good status stays visible until a successful read. The attribute value, when set, replaces the default text; <code>{time}</code> becomes the time of the last good read in the browser’s locale, or the page load when no read has succeeded yet."],
+    ["data-mero-live-follow", "On the <code>data-mero-live</code> region. An error response with <code>HX-Redirect</code>, <code>HX-Location</code> or <code>HX-Refresh: true</code>, such as a 401 for an expired session, is handed to htmx instead of retried, and polling stops. Without it Mero ignores those headers on an error response and keeps retrying."],
     ["data-mero-live-retry", "On a hidden button. Mero shows it after a failed read. Activating it refreshes the status immediately. If a successful read hides the focused button, focus returns to the region."],
-    ["data-mero-live-done", "On an operation with a final status. Mero sets it after a successful response with the terminal header. Render it yourself if the operation has already finished."],
+    ["data-mero-live-done", "On an operation with a final status. Mero sets it after a successful response with the terminal header, and after following a redirect with <code>data-mero-live-follow</code>. Render it yourself if the operation has already finished."],
   ]],
   ["Gallery", "mero-gallery.js", [
     ["data-mero-slide", "On each slide. Its value links the slide to a choice control."],
