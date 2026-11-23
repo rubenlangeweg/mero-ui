@@ -6,6 +6,7 @@
 - **Local time:** `time[data-mero-time]` shows its `datetime` in the reader's locale and time zone, as an absolute date and time, a date, a time or a relative time that refreshes every minute. Typography has a Local time variant.
 - **Keyboard shortcuts:** `data-mero-shortcut` binds a single key or a two-key sequence to a control, and `data-mero-shortcuts-toggle` turns single-key shortcuts off, as WCAG 2.1.4 requires. The Kbd has a Keyboard shortcuts variant.
 - **Form state:** `data-mero-show-when="field=value"` shows and enables a branch only for the chosen values, and `form[data-mero-dirty]` enables submitting only after a change. The Fieldset has a Conditional fields variant.
+- **Search and filter guard:** `form[data-mero-search]` never lets a failed read replace its list. Mero skips the swap of an error response or one without the `hx-select` region, explains it in `data-mero-search-error` and returns selects, checkboxes and radios to the filters the list shows. A redirected response without the region loads as a full page. The Search Field has a Filtered list variant.
 
 ## 0.7.0 · 23 November 2026
 

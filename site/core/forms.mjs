@@ -1,4 +1,16 @@
+import { escapeHtml } from "../html.mjs"
 import { field, item, section } from "./helpers.mjs"
+
+const searchProjects = [["Atlas", "active"], ["Beacon", "paused"], ["Cobalt", "active"], ["Delta", "archived"], ["Ember", "active"]]
+
+// Results for the Search Field's Filtered list variant. The demo route answers "archived" with HTTP 503.
+export function searchResults(query = "", status = "") {
+  const q = query.trim().toLowerCase()
+  const rows = searchProjects.filter(([name, state]) => name.toLowerCase().includes(q) && (!status || state === status))
+  return `<ul class="mero-stack" id="search-demo-results" aria-label="Projects">${rows.length
+    ? rows.map(([name, state]) => `<li>${escapeHtml(name)} <span class="mero-badge">${state}</span></li>`).join("")
+    : "<li>No projects match.</li>"}</ul>`
+}
 
 export const groups = [
   section("Forms", [
@@ -148,7 +160,28 @@ export const groups = [
         </div>
       </fieldset>`),
     item("search-field", "Search Field", "Use a native search field with the platform’s clear affordance.",
-      field("demo-search", "Find a component", 'name="q" placeholder="Buttons, drawers, tabs…"', { type: "search" })),
+      field("demo-search", "Find a component", 'name="q" placeholder="Buttons, drawers, tabs…"', { type: "search" }), undefined, [
+        ["Filtered list", `
+          <form class="mero-stack" role="search" action="/demo/catalog/search-results" method="get" data-mero-search
+            hx-get="/demo/catalog/search-results" hx-trigger="input delay:250ms, submit" hx-sync="this:replace"
+            hx-target="#search-demo-results" hx-select="#search-demo-results" hx-swap="outerHTML">
+            ${field("search-demo-q", "Search projects", 'name="q" autocomplete="off"', { type: "search" }).trim()}
+            <div class="mero-field">
+              <label class="mero-label" for="search-demo-status">Status</label>
+              <select class="mero-select" id="search-demo-status" name="status">
+                <option value="" selected>Any status</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="archived">Archived (simulated server error)</option>
+              </select>
+            </div>
+            <p class="mero-field-error" data-mero-search-error role="alert" hidden></p>
+          </form>
+          ${searchResults()}`, {
+          description: "Filter a list as you type without losing it when the server fails.",
+          notes: "Choose Archived to see a failed read: the list keeps its previous results, the error explains why and the status select returns to the filter the list shows. Mero also skips a 2xx response without the hx-select region, and loads a redirected response without it as a full page, such as a login page after the session expired.",
+        }],
+      ]),
     item("text-area", "Text Area", "Let users edit multiple lines of text with an optional autosizing surface.", `
       <div class="mero-field">
         <label class="mero-label" for="demo-textarea">Release summary</label>
