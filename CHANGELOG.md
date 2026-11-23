@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Search and filter guard:** `form[data-mero-search]` never lets a failed read replace its list. Mero skips the swap of an error response or one without the `hx-select` region, explains it in `data-mero-search-error` and returns selects, checkboxes and radios to the filters the list shows. A redirected response without the region loads as a full page. The Search Field has a Filtered list variant.
+
 ## 0.7.0 · 23 November 2026
 
 - Try six HTMX 4 workflows in the playground. Review price changes with keyboard approval and undo, correct a spreadsheet before import, assign records from the command menu, publish across pages, share saved views and move cards together on a live board. [Open the workflows](https://mero-ui.rubenlangeweg.com/premium) · [Watch the seven captioned walkthroughs](https://mero-ui.rubenlangeweg.com/premium/watch)
