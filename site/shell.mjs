@@ -190,7 +190,7 @@ export function home({ workbench, componentCount, product, apps = [] }) {
     ${workbench}
   </section>
   <section class="site-wrap home-start home-app-start" aria-labelledby="home-start-title">
-    <div class="home-app-copy"><h2 id="home-start-title">Bring your own backend.</h2><p>Use the same component markup in a full page or an HTML fragment returned by your server.</p></div>
+    <div class="home-app-copy"><h2 id="home-start-title">Bring your own backend.</h2><p>Try the same inventory button with <a href="/start#go">Go and html/template</a> or <a href="/start#rust">Rust and Axum</a>. Your server returns the HTML fragment.</p></div>
     <a class="mero-button mero-button-primary site-cta" href="/start">Read the docs <span aria-hidden="true">→</span></a>
   </section>`;
 }

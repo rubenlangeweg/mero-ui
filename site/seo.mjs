@@ -4,7 +4,7 @@ const productDescription = "Mero UI is a UI kit for htmx. Copy HTML components i
 
 const descriptions = new Map([
   ["/", productDescription],
-  ["/start", "Install Mero UI, request your first HTML fragment with htmx and inspect the server response."],
+  ["/start", "Use Mero UI with Go, Rust or any HTML backend. Run a Go net/http or Rust Axum example and inspect the HTML fragment returned to HTMX 4."],
   ["/docs/design-principles", "See how Mero UI handles keyboard focus, motion, theming and server responses in htmx interfaces."],
   ["/docs/responsive-layouts", "Resize a working company directory and see how Mero UI handles list and detail views, selection and Back in a narrow container."],
   ["/docs/reference", "Look up the events Mero UI sends and acts on, the window.MeroUI functions and every data-mero attribute."],

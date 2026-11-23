@@ -52,6 +52,19 @@ test("the footer leads visitors to project information and the original bundled 
   }
 });
 
+test("Go and Rust quick starts are discoverable in the initial HTML", async t => {
+  const base = await serve(t);
+  const home = await getText(base, "/");
+  const guide = await getText(base, "/start");
+  for (const language of ["go", "rust"]) {
+    assert.ok(links(home).includes("/start#" + language));
+    assert.ok(links(guide).includes("#" + language));
+    assert.ok(guide.includes(`id="${language}"`));
+  }
+  assert.equal(canonical(guide), publicOrigin + "/start");
+  assert.match(guide, /<title>[^<]*Go[^<]*Rust/);
+});
+
 test("robots advertises a sitemap of canonical documentation URLs using the configured origin", async t => {
   const base = await serve(t);
   const robots = await getText(base, "/robots.txt");

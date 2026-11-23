@@ -1,22 +1,31 @@
 # Mero UI
 
-A component library for server-rendered HTML and HTMX. Browse working examples, copy the displayed template, and inspect the response from examples that make HTTP requests.
+Mero UI works with Go, Rust and any backend that renders HTML. Copy a component into your server template, serve its CSS and JavaScript, and return HTML fragments for HTMX 4 requests. Your application can run without Node.js or npm.
 
 [Website](https://mero-ui.rubenlangeweg.com) · [Component catalog](https://mero-ui.rubenlangeweg.com/components) · [Playground](https://mero-ui.rubenlangeweg.com/playground)
 
-## Run locally
+## Use a component
 
-Use Node 22 or newer.
+[Download the browser assets](https://mero-ui.rubenlangeweg.com/start) into your static directory. Load the stylesheet and scripts in your page head.
 
-```sh
-npm start
+```html
+<link rel="stylesheet" href="/mero.css">
+<script defer src="/vendor/htmx.min.js"></script>
+<script defer src="/mero.js"></script>
 ```
 
-Open the [product page](http://127.0.0.1:4173/), [component catalog](http://127.0.0.1:4173/components) or [application layouts](http://127.0.0.1:4173/layouts). The docs cover [design principles](http://127.0.0.1:4173/docs/design-principles) and include a [resizable company directory](http://127.0.0.1:4173/docs/responsive-layouts). In the [playground](http://127.0.0.1:4173/playground), try an inventory edit, a failed form submission or a chart filter and inspect the returned HTML. The sample server listens on loopback and stores demo records in memory.
+### Try Go or Rust
 
-When serving the site on a public domain, set `MERO_SITE_ORIGIN` to its full origin, including `https://`. Mero uses it for canonical links, structured data and [the sitemap](http://127.0.0.1:4173/sitemap.xml). The local preview uses its loopback address.
+Both [runnable examples](https://github.com/rubenlangeweg/mero-ui/tree/main/examples/backends) serve the same inventory button. From the repository root, choose one backend.
 
-## Use a component
+| Backend | Run | Guide |
+| --- | --- | --- |
+| Go 1.22+ with `net/http` and `html/template` | `cd examples/backends && go run ./go/main.go` | [Go quick start](https://mero-ui.rubenlangeweg.com/start#go) |
+| Rust stable with Cargo and Axum | `cd examples/backends && cargo run --locked --manifest-path rust/Cargo.toml` | [Rust quick start](https://mero-ui.rubenlangeweg.com/start#rust) |
+
+Open <http://127.0.0.1:4180> and choose **Check inventory**. Your handler returns an HTML fragment showing **6 products · 4 active**.
+
+### Install with npm
 
 Install the UI assets from the [GitHub release](https://github.com/rubenlangeweg/mero-ui/releases) and HTMX from npm:
 
@@ -59,12 +68,6 @@ Add `data-mero-peek` around a table wrapper whose rows have a `.mero-row-link`, 
 
 Add `data-mero-restore-focus` to a list container. When someone opens a link in it and then presses Back, `mero.js` focuses that link again. This works after a full page load and after an HTMX history restore. Links are matched by their `href`, so keep row hrefs unique on the page. Mark one control in the container with `data-mero-focus-fallback`. It gets focus when an HTMX swap removes the focused element.
 
-```html
-<link rel="stylesheet" href="/mero.css">
-<script defer src="/vendor/htmx.min.js"></script>
-<script defer src="/mero.js"></script>
-```
-
 Use the [theme studio](http://127.0.0.1:4173/themes) to try colors, fonts and radii on real components or an app layout. Export the CSS, load it after `mero.css` and set `data-theme="light"` or `data-theme="dark"` on a document or section.
 
 Media uses `mero-gallery` assets. Collections use `mero-collections`. Workspace controls use `mero-workspace`. Charts and conversation examples use `mero-insights`. Presentation utilities use `mero-composition`. Each pair comprises a stylesheet and a deferred script. Two optional server helpers render charts and a small Markdown subset. Import them as `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown`.
@@ -86,6 +89,18 @@ Download the [complete preview and source](http://127.0.0.1:4173/downloads/mero-
 The [coverage map](docs/component-coverage.md) links the catalog to the original reference families. The [edit comparison](examples/edit-comparison/README.md) uses the same edit flow across three implementations.
 
 The inventory form uses `mero-forms.js` for pending state, a replacement form on HTTP 422, and a successful `mero:form-saved` event. `mero-forms.js` also reports the outcome of standalone action buttons marked `data-mero-action`. The `Mero-Action-Outcome` (`succeeded`, `rejected` or `unknown`) and `Mero-Action-Message` response headers override the status-based state and its text. The host supplies validation, persistence and authorization in its own application. A chart table, campus map and chat assistant in the catalog use local sample data. The chat demo gives deterministic replies.
+
+## Run the catalog locally
+
+Use Node 22 or newer.
+
+```sh
+npm start
+```
+
+Open the [product page](http://127.0.0.1:4173/), [component catalog](http://127.0.0.1:4173/components) or [application layouts](http://127.0.0.1:4173/layouts). The docs cover [design principles](http://127.0.0.1:4173/docs/design-principles) and include a [resizable company directory](http://127.0.0.1:4173/docs/responsive-layouts). In the [playground](http://127.0.0.1:4173/playground), try an inventory edit, a failed form submission or a chart filter and inspect the returned HTML. The sample server listens on loopback and stores demo records in memory.
+
+When serving the site on a public domain, set `MERO_SITE_ORIGIN` to its full origin, including `https://`. Mero uses it for canonical links, structured data and [the sitemap](http://127.0.0.1:4173/sitemap.xml). The local preview uses its loopback address.
 
 ## Verify
 
