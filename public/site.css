@@ -70,7 +70,8 @@
 .site-skip:focus { transform: translateY(0); }
 .site-header { position: sticky; z-index: 4; top: 0; color: var(--site-fg); background: color-mix(in srgb, var(--site-bg) 86%, transparent); box-shadow: inset 0 -1px color-mix(in srgb, var(--site-line) 66%, transparent); backdrop-filter: blur(20px); }
 .site-nav-frame { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 66px; }
-.site-brand { display: inline-flex; align-items: center; width: fit-content; min-height: 36px; color: var(--site-fg); font-size: 25px; font-weight: 680; letter-spacing: -.058em; line-height: 1; white-space: nowrap; }
+.site-brand { display: inline-flex; align-items: center; gap: .32em; width: fit-content; min-height: 36px; color: var(--site-fg); font-size: 25px; font-weight: 680; letter-spacing: -.058em; line-height: 1; white-space: nowrap; }
+.site-brand img { width: 1.12em; height: 1.12em; }
 .brand-suffix { color: var(--site-muted); font-weight: 490; }
 .site-nav { display: flex; align-items: center; gap: 6px; }
 .site-nav a { padding: 7px 11px; border-radius: 999px; color: var(--site-muted); font-size: 13px; font-weight: 530; transition: color .16s, background .16s; }
