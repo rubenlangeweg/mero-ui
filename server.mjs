@@ -36,7 +36,7 @@ import { referencePage } from "./site/reference.mjs";
 
 export const sourceArchiveEntries = [
   "LICENSE", ".gitignore", "README.md", "package.json", "package-lock.json", "server.mjs", "site", "ui", "public", "examples",
-  "test", "scripts", "docs", "worker.mjs", "vite.config.mjs", "cloudflare.config.ts",
+  "test", "scripts", "skills", "docs", "worker.mjs", "vite.config.mjs", "cloudflare.config.ts",
 ];
 // The files the npm package ships live in ui/. Site-only files stay in public/.
 const libraryAsset = /^(?:mero[a-z-]*\.(?:css|js)|insight-[a-z-]+\.mjs|studio-lamp\.webp)$/;

@@ -4,6 +4,18 @@ Mero UI works with Go, Rust and any backend that renders HTML. Copy a component 
 
 [Website](https://mero-ui.rubenlangeweg.com) · [Component catalog](https://mero-ui.rubenlangeweg.com/components) · [Playground](https://mero-ui.rubenlangeweg.com/playground)
 
+## Agent skills
+
+From your app's root, install the skill for building pages with Mero UI:
+
+```sh
+npx skills add rubenlangeweg/mero-ui --skill mero-ui
+```
+
+Try “Use Mero UI to add a sortable table with row previews to my inventory page.” The skill helps the agent find the matching template and assets, connect your routes and check the result after a swap.
+
+When changing the library itself, run `npx skills add . --skill mero-ui-contribute` from the Mero source checkout. Try “Add a variant to the sortable table and verify the copied template on a plain page.”
+
 ## Use a component
 
 [Download the browser assets](https://mero-ui.rubenlangeweg.com/start) into your static directory. Load the stylesheet and scripts in your page head.
