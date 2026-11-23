@@ -92,6 +92,10 @@ test("native select indicators and switch thumbs sit inside the control in both 
         document.documentElement.dir = dir;
         document.body.style.zoom = zoom;
       }, config);
+      if (config.pageType === "catalog") {
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+          `catalog must fit the viewport at ${config.zoom}× in ${config.dir}`);
+      }
       const subject = config.pageType === "plain" ? page.locator("body") : page.locator("[data-sample-scope]");
       if (id === "native-select") {
         const select = subject.getByRole("combobox", { name: /Default workspace/ });

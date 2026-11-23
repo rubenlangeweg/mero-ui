@@ -22,14 +22,18 @@ async function start(t) {
   return { browser, base: "http://127.0.0.1:" + app.address().port };
 }
 
-test("the shared wordmark is a single text link and the homepage works without scripts", options, async t => {
+test("the header and footer wordmarks link home and the homepage works without scripts", options, async t => {
   const { base, browser } = await start(t);
   const page = await browser.newPage({ javaScriptEnabled: false, reducedMotion: "reduce", viewport: { width: 320, height: 800 } });
   await page.goto(base + "/playground");
   for (const landmark of ["banner", "contentinfo"]) {
     const brand = page.getByRole(landmark).getByRole("link", { name: "Mero UI home" });
-    assert.equal(await brand.innerText(), "Mero UI");
-    assert.equal(await brand.locator(".mero-mark, img, svg").count(), 0);
+    assert.equal(await brand.count(), 1);
+    const wordmark = brand.locator("img");
+    assert.equal(await wordmark.getAttribute("src"), "/mero-wordmark.svg");
+    assert.equal(await wordmark.getAttribute("alt"), "");
+    assert.ok(await wordmark.isVisible());
+    assert.ok(await wordmark.evaluate(img => img.complete && img.naturalWidth > 0));
     assert.equal(await brand.getAttribute("href"), "/");
   }
   await page.getByRole("contentinfo").getByRole("link", { name: "Mero UI home" }).focus();

@@ -217,7 +217,7 @@
     const template = content.querySelector(":scope > template[data-catalog-head]");
     if (!template) return;
     const tags = template.content.querySelectorAll(
-      ":is(meta[name], meta[property], link[rel=canonical], script[type='application/ld+json']:not([src]))[data-page-meta]"
+      ":is(meta[name], meta[property], link[rel=canonical], link[rel=describedby], link[rel=alternate][type='text/markdown'], script[type='application/ld+json']:not([src]))[data-page-meta]"
     );
     document.head.querySelectorAll("[data-page-meta]:not(title)").forEach(tag => tag.remove());
     document.head.append(...tags);

@@ -66,6 +66,8 @@ export function seoHead({ path = "/", origin, title = "Mero UI", description, in
   const canonical = (origin || "") + path;
   const json = JSON.stringify(pageSchema(path, origin, title, summary)).replace(/</g, "\\u003c");
   return `${basic}
+    <link data-page-meta rel="describedby" href="/llms.txt">
+    ${path.startsWith("/components/") ? `<link data-page-meta rel="alternate" type="text/markdown" href="${escapeHtml(canonical)}.md">` : ""}
     <link data-page-meta rel="canonical" href="${escapeHtml(canonical)}">
     <meta data-page-meta property="og:type" content="website">
     <meta data-page-meta property="og:site_name" content="Mero UI">
