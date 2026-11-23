@@ -584,6 +584,18 @@
 :where(.mero-breadcrumbs li + li)::before { content: "/"; margin-inline-end: .52rem; color: var(--mero-muted); }
 :where(.mero-pagination [aria-current="page"]) { background: var(--mero-accent); color: var(--mero-accent-ink); }
 
+/* Page header: optional breadcrumbs, the heading block, then actions at the end. Below 768 px the actions wrap under the heading. */
+:where(.mero-page-head) { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: .75rem; margin-block-end: 1.5rem; }
+:where(.mero-page-head) :where(h1, h2) { margin: 0; font-size: clamp(1.55rem, 3vw, 2.15rem); line-height: 1.12; letter-spacing: -.05em; overflow-wrap: anywhere; }
+:where(.mero-page-head) :where(p) { margin: .35rem 0 0; color: var(--mero-muted); font-size: .9rem; }
+:where(.mero-page-head > .mero-breadcrumbs) { flex-basis: 100%; margin-block-end: -.25rem; font-size: .84rem; }
+:where(.mero-page-head > :not(.mero-breadcrumbs, .mero-page-head-actions)) { flex: 1 1 16rem; min-inline-size: 0; }
+:where(.mero-page-head-title) { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .65rem; }
+:where(.mero-page-head-actions) { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+@media (width < 48rem) {
+  :where(.mero-page-head-actions) { flex-basis: 100%; }
+}
+
 :where(.mero-tabs-list, .mero-tabs > [role="tablist"]) {
   display: inline-flex;
   max-inline-size: 100%;
