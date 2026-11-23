@@ -27,13 +27,13 @@ function list(items, selected, last) {
   </button></li>`).join("");
 }
 
-function inspector(p, last) {
+function inspector(p, last, settling = false) {
   const undo = last ? `<button type="button" id="pq-undo" class="mero-button mero-button-outline" ${request("post", "undo/" + last.id)}>Undo</button>` : "";
   return `<header class="mero-peek-header"><span>${p ? p.category + " · RL-" + p.id : "Review complete"}</span>
     <button type="button" class="mero-button mero-button-ghost mero-button-sm pq-close" aria-label="Close price inspector" data-pq-close>Close</button></header>
     ${p ? `<div class="pq-detail"><h3>${p.name}</h3><dl class="pq-prices"><div><dt>Current price</dt><dd>${euro.format(p.previous)}</dd></div><div><dt>Proposed price</dt><dd>${euro.format(p.proposed)}</dd></div></dl>
     <h4>Reason for change</h4><p>${p.reason}</p><small>Requested by ${p.author}</small></div>` : '<div class="pq-detail"><h3>All caught up</h3><p>The price review queue is empty.</p></div>'}
-    <footer class="mero-peek-footer"><div>${p ? `<button type="button" id="pq-approve" class="mero-button mero-button-primary" ${request("post", "approve/" + p.id)}>Approve &amp; next</button>` : ""}${undo}</div>
+    <footer class="mero-peek-footer"${settling ? " inert" : ""}><div>${p ? `<button type="button" id="pq-approve" class="mero-button mero-button-primary" ${request("post", "approve/" + p.id)}>Approve &amp; next</button>` : ""}${undo}</div>
     ${last ? `<small>Last approved · ${last.name}</small>` : ""}</footer>`;
 }
 
@@ -82,7 +82,7 @@ export function createFeature(saved) {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store",
       "HX-Trigger": JSON.stringify({ "premium:queue-ready": { target: "#pq-queue" } }) });
     res.end(partial("pq-count", items.length + " pending") + partial("pq-list", list(items, selected?.id, lastApproved())) +
-      partial("pq-inspector", inspector(selected, lastApproved())) + partial("pq-status", detail));
+      partial("pq-inspector", inspector(selected, lastApproved(), true)) + partial("pq-status", detail));
   }
   return { render, handle, snapshot: () => ({ approvals: [...approvals] }) };
 }
