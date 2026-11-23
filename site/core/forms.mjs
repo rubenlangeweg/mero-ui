@@ -71,7 +71,86 @@ export const groups = [
           description: "Create an API token and keep the page until the person has copied it.",
           notes: "While the request runs, and while the token is shown, Mero cancels boosted navigation and requests that would replace the token, undoes Back and asks before the page unloads. The token is cleared on I copied it, when a surrounding dialog closes and when the page is hidden. Render the secret only in this response, never in a page the server can send again.",
         }],
-      ]),
+        ["Action outcome", `
+          <form class="mero-stack" method="post" action="/demo/catalog/form-outcome" hx-post="/demo/catalog/form-outcome"
+            hx-target="#rotate-key-result" hx-headers='{"Idempotency-Key":"rotate-demo-7f3a"}'
+            data-mero-form data-mero-clear-passwords data-mero-action-expect="[data-rotated-key]" data-mero-action-unknown="#rotate-key-unknown">
+            <div class="mero-field">
+              <label class="mero-label" for="rotate-key-outcome">Simulated server response</label>
+              <select class="mero-select" id="rotate-key-outcome" name="outcome">
+                <option value="succeeded">Key rotated</option>
+                <option value="rejected">Refused: wrong password</option>
+                <option value="unknown">Gateway timeout</option>
+                <option value="incomplete">200 without the new key</option>
+              </select>
+            </div>
+            <div class="mero-field">
+              <label class="mero-label" for="rotate-key-password">Your password</label>
+              <input class="mero-input" id="rotate-key-password" name="password" type="password" autocomplete="current-password" required>
+            </div>
+            <p class="mero-field-error" data-mero-form-error role="alert" hidden></p>
+            <div id="rotate-key-unknown" hidden>
+              <div class="mero-alert mero-alert-warning">
+                <strong class="mero-alert-title">The key may have rotated</strong>
+                <p>Check the key list before you try again. A retry sends the same request ID, so the server will not rotate twice.</p>
+              </div>
+            </div>
+            <div class="mero-row">
+              <button class="mero-button mero-button-primary" type="submit">
+                <span class="mero-button-label">Rotate signing key</span>
+                <span class="mero-indicator mero-spinner" aria-hidden="true"></span>
+              </button>
+            </div>
+            <div class="mero-form-status" id="rotate-key-result" role="status"></div>
+          </form>`, {
+          description: "Rotate a key and report whether it succeeded, was refused or has an unknown result.",
+          notes: "The submit button gets data-mero-action-state. A 2xx response must contain data-mero-action-expect, otherwise the outcome is unknown and nothing is swapped. An unknown outcome reveals the data-mero-action-unknown panel and never closes the dialog or shows success, including a request aborted after it was sent. data-mero-clear-passwords empties password fields after every response. A retry resubmits the same form, so keep the idempotency key in the markup.",
+        }],
+      ["Two columns", `
+      <form class="mero-form" action="/demo/catalog/form" method="get" style="inline-size:min(100%,40rem)"
+        hx-get="/demo/catalog/form" hx-target="#catalog-form-grid-result" hx-swap="innerHTML">
+        <fieldset class="mero-fieldset">
+          <legend class="mero-label">Profile</legend>
+          <div class="mero-form-grid">
+            <div class="mero-field">
+              <label class="mero-label" for="demo-grid-name">Name</label>
+              <input class="mero-input" id="demo-grid-name" name="name" autocomplete="given-name" required maxlength="80" placeholder="Taylor">
+            </div>
+            <div class="mero-field">
+              <label class="mero-label" for="demo-grid-email">Email</label>
+              <input class="mero-input" id="demo-grid-email" name="email" type="email" autocomplete="email" aria-describedby="demo-grid-email-hint">
+              <p class="mero-description" id="demo-grid-email-hint">Used for release notifications.</p>
+            </div>
+            <div class="mero-field">
+              <label class="mero-label" for="demo-grid-team">Team</label>
+              <select class="mero-select" id="demo-grid-team" name="team">
+                <option>Platform</option>
+                <option>Design</option>
+                <option>Support</option>
+              </select>
+            </div>
+            <div class="mero-field">
+              <label class="mero-label" for="demo-grid-region">Region</label>
+              <select class="mero-select" id="demo-grid-region" name="region">
+                <option>Europe West</option>
+                <option>US East</option>
+              </select>
+            </div>
+            <div class="mero-field mero-field-wide">
+              <label class="mero-label" for="demo-grid-notes">Notes</label>
+              <textarea class="mero-textarea" id="demo-grid-notes" name="notes" rows="3"></textarea>
+            </div>
+          </div>
+        </fieldset>
+        <div class="mero-row">
+          <button class="mero-button mero-button-primary" type="submit">Save profile</button>
+        </div>
+        <div class="mero-form-status" id="catalog-form-grid-result" role="status"></div>
+      </form>`, {
+        description: "Arrange a longer form in two columns that stack on small screens.",
+        notes: "Put fields in a mero-form-grid. Fields fill two columns in source order, which is also the tab order, and add mero-field-wide to a field that needs the whole row, such as a text area. The grid stacks below 768 px and in containers too narrow for two fields, such as a dialog. Use a fieldset with a legend to name each group of fields.",
+      }],
+    ]),
     item("input", "Input", "A styled native input with browser validation and autocomplete.",
       field("demo-input", "Email address", 'name="email" autocomplete="email" placeholder="you@example.com"', { type: "email" })),
     item("input-group", "Input Group", "Combine a control and contextual prefix with a single outline.", `

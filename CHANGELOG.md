@@ -3,6 +3,8 @@
 ## Unreleased
 
 - **One-time credentials:** `data-mero-ephemeral` marks where a secret such as a new API token is shown. Mero empties it when its dialog closes, on a `data-mero-ephemeral-dismiss` button and when the page is hidden. `data-mero-hold` keeps the page while a request is pending or while held content is shown: Mero cancels boosted navigation and requests that would replace it, undoes Back and asks before unload. The Form has a One-time credential variant.
+- **Form outcomes:** `data-mero-form` reports `succeeded`, `rejected` or `unknown` like the Action Button. The submit button gets `data-mero-action-state`, the form fires `mero:action`, and `Mero-Action-Outcome` and `Mero-Action-Message` override the state and the text. A `mero:form-saved` trigger now acts only on a succeeded outcome, so an error or unknown response can never close the dialog or announce a save. The Form has an Action outcome variant.
+- **Outcome safety:** `data-mero-action-expect="selector"` turns a 2xx response without the expected content into `unknown` and skips its swap. `data-mero-action-unknown` sets the text for an unknown outcome or reveals a recovery panel. A request aborted after it was sent always reports `unknown`; only a request cancelled before it was sent clears the state. `data-mero-clear-passwords` empties a form's password fields after every response.
 
 ## 0.7.0 · 23 November 2026
 
