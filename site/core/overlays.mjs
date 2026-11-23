@@ -2,6 +2,21 @@ import { escapeHtml } from "../html.mjs"
 import { item, section } from "./helpers.mjs"
 import { typedConfirmation } from "./typed-confirmation.mjs"
 
+const boostPages = {
+  overview: ["Overview", "Three deployments ran today. All of them succeeded."],
+  reports: ["Reports", "The weekly usage report is ready to download."],
+  settings: ["Settings", "Only workspace managers can change these settings."],
+}
+
+// The region each boosted page returns in the Drawer's Boosted navigation variant.
+export function boostPage(name) {
+  const [title, text] = boostPages[name] ?? boostPages.overview
+  return `<section class="mero-card" id="boost-demo-main" aria-labelledby="boost-demo-title">
+              <h2 class="mero-card-title" id="boost-demo-title">${title}</h2>
+              <p class="mero-description">${text}</p>
+            </section>`
+}
+
 export function commandResults(query, pages) {
   const matches = name => name.toLowerCase().includes(query)
   const actions = matches("Export catalog")
@@ -43,7 +58,32 @@ export const groups = [
       "Focus starts on Cancel. Connect the confirmation to a form action in your application."),
     typedConfirmation,
     item("drawer", "Drawer", "Open a full-height edge panel for work that benefits from more room.",
-      overlay("demo-drawer", "Review deployment", "The staging build is ready to review.", { variant: "drawer", trigger: "Open drawer" })),
+      overlay("demo-drawer", "Review deployment", "The staging build is ready to review.", { variant: "drawer", trigger: "Open drawer" }), undefined, [
+        ["Boosted navigation", `
+          <div class="mero-stack" hx-boost:inherited="true" hx-select:inherited="#boost-demo-main" hx-target:inherited="#boost-demo-main"
+            hx-swap:inherited="outerHTML" hx-push-url:inherited="false" data-mero-boost="#boost-demo-main">
+            <button class="mero-button mero-button-outline" type="button" data-mero-open="boost-demo-drawer">Open navigation</button>
+            <dialog class="mero-dialog mero-drawer" id="boost-demo-drawer" aria-labelledby="boost-demo-drawer-title">
+              <div class="mero-dialog-body">
+                <div class="mero-dialog-header">
+                  <h2 class="mero-dialog-title" id="boost-demo-drawer-title">Navigation</h2>
+                  <button class="mero-button mero-close-button" type="button" aria-label="Close navigation" data-mero-close><span class="mero-dismiss-mark" aria-hidden="true"></span></button>
+                </div>
+                <nav aria-label="Sections">
+                  <ul class="mero-stack">
+                    <li><a class="mero-link" href="/demo/catalog/boost-page?page=overview">Overview</a></li>
+                    <li><a class="mero-link" href="/demo/catalog/boost-page?page=reports">Reports</a></li>
+                    <li><a class="mero-link" href="/demo/catalog/boost-page?page=settings">Settings</a></li>
+                  </ul>
+                </nav>
+              </div>
+            </dialog>
+            ${boostPage("overview")}
+          </div>`, {
+          description: "Navigate from a drawer with boosted links that swap only the page region.",
+          notes: "data-mero-boost names the region every boosted page must contain. The newest boosted GET wins and older ones are aborted, never a boosted form that changes data. A response without the region, such as a login page, or a failed GET becomes a full page load. Open dialogs close, and focus moves to the new region unless the person moved it during the load. This demo keeps the URL; in your app, let boosted links push it.",
+        }],
+      ]),
     item("modal", "Modal", "Open a centered, named dialog with native focus containment.",
       overlay("demo-modal", "Workspace details", "Only workspace managers can change access.")),
     item("command-menu", "Command Menu", "Press Cmd or Ctrl K to search pages and actions returned by your server.", `

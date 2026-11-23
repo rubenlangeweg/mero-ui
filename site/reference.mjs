@@ -73,6 +73,7 @@ const attributes = [
     ["*data-mero-peek-close", "On the Close button of the Preview panel Mero adds."],
     ["data-mero-restore-focus", "On a list container. After Back to this page, focuses the link in it that was opened. Links are matched by <code>href</code>."],
     ["data-mero-focus-fallback", "On one control inside a <code>data-mero-restore-focus</code> container. Gets focus after an htmx swap when the initiating control has no focusable replacement with the same ID."],
+    ["data-mero-boost", `On an element with <code>hx-boost:inherited</code>, such as <code>&lt;body&gt;</code>. A selector for the region every boosted page contains. The newest boosted GET wins and older ones are aborted; boosted forms that change data are never aborted. A response without the region and without <code>HX-Redirect</code>, <code>HX-Location</code> or <code>HX-Refresh</code>, or a GET that fails without a response, becomes a full page load. When a boosted page swaps in, open dialogs other than static and alert dialogs close, and focus moves to the region unless htmx <code>autofocus</code> placed it or the person moved it during the load. See the <a href="/components/drawer">Drawer</a> Boosted navigation variant.`],
     ["data-mero-pending", "On any element. Shows a <code>.mero-indicator</code> inside it, as <code>.htmx-request</code> does."],
     ["data-mero-request", "With a pending state. Sets a progress cursor on the element."],
   ]],

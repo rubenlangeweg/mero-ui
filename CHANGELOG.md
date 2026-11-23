@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Boosted navigation guard:** `data-mero-boost="#main"` on a boosted container makes the newest boosted GET win, turns a response without that region (a login or proxy error page) or a failed GET into a full page load, closes open drawers and moves focus to the new region unless the person moved it. Boosted forms that change data are never aborted. The Drawer has a Boosted navigation variant.
+
 ## 0.7.0 · 23 November 2026
 
 - Try six HTMX 4 workflows in the playground. Review price changes with keyboard approval and undo, correct a spreadsheet before import, assign records from the command menu, publish across pages, share saved views and move cards together on a live board. [Open the workflows](https://mero-ui.rubenlangeweg.com/premium) · [Watch the seven captioned walkthroughs](https://mero-ui.rubenlangeweg.com/premium/watch)
