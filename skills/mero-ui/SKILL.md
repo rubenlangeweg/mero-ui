@@ -10,9 +10,9 @@ Start with the host app's template, static asset path and route handler. Mero sh
 
 ## Find the matching example
 
-- Identify the Mero release from the package lock, `node_modules/@rubenlangeweg/mero-ui/package.json`, or the banner on a copied `mero.css`. Use the matching repository tag for existing apps. For a new app, the quick start covers direct downloads and backend examples. [Releases](https://github.com/rubenlangeweg/mero-ui/releases) · [Quick start](https://mero-ui.rubenlangeweg.com/start)
+- Identify the Mero release from the package lock, installed package metadata, or the banner on copied assets (0.6.2 onward). For older copies, check the original download URL or the commit that added the files. If the release is still unknown, ask which release was used or whether to upgrade the asset set together before choosing a template. Use the matching repository tag for existing apps. [Releases](https://github.com/rubenlangeweg/mero-ui/releases) · [Quick start](https://mero-ui.rubenlangeweg.com/start)
 - Choose a component **and variant**. Copy **Template** and the tags under **Use in your app**. For a full screen, start with the closest layout, then look up the controls it uses. The hosted catalog tracks the deployed version. [Components](https://mero-ui.rubenlangeweg.com/components) · [Layouts](https://mero-ui.rubenlangeweg.com/layouts)
-- With a matching Mero source checkout, use the bundled helper below. Run it with Node 22+ from the checkout root, using the script path in this installed skill. It reads the same catalog functions as the website. The app itself can run without Node.
+- Run the bundled helper with Node 22+ from the root of a trusted checkout of the matching Mero release. Use the script path in this installed skill. The helper executes the checkout's catalog modules. The app itself can run without Node.
 
 ```sh
 node /path/to/mero-ui/scripts/catalog.mjs list
@@ -23,7 +23,7 @@ node /path/to/mero-ui/scripts/catalog.mjs show sortable-table 'Row peek'
 
 1. Serve the listed files at your app's static URLs. The npm release tarball keeps Mero assets under `ui/`. For templates that issue requests, load HTMX 4 before `mero.js`, then the component's deferred scripts. A form or live region can need an extra script even in the core family.
 2. Replace sample records and demo URLs with the app's data and routes. Preserve labels, ID references, focus targets and native links or form actions present in the example. Give repeated instances distinct IDs or retain the example's `data-mero-scope` wrapper.
-3. Return the HTML expected by the selected swap. For example, a validating `data-mero-form` returns the filled replacement form on HTTP 422 with the invalid field marked. After a confirmed save, send `HX-Trigger: {"mero:form-saved":{"message":"Saved"}}`. If the swap replaces the form, include a `target` selector for the surviving form in the event detail. Keep validation, persistence and permissions in the host handler. [Mero reference](https://mero-ui.rubenlangeweg.com/docs/reference)
+3. Keep validation, persistence and permissions in the host handler. On HTTP 422, return the filled replacement form with the invalid field marked. After a successful save, send `HX-Trigger: {"mero:form-saved":{"message":"Saved"}}`. For Typed Confirmation (`data-mero-confirm`), also send `HX-Reswap: none` on success. The original form holds the request state Mero checks before closing the dialog and returning focus. For other forms that the success response replaces, set the event detail's `target` to the surviving form's selector. [Mero reference](https://mero-ui.rubenlangeweg.com/docs/reference)
 4. For a theme change, export or override `--mero-*` tokens in CSS loaded after the base stylesheet. Set `data-theme="light"` or `data-theme="dark"` on the document or section. [Theme studio](https://mero-ui.rubenlangeweg.com/themes)
 
 ## Check the interaction
