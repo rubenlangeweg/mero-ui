@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Mero UI · Flatcut</title>
+  <style>
+    :root { color: #181819; }
+    @media (prefers-color-scheme: dark) { :root { color: #f5f4f1; } }
+  </style>
+  <g fill="currentColor">
+    <path fill-rule="evenodd" d="M4 54V10h13l13 16h4l13-16h13v44H46V32L36 44h-8L18 32v22z"/>
+  </g>
+</svg>

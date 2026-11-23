@@ -14,8 +14,11 @@ const siteLinks = [
   ['playground', '/playground', 'Playground'],
 ];
 
+export const faviconLinks = `<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+  <link rel="icon" href="/mero-mark.svg" type="image/svg+xml" sizes="any">`;
+
 const brand = `<a class="site-brand" href="/" aria-label="Mero UI home">
-  <span>Mero<span class="brand-suffix"> UI</span></span>
+  <img src="/mero-wordmark.svg" alt="" width="102" height="32">
 </a>`;
 
 const footerGroups = [
@@ -58,6 +61,7 @@ export function embeddedLayout({title, content, assets, mode, tokens}) {
   return `<!doctype html><html lang="en" data-theme="${theme === 'dark' ? 'dark' : 'light'}"${theme === 'brand' ? ' data-tenant-preview' : ''}${style}><head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="htmx-config" content='{"includeIndicatorCSS":false}'>
+    ${faviconLinks}
     <title>${escape(title)} · Mero UI preview</title>
     <meta name="robots" content="noindex">
     ${assetStyles([...new Set(['site-fonts.css','mero.css', ...assets, 'site.css','lab.css', ...(theme === 'brand' ? ['preview.css'] : [])])])}
@@ -71,6 +75,7 @@ export function shell({ title = 'Mero UI', description, path = '/', origin, inde
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  ${faviconLinks}
   <meta name="theme-color" content="#09090a">
   <script>try { if (localStorage.getItem("mero-theme") === "light") document.documentElement.dataset.theme = "light" } catch {}</script>
   <meta name="htmx-config" content='{"includeIndicatorCSS":false}'>
@@ -107,7 +112,7 @@ export function shell({ title = 'Mero UI', description, path = '/', origin, inde
   <main id="main">${body}</main>
   <footer class="site-footer">
     <div class="site-wrap site-footer-inner">
-      <div class="footer-brand">${brand}<p>The UI kit for htmx.</p></div>
+      <div class="footer-brand">${brand}<p>The UI kit for HTMX.</p></div>
       <nav aria-label="Footer">
         ${footerGroups.map(([heading, links]) => `<div class="footer-group">
           <h2>${heading}</h2>
@@ -150,9 +155,9 @@ function homeLayouts(apps) {
 export function home({ workbench, componentCount, product, apps = [] }) {
   return `<section class="hero">
     <div class="site-wrap hero-frame">
-      <h1><span class="hero-line">The UI kit</span> <span class="hero-line hero-metal">for htmx.</span></h1>
+      <h1><span class="hero-line">The UI kit</span> <span class="hero-line hero-metal">for HTMX.</span></h1>
       <div class="hero-intro">
-        <p class="hero-description">Copy HTML components into your server templates. Loading states, keyboard controls, and focus handling come built in.</p>
+        <p class="hero-description">Use Mero components with <a class="mero-link" href="/start#go">Go</a>, <a class="mero-link" href="/start#rust">Rust</a>, or any backend that renders HTML. Keyboard controls, loading states and focus handling come built in.</p>
         <div class="hero-actions">
           <a class="mero-button mero-button-primary site-cta" href="/components">Browse components</a>
           <a class="mero-button mero-button-ghost site-cta" href="/playground">Try the playground <span aria-hidden="true">→</span></a>
@@ -190,8 +195,20 @@ export function home({ workbench, componentCount, product, apps = [] }) {
     ${workbench}
   </section>
   <section class="site-wrap home-start home-app-start" aria-labelledby="home-start-title">
-    <div class="home-app-copy"><h2 id="home-start-title">Bring your own backend.</h2><p>Try the same inventory button with <a href="/start#go">Go and html/template</a> or <a href="/start#rust">Rust and Axum</a>. Your server returns the HTML fragment.</p></div>
-    <a class="mero-button mero-button-primary site-cta" href="/start">Read the docs <span aria-hidden="true">→</span></a>
+    <div class="home-app-copy">
+      <h2 id="home-start-title">Using Mero in your app</h2>
+      <a class="site-inline-link" href="/start">Read the quick start <span aria-hidden="true">→</span></a>
+    </div>
+    <div class="home-questions">
+      <details class="mero-disclosure" open>
+        <summary>Do I need Node.js or npm?</summary>
+        <div class="mero-disclosure-body">No. Serve Mero’s CSS and JavaScript from your app’s static directory. Load HTMX 4 for components that make requests. Node.js runs the downloadable catalog.</div>
+      </details>
+      <details class="mero-disclosure">
+        <summary>What does my server return?</summary>
+        <div class="mero-disclosure-body">Return the part of the page that changed as <code>text/html</code>. In the inventory example, Go and Rust both return the product count. HTMX places it beside the button.</div>
+      </details>
+    </div>
   </section>`;
 }
 
