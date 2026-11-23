@@ -741,6 +741,14 @@
   border-end-start-radius: var(--mero-radius-panel);
 }
 :where(.mero-drawer:dir(rtl)) { --mero-offset-x: -100%; }
+/* Start-edge drawer, such as app navigation on small screens. It opens from the left, or the right in RTL. */
+:where(.mero-dialog.mero-drawer.mero-drawer-start) {
+  --mero-offset-x: -100%;
+  inset-inline-start: 0; inset-inline-end: auto;
+  border-start-start-radius: 0; border-end-start-radius: 0;
+  border-start-end-radius: var(--mero-radius-panel); border-end-end-radius: var(--mero-radius-panel);
+}
+:where(.mero-drawer-start:dir(rtl)) { --mero-offset-x: 100%; }
 :where(.mero-drawer .mero-dialog-body) { padding: 1.5rem; }
 :where(.mero-dialog.mero-sheet) {
   --mero-offset-y: 100%;
