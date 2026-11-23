@@ -463,6 +463,21 @@
   background: linear-gradient(105deg, var(--mero-line) 30%, var(--mero-hover) 50%, var(--mero-line) 70%) 100% 0 / 250% 100%;
   animation: mero-shimmer 2.2s ease-in-out infinite;
 }
+/* Empty state: an optional glyph, a heading or strong title, a description and an optional action. */
+:where(.mero-empty-state) { padding: 1.1rem; text-align: center; color: var(--mero-text); }
+:where(.mero-empty-state) :where(h2, h3, h4, strong, p) { display: block; margin: .3rem 0 0; }
+:where(.mero-empty-state) :where(h2, h3, h4) { font-size: 1rem; font-weight: 650; line-height: 1.35; }
+:where(.mero-empty-state p) { color: var(--mero-muted); font-size: .79rem; }
+:where(.mero-empty-state > :is(.mero-button, .mero-row)) { margin-block-start: .85rem; }
+:where(.mero-empty-state > .mero-row) { justify-content: center; }
+:where(.mero-empty-glyph) { position: relative; display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: var(--mero-radius); background: var(--mero-raised); font: 1.6rem/1 system-ui; }
+:where(.mero-empty-glyph)::before { content: ""; box-sizing: border-box; width: .85rem; height: .85rem; border: 1.5px solid currentColor; border-radius: 50%; transform: translate(-.09rem, -.09rem); }
+:where(.mero-empty-glyph)::after { content: ""; position: absolute; width: .45rem; height: 1.5px; border-radius: 1px; background: currentColor; transform: translate(.35rem, .35rem) rotate(45deg); }
+@media (forced-colors: active) {
+  :where(.mero-empty-glyph) { border: 1px solid CanvasText; }
+  :where(.mero-empty-glyph)::after { forced-color-adjust: none; background: CanvasText; }
+}
+
 @keyframes mero-spin { to { transform: rotate(360deg); } }
 @keyframes mero-shimmer { 50%, 100% { background-position: 0 0; } }
 
