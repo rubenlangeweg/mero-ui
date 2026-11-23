@@ -25,6 +25,21 @@ export const groups = [
         <button class="mero-button mero-button-secondary" type="button" data-mero-toast="Draft kept">Cancel</button>
         <button class="mero-button mero-button-ghost" type="button" disabled>Unavailable</button>
       </div>`, undefined, [
+        ["Copy to clipboard", `
+          <div class="mero-stack">
+            <div class="mero-field">
+              <label class="mero-label" for="copy-demo-key">Publishable key</label>
+              <div class="mero-input-group">
+                <input class="mero-input" id="copy-demo-key" value="pk_live_51HcX2eDeploy" readonly>
+                <button class="mero-button mero-button-ghost mero-button-sm" type="button" data-mero-copy-target="#copy-demo-key" aria-label="Copy publishable key">Copy</button>
+              </div>
+            </div>
+            <p class="mero-row">Environment <code>env_7f3a91</code>
+              <button class="mero-button mero-button-ghost mero-button-sm" type="button" data-mero-copy="env_7f3a91" aria-label="Copy environment ID">Copy</button></p>
+          </div>`, {
+          description: "Copy an ID or a field’s value and confirm it with a notification.",
+          notes: "data-mero-copy holds the text to copy. data-mero-copy-target names an input, textarea or element whose value or text to copy, which suits secrets, because nothing is repeated in the markup and the text can be selected when the browser blocks clipboard access. data-mero-copy-message replaces the “Copied” notification. The label stays the same, so an aria-label keeps working.",
+        }],
         ["Compact actions", `<div class="mero-button-group" role="group" aria-label="Draft actions">
           <button class="mero-button mero-button-sm mero-button-secondary" type="button" data-mero-toast="Draft saved">Save draft</button>
           <button class="mero-button mero-button-sm mero-button-outline" type="button" data-mero-toast="Draft copied">Copy</button>

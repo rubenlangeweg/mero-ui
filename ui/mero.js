@@ -390,6 +390,24 @@
     return item;
   }
 
+  // Copy a literal value (data-mero-copy="…") or a target's value or text (data-mero-copy-target="#id").
+  // An empty data-mero-copy without a target belongs to the code block and chat copy in mero-insights.js.
+  async function copy(button) {
+    const target = button.hasAttribute("data-mero-copy-target") ? document.querySelector(button.getAttribute("data-mero-copy-target")) : null;
+    const text = target ? ("value" in target && target.matches("input, textarea, select, output") ? target.value : target.innerText)
+      : button.getAttribute("data-mero-copy");
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast(button.dataset.meroCopyMessage || "Copied", { tone: "success", duration: 2400, trigger: button });
+    } catch {
+      // Without clipboard access, select the text so the person can copy it themselves.
+      if (target?.select) target.select();
+      else if (target) getSelection().selectAllChildren(target);
+      toast(target ? "Press Ctrl+C or ⌘C to copy the selected text." : "Couldn't copy. Your browser blocked clipboard access.", { tone: target ? "accent" : "warning", trigger: button });
+    }
+  }
+
   // Row peek: one preview at a time, keyed by the row's id (or the link's href) so it can follow the row through swaps.
   let peek = null;
   const peekRegion = node => node?.closest?.("[data-mero-peek]");
@@ -455,12 +473,54 @@
     if (document.activeElement === document.body) region?.querySelector(".mero-row-link")?.focus({ preventScroll: true });
   }
 
+  // time[data-mero-time]: show the datetime attribute in the reader's locale and time zone.
+  // relative: "3 minutes ago", refreshed every minute, with the full date in title. absolute, date, time: formatted.
+  const timeUnits = [["year", 31536e6], ["month", 2592e6], ["week", 6048e5], ["day", 864e5], ["hour", 36e5], ["minute", 6e4], ["second", 1e3]];
+  function localizeTimes(root = document) {
+    for (const node of matching(root, "time[data-mero-time]")) {
+      const date = new Date(node.getAttribute("datetime"));
+      if (Number.isNaN(date.getTime())) continue;
+      const style = node.dataset.meroTime;
+      const full = date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+      let text = full;
+      if (style === "date") text = date.toLocaleDateString(undefined, { dateStyle: "medium" });
+      else if (style === "time") text = date.toLocaleTimeString(undefined, { timeStyle: "short" });
+      else if (style === "relative") {
+        const delta = date.getTime() - Date.now();
+        const [unit, size] = timeUnits.find(([, size]) => Math.abs(delta) >= size) ?? ["second", 1e3];
+        text = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(Math.round(delta / size), unit);
+        if (node.title !== full) node.title = full;
+      }
+      if (node.textContent !== text) node.textContent = text;
+    }
+  }
+  setInterval(() => document.querySelector('time[data-mero-time="relative"]') && localizeTimes(), 60000);
+
+  // Single-key shortcuts. WCAG 2.1.4: a [data-mero-shortcuts-toggle] control turns them off, remembered per browser.
+  const shortcutStore = "mero-shortcuts";
+  const shortcutsOn = () => { try { return localStorage.getItem(shortcutStore) !== "off"; } catch { return true; } };
+  function syncShortcuts(root = document) {
+    const on = shortcutsOn();
+    for (const node of matching(root, "[data-mero-shortcut]")) {
+      const keys = node.dataset.meroShortcut.trim();
+      // aria-keyshortcuts has no notation for sequences, so only single keys are announced.
+      if (on && !/\s/.test(keys)) node.setAttribute("aria-keyshortcuts", keys);
+      else if (node.getAttribute("aria-keyshortcuts") === keys) node.removeAttribute("aria-keyshortcuts");
+    }
+    for (const toggle of matching(root, "[data-mero-shortcuts-toggle]")) {
+      if (toggle.matches("input[type=checkbox]")) toggle.checked = on;
+      else toggle.setAttribute(toggle.matches('[role="menuitemcheckbox"], [role="switch"], [role="checkbox"]') ? "aria-checked" : "aria-pressed", String(on));
+    }
+  }
+
   function init(root = document, trigger, request) {
     scopeIds(root);
     initNativeGroups(root);
     initTabs(root);
     initListboxes(root);
     reconcileCombos(root, request);
+    localizeTimes(root);
+    syncShortcuts(root);
     for (const dialog of matching(root, "dialog[data-mero-autoopen]")) {
       if (autoOpened.has(dialog)) continue;
       autoOpened.add(dialog);
@@ -523,6 +583,8 @@
     const toggle = target.closest("[data-mero-toggle]");
     const notifier = target.closest("[data-mero-toast]");
     const removable = target.closest("[data-mero-remove]");
+    const copier = target.closest("[data-mero-copy-target], [data-mero-copy]:not([data-mero-copy=''])");
+    const shortcutToggle = target.closest("[data-mero-shortcuts-toggle]");
     if (trigger && !disabled(trigger)) {
       open(trigger.dataset.meroOpen, { trigger });
     }
@@ -542,6 +604,14 @@
     if (list && !disabled(option)) chooseOption(list, option);
     if (toggle && !disabled(toggle)) toggle.setAttribute("aria-pressed", String(toggle.getAttribute("aria-pressed") !== "true"));
     if (notifier && !disabled(notifier)) toast(notifier.dataset.meroToast, { tone: notifier.dataset.meroTone, trigger: notifier });
+    if (copier && !disabled(copier)) copy(copier);
+    if (shortcutToggle && !disabled(shortcutToggle)) {
+      // A checkbox has already changed; other controls flip the stored state.
+      const on = shortcutToggle.matches("input[type=checkbox]") ? shortcutToggle.checked : !shortcutsOn();
+      try { localStorage.setItem(shortcutStore, on ? "on" : "off"); } catch {}
+      syncShortcuts();
+      toast(on ? "Keyboard shortcuts on" : "Keyboard shortcuts off", { trigger: shortcutToggle, duration: 2400 });
+    }
     if (removable && !disabled(removable)) {
       const chip = removable.closest(".mero-chip");
       const next = chip?.nextElementSibling?.querySelector(focusable) ?? chip?.previousElementSibling?.querySelector(focusable);
@@ -549,6 +619,35 @@
       next?.focus();
     }
   });
+
+  let shortcutPrefix = null;
+  function runShortcut(event) {
+    const target = event.target;
+    if (event.defaultPrevented || event.key.length !== 1 || !shortcutsOn()) return false;
+    // Typing, menus, lists and grids own their letter keys.
+    if (target.isContentEditable || target.matches("input, textarea, select") ||
+      target.closest('[role="menu"], [role="listbox"], [role="tablist"], [role="grid"], [role="combobox"]')) return false;
+    const key = event.key.toLowerCase();
+    const sequence = shortcutPrefix && Date.now() - shortcutPrefix.at < 1500 ? shortcutPrefix.key + " " + key : null;
+    shortcutPrefix = null;
+    const modal = document.querySelector("dialog:modal");
+    const candidates = [...document.querySelectorAll("[data-mero-shortcut]")]
+      .filter(node => !node.closest("[inert]") && (!modal || modal.contains(node)) && node.getClientRects().length && !disabled(node));
+    const match = keys => candidates.find(node => node.dataset.meroShortcut.trim().toLowerCase().split(/\s+/).join(" ") === keys);
+    const found = (sequence && match(sequence)) || match(key);
+    if (!found) {
+      if (candidates.some(node => node.dataset.meroShortcut.trim().toLowerCase().startsWith(key + " "))) {
+        shortcutPrefix = { key, at: Date.now() };
+        event.preventDefault();
+        return true;
+      }
+      return false;
+    }
+    event.preventDefault();
+    if (found.matches("input, textarea, select")) found.focus();
+    else found.click();
+    return true;
+  }
 
   document.addEventListener("keydown", event => {
     const target = event.target;
@@ -565,6 +664,7 @@
       }
     }
     if (!(target instanceof Element) || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
+    if (runShortcut(event)) return;
     if (event.key === "Escape") {
       const tooltip = target.closest(".mero-tooltip") ?? document.querySelector(".mero-tooltip:hover");
       if (tooltip && !tooltip.hasAttribute("data-mero-tooltip-dismissed")) {

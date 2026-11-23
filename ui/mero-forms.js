@@ -314,6 +314,64 @@
     }
     (action.isConnected ? action : document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message } }));
   });
+  // Form state helpers. [data-mero-show-when="field=value other"] shows a branch only while the form's
+  // field has one of the values, and disables its controls while hidden so they neither validate nor submit.
+  // form[data-mero-dirty] keeps its submit buttons disabled until a control differs from the rendered value.
+  const disabledByBranch = new WeakSet();
+  function fieldValues(form, name) {
+    const values = [];
+    for (const control of form.elements) {
+      if (control.name !== name || control.disabled) continue;
+      if (control.matches("input[type=checkbox], input[type=radio]")) { if (control.checked) values.push(control.value); }
+      else if (control.matches("select")) values.push(...[...control.selectedOptions].map(option => option.value));
+      else values.push(control.value);
+    }
+    return values;
+  }
+  function changed(form) {
+    return [...form.elements].some(control => {
+      if (control.matches("input[type=checkbox], input[type=radio]")) return control.checked !== control.defaultChecked;
+      if (control.matches("select")) return [...control.options].some(option => option.selected !== option.defaultSelected);
+      return control.matches("input, textarea") && !control.matches("[type=submit], [type=button], [type=reset], [type=image]") && control.value !== control.defaultValue;
+    });
+  }
+  function updateForm(form) {
+    // Outer branches first, so a nested branch reads the state its parent left.
+    for (const branch of form.querySelectorAll("[data-mero-show-when]")) {
+      const [name, wanted = ""] = branch.getAttribute("data-mero-show-when").split("=");
+      const values = fieldValues(form, name.trim());
+      const show = wanted.trim().split(/\s+/).some(value => values.includes(value)) && !branch.parentElement.closest("[data-mero-show-when][hidden]");
+      branch.hidden = !show;
+      if (branch.matches("fieldset")) branch.disabled = !show;
+      else for (const control of branch.querySelectorAll("input, select, textarea, button")) {
+        if (!show && !control.disabled) { control.disabled = true; disabledByBranch.add(control); }
+        else if (show && disabledByBranch.delete(control)) control.disabled = false;
+      }
+    }
+    if (form.matches("[data-mero-dirty]") && !requesting.has(form)) {
+      const clean = !changed(form);
+      for (const button of form.querySelectorAll("button:not([type]), [type=submit], [type=image]")) {
+        if (!button.closest("[data-mero-show-when][hidden]")) button.disabled = clean;
+      }
+    }
+  }
+  const stateForms = root => [...(root.matches?.("form") ? [root] : []), ...(root.querySelectorAll?.("form") ?? [])]
+    .filter(form => form.matches("[data-mero-dirty]") || form.querySelector("[data-mero-show-when]"));
+  for (const type of ["input", "change"]) document.addEventListener(type, event => {
+    const form = event.target.form ?? event.target.closest?.("form");
+    if (form && stateForms(form).length) updateForm(form);
+  });
+  document.addEventListener("reset", event => {
+    if (stateForms(event.target).length) setTimeout(() => updateForm(event.target));
+  });
+  // Swapped-in forms, and forms released after a request, which re-enables their submit buttons.
+  document.addEventListener("htmx:after:settle", event => stateForms(event.target).forEach(updateForm));
+  document.addEventListener("htmx:finally:request", event => {
+    const form = event.detail.ctx.sourceElement?.closest?.("form");
+    if (form && stateForms(form).length) queueMicrotask(() => updateForm(form));
+  });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => stateForms(document).forEach(updateForm), { once: true });
+  else stateForms(document).forEach(updateForm);
   // data-mero-action-reread="#region": after an unknown outcome, read the current page again with a GET
   // and morph that region, so the person sees what actually happened. Mero never re-sends the action.
   // The answer is dropped when the page moved on, the region is gone or a newer read started.
