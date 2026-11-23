@@ -53,7 +53,7 @@ const attributes = [
     ["data-mero-accordion", "On the parent of <code>&lt;details&gt;</code> elements. Only one stays open at a time."],
     ["data-mero-radio-group", "Around radios that sit outside a form. Repeated copies with the same <code>name</code> stay independent."],
     ["*data-mero-radio-owner", "On the hidden form Mero adds to own those radios."],
-    ["data-mero-scope", "On a repeated snippet or fragment. Mero renames duplicate IDs inside it and updates <code>for</code>, ARIA, <code>popovertarget</code>, <code>data-mero-open</code> and ID selectors in <code>hx-target</code>, <code>data-mero-return-focus</code> and <code>data-mero-fallback-focus</code> to match."],
+    ["data-mero-scope", "On a repeated snippet or fragment. Mero renames duplicate IDs inside it and updates <code>for</code>, ARIA, <code>popovertarget</code>, <code>data-mero-open</code> and ID selectors in <code>hx-target</code>, <code>data-mero-return-focus</code>, <code>data-mero-fallback-focus</code> and <code>data-mero-ephemeral-dismiss</code> to match."],
     ["data-mero-listbox", "On a <code>role=\"listbox\"</code>. Adds arrow-key navigation and selection, and fires <code>mero:selection</code>."],
     ["data-mero-combo", "Root of a combobox. Wraps the <code>role=\"combobox\"</code> input and its options."],
     ["data-mero-combo-remote", "On the combobox root when the options come from your server. Mero then leaves filtering to the response."],
@@ -91,6 +91,9 @@ const attributes = [
     ["data-mero-return-focus", "On the form. Selector for the element to focus after <code>mero:form-saved</code>."],
     ["data-mero-fallback-focus", "On the form. Selector to focus when the return-focus element is gone."],
     ["data-mero-close-all", "On a form in a nested dialog. A save closes the parent dialogs too."],
+    ["data-mero-hold", `Keeps the page while something the person cannot get back is on its way or on screen. On a <code>data-mero-form</code> or <code>data-mero-action</code> button it holds while the request is pending. On a <code>data-mero-ephemeral</code> element it holds while the element has content. While held, Mero cancels boosted navigation, history restores and requests whose target is the body or contains the held element, undoes Back to another htmx history entry and asks before the page unloads. Requests from controls inside the held content still run. The value is the warning shown as a toast; empty uses a generic text. See the <a href="/components/form">Form</a> One-time credential variant.`],
+    ["data-mero-ephemeral", "On the element that receives a one-time secret, such as a new API token. Mero empties it when its dialog closes, when a <code>data-mero-ephemeral-dismiss</code> button inside it is activated, and when the page is hidden, so the back-forward cache cannot show it again. Add <code>data-mero-hold</code> to keep the page while it has content."],
+    ["data-mero-ephemeral-dismiss", "On a button inside a <code>data-mero-ephemeral</code> element. Empties that element. The optional value is a selector to focus afterwards; otherwise the emptied element takes focus."],
   ]],
   ["Live progress", "mero-live.js", [
     ["data-mero-live", "On a region with <code>hx-get</code> and <code>hx-trigger=\"mero:refresh\"</code>. Its value is the interval in milliseconds, 3000 by default. Polling pauses while the page is hidden. Send <code>Mero-Live: done</code> on the final successful response."],

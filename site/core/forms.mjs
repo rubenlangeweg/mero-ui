@@ -48,7 +48,28 @@ export const groups = [
         <button class="mero-button mero-button-primary" type="submit">Send to server</button>
         <div class="mero-form-status" id="catalog-form-result" role="status"></div>
       </form>`,
-      "This demo uses a read-only GET. Use POST for changes and keep validation on the server."),
+      "This demo uses a read-only GET. Use POST for changes and keep validation on the server.", [
+        ["One-time credential", `
+          <form class="mero-stack" method="post" action="/demo/catalog/form-credential" hx-post="/demo/catalog/form-credential"
+            hx-target="#api-token-secret" data-mero-form data-mero-hold="Wait for the new token. Leaving now would lose it.">
+            <div class="mero-field">
+              <label class="mero-label" for="api-token-name">Token name</label>
+              <input class="mero-input" id="api-token-name" name="name" required maxlength="40" value="Deploy bot">
+            </div>
+            <p class="mero-field-error" data-mero-form-error role="alert" hidden></p>
+            <div class="mero-row">
+              <button class="mero-button mero-button-primary" type="submit" id="api-token-create">
+                <span class="mero-button-label">Create token</span>
+                <span class="mero-indicator mero-spinner" aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+          <div class="mero-stack" id="api-token-secret" data-mero-ephemeral
+            data-mero-hold="Copy the token before you leave. It is shown only once."></div>`, {
+          description: "Create an API token and keep the page until the person has copied it.",
+          notes: "While the request runs, and while the token is shown, Mero cancels boosted navigation and requests that would replace the token, undoes Back and asks before the page unloads. The token is cleared on I copied it, when a surrounding dialog closes and when the page is hidden. Render the secret only in this response, never in a page the server can send again.",
+        }],
+      ]),
     item("input", "Input", "A styled native input with browser validation and autocomplete.",
       field("demo-input", "Email address", 'name="email" autocomplete="email" placeholder="you@example.com"', { type: "email" })),
     item("input-group", "Input Group", "Combine a control and contextual prefix with a single outline.", `

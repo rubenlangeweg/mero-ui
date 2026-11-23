@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **One-time credentials:** `data-mero-ephemeral` marks where a secret such as a new API token is shown. Mero empties it when its dialog closes, on a `data-mero-ephemeral-dismiss` button and when the page is hidden. `data-mero-hold` keeps the page while a request is pending or while held content is shown: Mero cancels boosted navigation and requests that would replace it, undoes Back and asks before unload. The Form has a One-time credential variant.
+
 ## 0.7.0 · 23 November 2026
 
 - Try six HTMX 4 workflows in the playground. Review price changes with keyboard approval and undo, correct a spreadsheet before import, assign records from the command menu, publish across pages, share saved views and move cards together on a live board. [Open the workflows](https://mero-ui.rubenlangeweg.com/premium) · [Watch the seven captioned walkthroughs](https://mero-ui.rubenlangeweg.com/premium/watch)
