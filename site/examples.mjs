@@ -73,7 +73,7 @@ export function selectVariant(item, search) {
       ? ""
       : `<nav aria-label="Example variants" class="doc-variants"><span aria-hidden="true">Variant</span>${variants.map((v, i) => `<a href="${path}${i ? `?variant=${encodeURIComponent(v.name)}` : ""}"${v === selected ? ' aria-current="page"' : ""}>${esc(v.name)}</a>`).join("")}</nav>`;
   return {
-    demo: selected.demo,
+    demo: index > 0 && selected.render ? selected.render(search) : selected.demo,
     code: selected.code ?? selected.demo,
     description: selected.description ?? item.description,
     notes: selected.notes ?? item.notes,

@@ -13,14 +13,16 @@ export function item(id, name, description, markup, notes, variants = []) {
   const demo = exampleMarkup(markup)
   return { id, name, description, demo, code: demo, notes,
     variants: variants.map(([name, markup, guidance]) => {
+      // A rendered() item keeps its query-driven render. Its preview links carry ?variant so they stay on this variant.
+      if (typeof markup === "object") return { name, demo: markup.render(new URLSearchParams({ variant: name })), code: markup.code, render: markup.render, description: markup.description, notes: markup.notes }
       const demo = exampleMarkup(markup)
       return { name, demo, code: demo, ...guidance }
     }) }
 }
 
 // Default markup comes from empty params; previews pass the request query so ?links render server-side.
-export function rendered(id, name, description, render, notes) {
-  return { ...item(id, name, description, render(new URLSearchParams()), notes),
+export function rendered(id, name, description, render, notes, variants) {
+  return { ...item(id, name, description, render(new URLSearchParams()), notes, variants),
     render: params => exampleMarkup(render(params)) }
 }
 

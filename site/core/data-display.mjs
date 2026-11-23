@@ -17,7 +17,7 @@ const cellLabel = label => `<span data-mero-cell-label aria-hidden="true">${labe
 const filterFields = { status: ["Status", ["Active", "Draft", "Archived"]], category: ["Category", ["Furniture", "Lighting", "Objects", "Textiles"]] }
 
 // shortcut: hx-select takes the first [data-mero-records] in the response, so one instance per page; give each instance its own selector to host several.
-export function records(query, { filters = false } = {}) {
+export function records(query, { filters = false, peek = false } = {}) {
   const params = new URLSearchParams(query)
   const applied = {}
   if (filters) for (const [field, [, values]] of Object.entries(filterFields)) {
@@ -48,7 +48,8 @@ export function records(query, { filters = false } = {}) {
   </dl>
   <a href="${link({ open: null })}">Back to products</a>
 </article>` : `
-${filters ? filterBar(applied, link) : ""}<div class="mero-table-wrap mero-table-cards">
+${filters ? filterBar(applied, link) : ""}${peek ? `<div data-mero-peek>
+` : ""}<div class="mero-table-wrap mero-table-cards">
   <table class="mero-table mero-table-compact" role="table" aria-labelledby="records-count">
     <caption id="records-count">Studio products · ${rows.length} of ${products.length}<span class="mero-table-sort-label" aria-hidden="true">Sort by</span></caption>
     <thead role="rowgroup" hx-boost:inherited="true"><tr role="row">
@@ -60,8 +61,8 @@ ${Object.entries(columns).map(([name, label]) => name === column
     <tbody role="rowgroup">
 ${rows.map(row => {
   const name = escapeHtml(row.name), href = link({ sort, open: row.id })
-  return `      <tr role="row">
-        <th role="rowheader" scope="row">${cellLabel(columns.name)}<a class="mero-row-link" href="${href}">${name}</a></th>
+  return `      <tr role="row"${peek ? ` id="records-row-${row.id}"` : ""}>
+        <th role="rowheader" scope="row">${cellLabel(columns.name)}<a class="mero-row-link" href="${href}">${name}</a>${peek ? peekBody(row) : ""}</th>
         <td role="cell">${cellLabel(columns.category)}${escapeHtml(row.category)}</td>
         <td role="cell">${cellLabel(columns.status)}<span class="mero-badge${tones[row.status]}">${escapeHtml(row.status)}</span></td>
         <td role="cell">${cellLabel("Actions")}
@@ -75,10 +76,18 @@ ${rows.map(row => {
 }).join("\n") || `      <tr role="row"><td role="cell" colspan="4">No products match these filters.</td></tr>`}
     </tbody>
   </table>
-</div>`
+</div>${peek ? `
+</div>` : ""}`
   return `<section class="mero-records" data-mero-records data-mero-restore-focus hx-target:inherited="this" hx-select:inherited="[data-mero-records]" hx-swap:inherited="outerHTML show:none" hx-sync:inherited="this:replace">${body}
 </section>`
 }
+
+// Server-rendered preview for row peek. Inert until mero.js copies it into the panel.
+const peekBody = row => `<template data-mero-peek-body><dl>
+          <dt>SKU</dt><dd>${escapeHtml(row.sku)}</dd>
+          <dt>Category</dt><dd>${escapeHtml(row.category)}</dd>
+          <dt>Status</dt><dd><span class="mero-badge${tones[row.status]}">${escapeHtml(row.status)}</span></dd>
+        </dl></template>`
 
 function filterBar(applied, link) {
   const label = field => filterFields[field][0]
@@ -119,7 +128,9 @@ export const groups = [
         </table>
       </div>`),
     rendered("sortable-table", "Sortable Table", "Sort server-rendered rows from the column headers and open a row from anywhere in it.", params => records(params),
-      "Each header links to ?sort=column. A leading minus sorts descending. The server marks the current column with aria-sort. Below 768 px, mero-table-cards shows each row as a card and keeps the sort links above it. Use mero-table-cards-wide for a 1024 px breakpoint. Render each data-mero-cell-label from its column heading and give it aria-hidden=true. Keep the table roles in the copied markup so screen readers retain row and column navigation. The row link opens the record and Back returns focus to it. Actions opens the row menu. Remove mero-table-compact for regular density."),
+      "Each header links to ?sort=column. A leading minus sorts descending. The server marks the current column with aria-sort. Below 768 px, mero-table-cards shows each row as a card and keeps the sort links above it. Use mero-table-cards-wide for a 1024 px breakpoint. Render each data-mero-cell-label from its column heading and give it aria-hidden=true. Keep the table roles in the copied markup so screen readers retain row and column navigation. The row link opens the record and Back returns focus to it. Actions opens the row menu. Remove mero-table-compact for regular density.",
+      [["Row peek", rendered("sortable-table", "Sortable Table", "Preview a row beside the table without leaving it.", params => records(params, { peek: true }),
+        "Add data-mero-peek around the table wrapper and put the row's preview in a template data-mero-peek-body inside the row. Give each row a stable id so the preview stays on it when a sort or filter swap changes the row links. With a row link focused, Space opens the preview and Space again or Escape closes it and returns focus to the row. While it is open, Up and Down Arrow move between rows and the preview follows focus, including when Tab reaches another row. The panel is an aside named Preview with polite live updates, a heading from the row link, a Close button and an Open link to the row's page. Focus is never trapped. Below 768 px the preview is a bottom sheet over the cards. Without scripts Space keeps its native behaviour and the template stays hidden.")]]),
     rendered("filter-chips", "Filter Chips", "Add filters from a menu, see them as chips and remove them one at a time. The URL keeps the state.", params => records(params, { filters: true }),
       "Choose + Filter to add one. Each chip and Clear all are ordinary links to the URL without that filter. The server reads status and category from the query string, so the view survives reload, sharing and Back. The menu uses the Menu Button keyboard pattern. Below 768 px, the same filters apply to the labelled cards."),
   ]),
