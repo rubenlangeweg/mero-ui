@@ -1,4 +1,4 @@
-/*! @rubenlangeweg/mero-ui 0.6.1 | MIT */
+/*! @rubenlangeweg/mero-ui 0.6.2 | MIT */
 // Optional behavior for the Studio Inventory block. HTMX owns all requests and swaps.
 (() => {
   function workbench(event) {
