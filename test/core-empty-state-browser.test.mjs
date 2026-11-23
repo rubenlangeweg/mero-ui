@@ -52,7 +52,9 @@ test("empty state names its section with a real heading and centres its action",
 
   // Collections still render their empty results with the core styles.
   await page.goto(base + "/preview/data-grid?variant=No+matches");
-  const empty = page.locator(".mero-empty-state");
-  assert.equal(await empty.evaluate(el => getComputedStyle(el).textAlign), "center");
-  assert.equal(await empty.locator("strong").evaluate(el => getComputedStyle(el).display), "block");
+  // The grid may re-render its body after load, so wait for the settled element instead of reading it once.
+  await page.waitForFunction(() => {
+    const empty = document.querySelector(".mero-empty-state");
+    return empty && getComputedStyle(empty).textAlign === "center" && getComputedStyle(empty.querySelector("strong")).display === "block";
+  });
 });
