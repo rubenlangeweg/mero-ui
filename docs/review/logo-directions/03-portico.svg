@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Mero UI · Portico</title>
+  <style>
+    :root { color: #181819; }
+    @media (prefers-color-scheme: dark) { :root { color: #f5f4f1; } }
+  </style>
+  <g fill="currentColor">
+    <path d="M4 52V32C4 18 15 10 28 10h3v12c-9 0-15 5-15 14v16z M24 52V35c0-16 13-25 29-25h7v42H47V23c-7 2-11 7-11 15v14z"/>
+  </g>
+</svg>

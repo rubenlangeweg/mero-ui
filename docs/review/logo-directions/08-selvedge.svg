@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Mero UI · Selvedge</title>
+  <style>
+    :root { color: #181819; }
+    @media (prefers-color-scheme: dark) { :root { color: #f5f4f1; } }
+  </style>
+  <g fill="currentColor">
+    <g transform="rotate(0 32 32)"><path d="M6 36c0-17 11-28 26-28 11 0 19 5 25 14-10-5-20-6-28-2-8 4-12 11-13 22z"/></g>
+    <g transform="rotate(180 32 32)"><path d="M6 36c0-17 11-28 26-28 11 0 19 5 25 14-10-5-20-6-28-2-8 4-12 11-13 22z"/></g>
+  </g>
+</svg>

@@ -1,5 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-  <title>Mero UI</title>
-  <rect width="32" height="32" rx="7" fill="#92ddba"/>
-  <path fill="#12251d" d="M4 25V12l5-5v3c2-3 6-4 9 0 4-5 10-3 10 3v7l-5 5V14c0-3-4-3-4 0v6l-5 5V14c0-3-5-3-5 0v6z"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Mero UI · Pleat</title>
+  <style>
+    :root { color: #181819; }
+    @media (prefers-color-scheme: dark) { :root { color: #f5f4f1; } }
+  </style>
+  <g fill="currentColor">
+    <path d="M3 50 13 12h8l13 22-8 12-8-15-5 19z M33 23l8-11h8l12 38H46l-6-22-3 5z"/>
+  </g>
 </svg>

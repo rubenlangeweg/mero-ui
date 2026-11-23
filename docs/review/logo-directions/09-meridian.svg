@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Mero UI · Meridian</title>
+  <style>
+    :root { color: #181819; }
+    @media (prefers-color-scheme: dark) { :root { color: #f5f4f1; } }
+  </style>
+  <g fill="currentColor">
+    <path d="M3 51h3l3-2 3-34-4-3H5v-2h16l13 29 13-29h14v2h-3l-3 2 2 35 3 2h3v2H40v-2h4l2-2-2-29-15 34h-2L13 22l-2 26 3 3h4v2H3z"/>
+  </g>
+</svg>

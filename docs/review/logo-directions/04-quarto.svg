@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Mero UI · Quarto</title>
+  <style>
+    :root { color: #181819; }
+    @media (prefers-color-scheme: dark) { :root { color: #f5f4f1; } }
+  </style>
+  <g fill="currentColor">
+    <g transform="rotate(0 32 32)"><path d="M30 5v22L11 34 5 28z"/></g>
+    <g transform="rotate(90 32 32)"><path d="M30 5v22L11 34 5 28z"/></g>
+    <g transform="rotate(180 32 32)"><path d="M30 5v22L11 34 5 28z"/></g>
+    <g transform="rotate(270 32 32)"><path d="M30 5v22L11 34 5 28z"/></g>
+  </g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Mero UI · Oculus</title>
+  <style>
+    :root { color: #181819; }
+    @media (prefers-color-scheme: dark) { :root { color: #f5f4f1; } }
+  </style>
+  <g fill="currentColor">
+    <path fill-rule="evenodd" d="M58 32a26 26 0 1 1-52 0 26 26 0 1 1 52 0ZM18 43C30 45 45 31 46 20 34 18 19 32 18 43Z"/>
+  </g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Mero UI · Fluent</title>
+  <style>
+    :root { color: #181819; }
+    @media (prefers-color-scheme: dark) { :root { color: #f5f4f1; } }
+  </style>
+  <g fill="currentColor">
+    <path d="M2 46c4-2 5-6 7-13l5-16 12-3-4 13c6-9 12-14 18-13 4 1 4 5 3 9l-1 4c6-9 12-14 18-13 4 1 4 5 2 11l-6 19c-1 4 0 6 4 5l-1 3c-12 5-18 1-15-8l6-19c1-3-2-2-5 2-5 5-8 11-11 21l-1 4H22l8-26c1-4-2-3-5 1-5 5-8 11-11 21l-1 4H2z"/>
+  </g>
+</svg>
