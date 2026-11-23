@@ -10,6 +10,16 @@ jobs:
     uses: ./.github/workflows/test.yml
     permissions:
       contents: read
+  # Same test gate as the GitHub Release. Called directly so a release created
+  # with GITHUB_TOKEN still publishes to npm. See npm-publish.yml.
+  npm:
+    needs: test
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/npm-publish.yml
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
   release:
     needs: test
     runs-on: ubuntu-latest

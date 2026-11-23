@@ -1,9 +1,17 @@
 name: Publish to npm
 
-# Pushing a v* tag already runs release.yml, which creates the GitHub Release.
-# That published release is the only trigger here, so each version is published
-# to npm once. Also listening for the tag would publish the same version twice.
+# Two ways in, one publish:
+# - release.yml calls this after tests on a v* tag. That workflow creates the
+#   GitHub Release with GITHUB_TOKEN, and GitHub does not start a new workflow
+#   from events caused by GITHUB_TOKEN, so this release trigger does not run again.
+# - A release published by a person (not GITHUB_TOKEN) starts this workflow directly.
+# Do not create that release with a PAT or GitHub App token unless this release
+# trigger is removed. Both paths would publish the same version.
 on:
+  workflow_call:
+    secrets:
+      NPM_TOKEN:
+        required: true
   release:
     types: [published]
 
@@ -15,11 +23,12 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      # release events check out the default branch unless the tag is requested.
+      # A release event checks out the default branch unless the tag is set.
+      # workflow_call from a tag push already has that tag as github.ref.
       - name: Checkout the release tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.event.release.tag_name || github.ref }}
 
       # engines.node is ">=22". No .nvmrc, .node-version, volta, or packageManager.
       - uses: actions/setup-node@v4
@@ -30,7 +39,7 @@ jobs:
 
       - name: Check the tag matches package.json
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || github.ref_name }}
         run: test "$RELEASE_TAG" = "v$(node -p 'require("./package.json").version')"
 
       - run: npm ci
