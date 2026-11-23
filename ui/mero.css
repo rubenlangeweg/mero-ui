@@ -839,6 +839,11 @@
 :where([data-mero-listbox] > [role="option"]) { flex-wrap: nowrap; }
 :where([data-mero-listbox] > [aria-selected="true"]) { background: color-mix(in srgb, var(--mero-accent) 9%, var(--mero-surface)); }
 :where([data-mero-listbox] > [aria-selected="true"], .mero-menu-item[aria-checked="true"])::after { content: ""; flex: none; inline-size: .6rem; block-size: .32rem; margin-inline-start: auto; margin-inline-end: .16rem; border-left: 1.5px solid; border-bottom: 1.5px solid; transform: translateY(-.08rem) rotate(-45deg); }
+/* A menu group named by its visible heading: role=group aria-labelledby the heading, which is aria-hidden so it is not read twice. */
+:where(.mero-menu [role="group"]:first-child > .mero-menu-heading) { padding-block-start: .2rem; }
+:where(.mero-menu > .mero-separator) { margin: .3rem .1rem; }
+:where(.mero-menu-item-danger) { color: var(--mero-danger); }
+:where(.mero-menu-item-danger:hover, .mero-menu-item-danger:focus) { background: color-mix(in srgb, var(--mero-danger) 12%, var(--mero-surface)); }
 :where(.mero-combo) { position: relative; inline-size: 100%; }
 :where(.mero-combo-list:not([hidden])) {
   position: absolute;
@@ -850,7 +855,7 @@
 /* Command results accept keyboard input immediately, including during entry. */
 :where(.mero-command) { --mero-enter-opacity: 1; inline-size: min(36rem, calc(100% - 2rem)); margin-block-start: 12vh; padding: .5rem; }
 :where(.mero-command .mero-combo-list:not([hidden])) { position: static; max-block-size: min(50vh, 24rem); margin-block-start: .35rem; box-shadow: none; }
-:where(.mero-command-heading) { margin: 0; padding: .55rem .56rem .15rem; color: var(--mero-muted); font-size: .78rem; font-weight: 600; }
+:where(.mero-command-heading, .mero-menu-heading) { margin: 0; padding: .55rem .56rem .15rem; color: var(--mero-muted); font-size: .78rem; font-weight: 600; }
 :where(.mero-command [role="group"] + [role="group"]) { margin-block-start: .3rem; border-block-start: 1px solid var(--mero-line); }
 :where(.mero-option small) { margin-inline-start: auto; color: var(--mero-muted); }
 :where(.mero-scroll-shadow) {
