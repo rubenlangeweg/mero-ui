@@ -834,6 +834,35 @@
     }
   });
 
+  // Focus continuity: when a swap or morph removes the focused element, focus would fall to <body>.
+  // Mero puts it back on the same element, else the element with its ID, else the swapped region's
+  // [data-mero-focus-fallback]. It only acts when focus was inside a swap target as the swap began and
+  // is on <body> once every task has settled, so it never moves focus the person put somewhere else.
+  const lostFocus = new WeakMap();
+  const focusLost = () => !document.activeElement || document.activeElement === document.body;
+  document.addEventListener("htmx:before:swap", event => {
+    const { ctx, tasks } = event.detail;
+    const active = document.activeElement;
+    if (focusLost() || event.defaultPrevented) return;
+    const targets = tasks.map(task => typeof task.target === "string" ? document.querySelector(task.target) : task.target)
+      .filter(target => target?.contains(active) && !target.closest("[data-mero-focus-manual]"));
+    if (targets.length) lostFocus.set(ctx, { element: active, id: active.id, targets });
+  });
+  // finally:swap follows every task's settle and htmx's own [autofocus], so both keep precedence.
+  document.addEventListener("htmx:finally:swap", event => {
+    const saved = lostFocus.get(event.detail.ctx);
+    lostFocus.delete(event.detail.ctx);
+    if (!saved || !focusLost()) return;
+    const regions = saved.targets.map(target => target.isConnected ? target : target.id && document.getElementById(target.id)).filter(Boolean);
+    const candidates = [saved.element, saved.id && document.getElementById(saved.id),
+      ...regions.map(region => region.querySelector("[data-mero-focus-fallback]"))];
+    for (const candidate of candidates) {
+      if (!candidate?.isConnected || !candidate.getClientRects().length) continue;
+      candidate.focus({ preventScroll: true });
+      if (document.activeElement === candidate) return;
+    }
+  });
+
   const focusStore = () => "mero-focus:" + location.pathname + location.search;
   // The key is per URL, not per history entry, so every visit consumes it and only a traversal applies it.
   function restoreFocus(apply = true) {
