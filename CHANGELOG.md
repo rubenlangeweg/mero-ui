@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Menu Button:** `menuitemradio` and `menuitemcheckbox` items get the same arrow-key, Home, End, typeahead, Escape and Tab handling as `menuitem`. The menu opens on its checked radio item, and checked items show a check mark. Mero does not change `aria-checked`; render it on the server.
+
 ## 0.6.1 · 20 November 2026
 
 - The test runner executes two files at a time. This keeps the full Firefox suite responsive on hosts where Node would otherwise start nine browser-test files at once. All three engines run the same tests.

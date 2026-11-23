@@ -18,6 +18,8 @@
   const focusable = 'button:not(:disabled), input:not(:disabled):not([type="hidden"]), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]';
   const tabSelector = '[role="tab"]';
   const optionSelector = '[role="option"]';
+  const menuItemSelector = '[role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"]';
+  const popupMenuItemSelector = `[popover][role="menu"] :is(${menuItemSelector})`;
 
   function element(ref) {
     return typeof ref === "string" ? document.getElementById(ref.replace(/^#/, "")) : ref;
@@ -197,7 +199,7 @@
 
   function menuItems(menu) {
     // Disabled items stay focusable (APG) so screen-reader users learn they exist; the click guard blocks them.
-    return [...menu.querySelectorAll('[role="menuitem"]')].filter(item => !item.hidden);
+    return [...menu.querySelectorAll(menuItemSelector)].filter(item => !item.hidden);
   }
 
   function menuButton(menu) {
@@ -422,7 +424,10 @@
     const button = menuButton(menu);
     button?.setAttribute("aria-expanded", String(event.newState === "open"));
     if (event.newState === "open") {
-      menuItems(menu).at(menuFocusLast.has(menu) ? -1 : 0)?.focus();
+      const items = menuItems(menu);
+      // A single-choice menu opens on its current choice, as a select does.
+      const checked = items.find(item => item.matches('[role="menuitemradio"][aria-checked="true"]'));
+      (menuFocusLast.has(menu) ? items.at(-1) : checked ?? items[0])?.focus();
       menuFocusLast.delete(menu);
       tabbedMenus.delete(menu);
     } else if (!tabbedMenus.delete(menu) && (document.activeElement === document.body || menu.contains(document.activeElement)) && button?.isConnected) {
@@ -433,7 +438,7 @@
   document.addEventListener("click", event => {
     const target = event.target;
     if (!(target instanceof Element)) return;
-    const menuItem = target.closest('[popover][role="menu"] [role="menuitem"]');
+    const menuItem = target.closest(popupMenuItemSelector);
     if (menuItem && disabled(menuItem)) {
       event.preventDefault();
       return;
@@ -525,7 +530,7 @@
       target.click();
       return;
     }
-    const menu = target.matches('[role="menuitem"]') && target.closest('[popover][role="menu"]');
+    const menu = target.matches(menuItemSelector) && target.closest('[popover][role="menu"]');
     if (menu) {
       const items = menuItems(menu);
       let next = step(target, items, event.key);
