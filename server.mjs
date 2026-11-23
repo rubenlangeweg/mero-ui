@@ -4,6 +4,7 @@ import { extname } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createPremiumHandler } from "./examples/premium/server.mjs";
 import { confirmationResponse } from "./site/core/typed-confirmation.mjs";
+import { searchResults } from "./site/core/forms.mjs";
 import { nightlyExport } from "./site/core/buttons.mjs";
 import { catalogFragment } from "./site/core-components.mjs";
 import { groups, components, moduleAssets } from "./site/catalog.mjs";
@@ -327,6 +328,12 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     return send(response, "", { status, headers });
   }
 
+  function searchResultsDemo({ response, searchParams }) {
+    const status = searchParams.get("status") ?? "";
+    if (status === "archived") return send(response, "<p>Search is unavailable.</p>", { status: 503 });
+    return send(response, searchResults((searchParams.get("q") ?? "").slice(0, 80), status));
+  }
+
   async function formCredentialDemo({ request, response }) {
     const params = await formBody(request);
     if (!params) return send(response, "Form is too large.", { status: 413 });
@@ -408,6 +415,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     ["*", /^\/demo\/insights\//, ({ request, response, url }) => handleInsightRequest(request, response, url)],
     ["*", /^\/demo\/workspace\//, ({ request, response, url }) => handleWorkspaceRequest(request, response, url)],
     ["GET", "/demo/catalog/live-progress", liveProgressDemo],
+    ["GET", "/demo/catalog/search-results", searchResultsDemo],
     ["GET", /^\/demo\/catalog\//, catalogDemo],
     ["POST", "/demo/settings", saveSettings],
     ["POST", "/demo/catalog/action-button", actionDemo],

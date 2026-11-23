@@ -367,6 +367,82 @@
     }
   });
 
+  // form[data-mero-search]: a search or filter form that GETs results into a list. A failed read never
+  // replaces the list: Mero skips the swap of a non-2xx response or one without the hx-select region,
+  // explains it in [data-mero-search-error], and once nothing is pending puts selects, checkboxes and
+  // radios back to the values of the list on screen. A redirect to a page without the region loads fully.
+  const searchSelector = "form[data-mero-search]";
+  const searchPending = new WeakMap();
+  const searchRequests = new WeakMap();
+  const searchFailed = new WeakSet();
+  const searchFollowed = new WeakSet();
+  const searchOf = ctx => {
+    const source = ctx.sourceElement;
+    return source?.matches?.(searchSelector) ? source : source?.form?.matches(searchSelector) ? source.form : null;
+  };
+  const choices = form => [...form.elements].filter(control => control.matches("select, input[type=checkbox], input[type=radio]"));
+
+  document.addEventListener("htmx:before:request", event => {
+    const form = searchOf(event.detail.ctx);
+    if (!form || event.defaultPrevented) return;
+    if (!searchPending.has(form)) searchPending.set(form, new Set());
+    searchPending.get(form).add(event.detail.ctx);
+    searchRequests.set(event.detail.ctx, form);
+  });
+
+  document.addEventListener("htmx:before:swap", event => {
+    const { ctx, tasks } = event.detail;
+    if (!searchRequests.has(ctx) || event.defaultPrevented) return;
+    const status = ctx.response?.status;
+    const main = tasks.find(task => task.type === "main");
+    const missing = Boolean(ctx.select) && !main?.fragment?.firstElementChild;
+    if (status >= 200 && status < 300 && !missing) return;
+    event.preventDefault();
+    if (missing && ctx.response.raw.redirected) {
+      // Typically an expired session answered with a login page.
+      searchFollowed.add(ctx);
+      location.assign(ctx.response.raw.url);
+      return;
+    }
+    searchFailed.add(ctx);
+  });
+
+  document.addEventListener("htmx:finally:request", event => {
+    const { ctx } = event.detail;
+    const form = searchRequests.get(ctx);
+    if (!form) return;
+    const pending = searchPending.get(form);
+    pending.delete(ctx);
+    if (searchFollowed.has(ctx) || cancelled(ctx)) return;
+    const signal = ctx.request.signal;
+    // A newer search replaced this one (hx-sync): that request decides what the list shows.
+    const superseded = !ctx.response && signal?.aborted && signal.reason !== "timeout";
+    const failed = searchFailed.has(ctx) || (!ctx.response && !superseded);
+    const error = form.querySelector("[data-mero-search-error]");
+    if (!failed && !superseded) {
+      // The list now matches these controls: remember them as the values to return to.
+      for (const control of choices(form)) {
+        if (control.matches("select")) for (const option of control.options) option.defaultSelected = option.selected;
+        else control.defaultChecked = control.checked;
+      }
+      if (error) { error.textContent = ""; error.hidden = true; }
+      return;
+    }
+    if (failed && error) {
+      error.textContent = "";
+      error.textContent = error.getAttribute("data-mero-search-error") || ctx.response?.headers.get("Mero-Form-Error") ||
+        "Couldn't update the results. The list still shows the previous results.";
+      error.hidden = false;
+    }
+    if (pending.size) return;
+    for (const control of choices(form)) {
+      if (control.matches("select")) {
+        const fallback = [...control.options].find(option => option.defaultSelected) ?? control.options[0];
+        if (fallback) fallback.selected = true;
+      } else control.checked = control.defaultChecked;
+    }
+  });
+
   // One-time credentials. [data-mero-ephemeral] content is cleared when its dialog closes, on a
   // [data-mero-ephemeral-dismiss] click and when the page is hidden. data-mero-hold keeps the page
   // while a held request is pending, or while a held ephemeral element shows content: requests that
