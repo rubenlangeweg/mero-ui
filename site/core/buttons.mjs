@@ -1,5 +1,22 @@
 import { item, section } from "./helpers.mjs"
 
+// Server state for the Re-read after unknown variant. The demo POST restarts the export and then fails.
+export const nightlyExport = { restarts: 0 }
+
+function exportRun(restarts) {
+  return `
+    <section class="mero-stack" id="export-run" aria-labelledby="export-run-title">
+      <h2 class="mero-label" id="export-run-title">Nightly export</h2>
+      <p class="mero-description" data-export-restarts>${restarts ? `Restarted ${restarts} ${restarts === 1 ? "time" : "times"}` : "Not restarted yet"}</p>
+      <span class="mero-row">
+        <button class="mero-button mero-button-secondary" type="button" id="export-run-restart" hx-post="/demo/catalog/action-button?outcome=lost" hx-swap="none"
+          data-mero-action data-mero-action-reread="#export-run">
+          <span class="mero-button-label">Restart export</span><span class="mero-indicator mero-spinner" aria-hidden="true"></span></button>
+        <span class="mero-action-status" data-mero-action-status role="status"></span>
+      </span>
+    </section>`
+}
+
 export const groups = [
   section("Buttons", [
     item("button", "Button", "Trigger an action with a consistent hierarchy of visual emphasis.", `
@@ -46,7 +63,14 @@ export const groups = [
           <span class="mero-action-status" data-mero-action-status role="status"></span>
         </span>
       </div>`,
-      "The button shows pending while the request runs and ignores further clicks. A 2xx response means succeeded. A 4xx response other than 408 means rejected: the server refused and nothing changed. A 5xx, 408, timeout or network error means unknown: the action may have happened, so check the current state before you retry. The Mero-Action-Outcome header overrides the state and Mero-Action-Message overrides the text. Each step dispatches a bubbling mero:action event, and data-mero-action-state exposes the state for styling."),
+      "The button shows pending while the request runs and ignores further clicks. A 2xx response means succeeded. A 4xx response other than 408 means rejected: the server refused and nothing changed. A 5xx, 408, timeout or network error means unknown: the action may have happened, so check the current state before you retry. The Mero-Action-Outcome header overrides the state and Mero-Action-Message overrides the text. Each step dispatches a bubbling mero:action event, and data-mero-action-state exposes the state for styling.", [
+        ["Re-read after unknown", {
+          render: () => exportRun(nightlyExport.restarts),
+          code: exportRun(0),
+          description: "Read the current state again after an unknown outcome, without repeating the action.",
+          notes: "This endpoint restarts the export and then answers 504, as a gateway timeout would. data-mero-action-reread names the region to read again: Mero GETs the current page, morphs that region and shows the unknown message again. It never re-sends the POST. A response for another page, an error or a page without the region is dropped.",
+        }],
+      ]),
     item("button-group", "Button Group", "Keep related actions together while preserving each button’s own label and focus.", `
       <div class="mero-button-group" role="group" aria-label="Document actions">
         <button class="mero-button mero-button-outline" type="button" data-mero-toast="Document copied">Copy</button>
