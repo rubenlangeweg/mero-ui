@@ -1,0 +1,44 @@
+name: Publish to npm
+
+# Pushing a v* tag already runs release.yml, which creates the GitHub Release.
+# That published release is the only trigger here, so each version is published
+# to npm once. Also listening for the tag would publish the same version twice.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      # release events check out the default branch unless the tag is requested.
+      - name: Checkout the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      # engines.node is ">=22". No .nvmrc, .node-version, volta, or packageManager.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Check the tag matches package.json
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: test "$RELEASE_TAG" = "v$(node -p 'require("./package.json").version')"
+
+      - run: npm ci
+      # Site build (Cloudflare worker). package.json "files" keeps it out of the tarball.
+      - run: npm run build
+      - run: npm run pack:ui
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance
