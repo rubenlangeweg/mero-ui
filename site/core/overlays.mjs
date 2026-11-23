@@ -58,32 +58,53 @@ export const groups = [
       "Focus starts on Cancel. Connect the confirmation to a form action in your application."),
     typedConfirmation,
     item("drawer", "Drawer", "Open a full-height edge panel for work that benefits from more room.",
-      overlay("demo-drawer", "Review deployment", "The staging build is ready to review.", { variant: "drawer", trigger: "Open drawer" }), undefined, [
-        ["Boosted navigation", `
-          <div class="mero-stack" hx-boost:inherited="true" hx-select:inherited="#boost-demo-main" hx-target:inherited="#boost-demo-main"
-            hx-swap:inherited="outerHTML" hx-push-url:inherited="false" data-mero-boost="#boost-demo-main">
-            <button class="mero-button mero-button-outline" type="button" data-mero-open="boost-demo-drawer">Open navigation</button>
-            <dialog class="mero-dialog mero-drawer" id="boost-demo-drawer" aria-labelledby="boost-demo-drawer-title">
-              <div class="mero-dialog-body">
-                <div class="mero-dialog-header">
-                  <h2 class="mero-dialog-title" id="boost-demo-drawer-title">Navigation</h2>
-                  <button class="mero-button mero-close-button" type="button" aria-label="Close navigation" data-mero-close><span class="mero-dismiss-mark" aria-hidden="true"></span></button>
-                </div>
-                <nav aria-label="Sections">
-                  <ul class="mero-stack">
-                    <li><a class="mero-link" href="/demo/catalog/boost-page?page=overview">Overview</a></li>
-                    <li><a class="mero-link" href="/demo/catalog/boost-page?page=reports">Reports</a></li>
-                    <li><a class="mero-link" href="/demo/catalog/boost-page?page=settings">Settings</a></li>
-                  </ul>
-                </nav>
+      overlay("demo-drawer", "Review deployment", "The staging build is ready to review.", { variant: "drawer", trigger: "Open drawer" }),
+      "The drawer opens from the inline end. Add mero-drawer-start to open it from the start edge.", [
+      ["Start edge", `
+      <button class="mero-button mero-button-outline" type="button" data-mero-open="demo-nav-drawer">Menu</button>
+      <dialog class="mero-dialog mero-drawer mero-drawer-start" id="demo-nav-drawer" aria-labelledby="demo-nav-drawer-title">
+        <div class="mero-dialog-body">
+          <div class="mero-dialog-header">
+            <h2 class="mero-dialog-title" id="demo-nav-drawer-title">Navigation</h2>
+            <button class="mero-button mero-close-button" type="button" aria-label="Close navigation" data-mero-close><span class="mero-dismiss-mark" aria-hidden="true"></span></button>
+          </div>
+          <nav aria-label="Main">
+            <ul class="mero-stack">
+              <li><a class="mero-link" href="/components" aria-current="page">Components</a></li>
+              <li><a class="mero-link" href="/layouts">Layouts</a></li>
+              <li><a class="mero-link" href="/start">Quick start</a></li>
+            </ul>
+          </nav>
+        </div>
+      </dialog>`, {
+        description: "Open app navigation from the start edge on small screens.",
+        notes: "Add mero-drawer-start to a mero-drawer. It slides in from the left, or from the right in RTL, and rounds its inline-end corners. Give it a visible close button so touch users don't have to find the backdrop; Escape and the backdrop also close it, and focus returns to the opener.",
+      }],
+      ["Boosted navigation", `
+        <div class="mero-stack" hx-boost:inherited="true" hx-select:inherited="#boost-demo-main" hx-target:inherited="#boost-demo-main"
+          hx-swap:inherited="outerHTML" hx-push-url:inherited="false" data-mero-boost="#boost-demo-main">
+          <button class="mero-button mero-button-outline" type="button" data-mero-open="boost-demo-drawer">Open navigation</button>
+          <dialog class="mero-dialog mero-drawer" id="boost-demo-drawer" aria-labelledby="boost-demo-drawer-title">
+            <div class="mero-dialog-body">
+              <div class="mero-dialog-header">
+                <h2 class="mero-dialog-title" id="boost-demo-drawer-title">Navigation</h2>
+                <button class="mero-button mero-close-button" type="button" aria-label="Close navigation" data-mero-close><span class="mero-dismiss-mark" aria-hidden="true"></span></button>
               </div>
-            </dialog>
-            ${boostPage("overview")}
-          </div>`, {
-          description: "Navigate from a drawer with boosted links that swap only the page region.",
-          notes: "data-mero-boost names the region every boosted page must contain. The newest boosted GET wins and older ones are aborted, never a boosted form that changes data. A response without the region, such as a login page, or a failed GET becomes a full page load. Open dialogs close, and focus moves to the new region unless the person moved it during the load. This demo keeps the URL; in your app, let boosted links push it.",
-        }],
-      ]),
+              <nav aria-label="Sections">
+                <ul class="mero-stack">
+                  <li><a class="mero-link" href="/demo/catalog/boost-page?page=overview">Overview</a></li>
+                  <li><a class="mero-link" href="/demo/catalog/boost-page?page=reports">Reports</a></li>
+                  <li><a class="mero-link" href="/demo/catalog/boost-page?page=settings">Settings</a></li>
+                </ul>
+              </nav>
+            </div>
+          </dialog>
+          ${boostPage("overview")}
+        </div>`, {
+        description: "Navigate from a drawer with boosted links that swap only the page region.",
+        notes: "data-mero-boost names the region every boosted page must contain. The newest boosted GET wins and older ones are aborted, never a boosted form that changes data. A response without the region, such as a login page, or a failed GET becomes a full page load. Open dialogs close, and focus moves to the new region unless the person moved it during the load. This demo keeps the URL; in your app, let boosted links push it.",
+      }],
+    ]),
     item("modal", "Modal", "Open a centered, named dialog with native focus containment.",
       overlay("demo-modal", "Workspace details", "Only workspace managers can change access.")),
     item("command-menu", "Command Menu", "Press Cmd or Ctrl K to search pages and actions returned by your server.", `

@@ -48,6 +48,23 @@ export const groups = [
       </div>`, {
         description: "Choose one sort order or switch an option from a menu that shows the current state.",
         notes: "Use role=menuitemradio for one choice in a group and role=menuitemcheckbox for an option that is on or off. Render aria-checked on the server; Mero shows a check mark but never changes it, so each item links to the URL with the new state. The menu opens on the checked radio item, or on the first item when none is checked. Up Arrow still opens it on the last item. The keys work as in the default Menu Button.",
+      }], ["Groups and danger", `
+      <button class="mero-button mero-button-outline mero-button-sm" type="button" popovertarget="environment-menu" aria-haspopup="menu" aria-controls="environment-menu" aria-expanded="false">Environment actions</button>
+      <div class="mero-popover mero-menu" id="environment-menu" popover role="menu" aria-label="acme-production actions">
+        <div role="group" aria-labelledby="environment-menu-lifecycle">
+          <div class="mero-menu-heading" id="environment-menu-lifecycle" aria-hidden="true">Lifecycle</div>
+          <button class="mero-menu-item" role="menuitem" type="button" data-mero-toast="Deploy started">Deploy release</button>
+          <button class="mero-menu-item" role="menuitem" type="button" data-mero-toast="Suspend requested">Suspend</button>
+        </div>
+        <div role="group" aria-labelledby="environment-menu-access">
+          <div class="mero-menu-heading" id="environment-menu-access" aria-hidden="true">Access</div>
+          <a class="mero-menu-item" role="menuitem" href="/components/typed-confirmation">Grant support access</a>
+        </div>
+        <hr class="mero-separator">
+        <a class="mero-menu-item mero-menu-item-danger" role="menuitem" href="/components/typed-confirmation">Delete environment…</a>
+      </div>`, {
+        description: "Label groups of actions with a visible heading and set a destructive action apart.",
+        notes: "Give each group role=group and aria-labelledby its mero-menu-heading. The heading is aria-hidden, so screen readers announce it once as the group name, and arrow keys and typeahead skip it. Use mero-menu-item-danger for an action that destroys data, after a separator, and name the action in its text because forced-colors mode drops the colour. Let it open a confirmation instead of acting immediately.",
       }]]),
     item("list-box", "List Box", "Present a selectable collection with arrow-key navigation.", `
       <ul class="mero-listbox" role="listbox" aria-label="Workspace" data-mero-listbox>
