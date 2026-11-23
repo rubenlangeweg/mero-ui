@@ -18,6 +18,7 @@ await mkdir(downloads);
 await writeFile(join(downloads, "mero-ui.tar.gz"), await createSourceArchive(sourceArchiveEntries));
 await writeFile(join(downloads, "studio-inventory.tar.gz"), await createSourceArchive(inventoryArchiveEntries));
 await writeFile(join(stage, "_headers"), [
+  "/fonts/*", "  Cache-Control: public, max-age=604800",
   "/source/*", "  Content-Type: text/plain; charset=utf-8", "  X-Robots-Tag: noindex",
   "/downloads/*", "  Content-Type: application/gzip", "  Content-Disposition: attachment",
   "  X-Robots-Tag: noindex", "/*", "  X-Content-Type-Options: nosniff", "",

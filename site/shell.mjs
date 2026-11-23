@@ -75,6 +75,7 @@ export function shell({ title = 'Mero UI', description, path = '/', origin, inde
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
   ${faviconLinks}
   <meta name="theme-color" content="#09090a">
   <script>try { if (localStorage.getItem("mero-theme") === "light") document.documentElement.dataset.theme = "light" } catch {}</script>
