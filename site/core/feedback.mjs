@@ -7,6 +7,23 @@ export const groups = [
         <strong>Preview expires soon</strong>
         <p>Publish the draft before Friday to retain this URL.</p>
       </div>`),
+    item("empty-state", "Empty State", "Explain an empty result and give the user a relevant next action.", `
+      <section class="mero-empty-state" aria-labelledby="empty-environments-title">
+        <span class="mero-empty-glyph" aria-hidden="true"></span>
+        <h2 id="empty-environments-title">No environments yet</h2>
+        <p>Create the first environment to deploy a release to it.</p>
+        <a class="mero-button mero-button-primary mero-button-sm" href="/components/form">New environment</a>
+      </section>`,
+      "Use a heading at the level the page needs, so the empty result appears in the heading outline. Inside a table cell or a list, where a heading would break the outline, use strong instead. Put one action after the description, or several in a mero-row. The glyph is decorative and hidden from screen readers.", [
+      ["No matches", `
+      <div class="mero-empty-state">
+        <strong>No operations match these filters</strong>
+        <p>Remove a filter or search for another environment.</p>
+        <div class="mero-row">
+          <a class="mero-button mero-button-outline mero-button-sm" href="/components/filter-chips">Clear filters</a>
+        </div>
+      </div>`, { description: "Explain why a filtered list is empty and how to widen it." }],
+    ]),
     item("meter", "Meter", "Show a measurement between known bounds.", `
       <div class="mero-field">
         <label class="mero-label" for="demo-meter">Storage used</label>

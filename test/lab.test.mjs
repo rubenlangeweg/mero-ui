@@ -5,7 +5,7 @@ import { createLabStore, renderResults, renderProductForm, saveProduct } from ".
 
 test("the catalog exposes distinct copyable component examples", () => {
   const entries = groups.flatMap(({ items }) => items);
-  assert.equal(entries.length, 79);
+  assert.equal(entries.length, 83);
   assert.equal(new Set(entries.map(({ id }) => id)).size, entries.length);
   assert.ok(entries.every(({ name, description, demo, code }) => name && description && demo && code));
   assert.equal(catalogFragment("missing", new URLSearchParams()), null);

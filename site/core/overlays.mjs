@@ -43,7 +43,29 @@ export const groups = [
       "Focus starts on Cancel. Connect the confirmation to a form action in your application."),
     typedConfirmation,
     item("drawer", "Drawer", "Open a full-height edge panel for work that benefits from more room.",
-      overlay("demo-drawer", "Review deployment", "The staging build is ready to review.", { variant: "drawer", trigger: "Open drawer" })),
+      overlay("demo-drawer", "Review deployment", "The staging build is ready to review.", { variant: "drawer", trigger: "Open drawer" }),
+      "The drawer opens from the inline end. Add mero-drawer-start to open it from the start edge.", [
+      ["Start edge", `
+      <button class="mero-button mero-button-outline" type="button" data-mero-open="demo-nav-drawer">Menu</button>
+      <dialog class="mero-dialog mero-drawer mero-drawer-start" id="demo-nav-drawer" aria-labelledby="demo-nav-drawer-title">
+        <div class="mero-dialog-body">
+          <div class="mero-dialog-header">
+            <h2 class="mero-dialog-title" id="demo-nav-drawer-title">Navigation</h2>
+            <button class="mero-button mero-close-button" type="button" aria-label="Close navigation" data-mero-close><span class="mero-dismiss-mark" aria-hidden="true"></span></button>
+          </div>
+          <nav aria-label="Main">
+            <ul class="mero-stack">
+              <li><a class="mero-link" href="/components" aria-current="page">Components</a></li>
+              <li><a class="mero-link" href="/layouts">Layouts</a></li>
+              <li><a class="mero-link" href="/start">Quick start</a></li>
+            </ul>
+          </nav>
+        </div>
+      </dialog>`, {
+        description: "Open app navigation from the start edge on small screens.",
+        notes: "Add mero-drawer-start to a mero-drawer. It slides in from the left, or from the right in RTL, and rounds its inline-end corners. Give it a visible close button so touch users don't have to find the backdrop; Escape and the backdrop also close it, and focus returns to the opener.",
+      }],
+    ]),
     item("modal", "Modal", "Open a centered, named dialog with native focus containment.",
       overlay("demo-modal", "Workspace details", "Only workspace managers can change access.")),
     item("command-menu", "Command Menu", "Press Cmd or Ctrl K to search pages and actions returned by your server.", `

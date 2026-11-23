@@ -198,7 +198,6 @@ export const groups = [{name:'Studio collections',items:[
     render: params => gridFromPage(params, [['row','1'],['row','2']]),
   },
   component('agenda','Agenda','Browse daily bookings and add a timed event.',`<div class="mero-agenda-mount" hx-get="${agendaPath}" hx-trigger="load" hx-swap="innerHTML">${agendaMarkup(initialAgenda)}</div>`,'Return a dated agenda fragment on navigation and after saving a booking. Demo bookings live in memory.'),
-  component('empty-state','Empty State','Explain an empty result and give the user a relevant next action.',`<section class="mero-collection-empty">${emptyState('No products in this collection','Add the first product to start tracking inventory.')}<a class="mero-button mero-button-primary mero-button-sm" href="/components/data-grid">Open inventory</a></section>`),
   component('file-tree','File Tree','Expand folders and preview a selected file with native disclosure controls.',fileTree()),
   component('floating-toc','Floating TOC','Navigate to sections with an index that follows the reading position.',floatingToc()),
   component('hover-card','Hover Card','Preview a contributor on hover, focus or tap.',hoverCard(),'Tab into the card for its action. Escape dismisses it.'),
