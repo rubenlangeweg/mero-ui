@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inventory · Mero UI</title>
+  <link rel="stylesheet" href="/ui/mero.css">
+  <script defer src="/vendor/htmx.min.js"></script>
+  <script defer src="/ui/mero.js"></script>
+</head>
+<body>
+  <main>
+    <h1>Inventory</h1>
+    <button type="button" class="mero-button mero-button-primary"
+            hx-get="/demo/stock-summary" hx-target="next output"
+            hx-disable="this">Check inventory</button>
+    <output aria-live="polite"></output>
+  </main>
+</body>
+</html>

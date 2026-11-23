@@ -44,7 +44,7 @@ async function parameters(request) {
 
 // Callers supply a fixed manifest of project paths.
 export async function createSourceArchive(entries) {
-  const { stdout } = await execFileAsync("tar", ["-czf", "-", "--", ...entries], {
+  const { stdout } = await execFileAsync("tar", ["-czf", "-", "--exclude=examples/backends/rust/target", "--", ...entries], {
     cwd: fileURLToPath(new URL("../", import.meta.url)), encoding: "buffer", maxBuffer: 32 * 1024 * 1024,
     env: { ...process.env, COPYFILE_DISABLE: "1" },
   });

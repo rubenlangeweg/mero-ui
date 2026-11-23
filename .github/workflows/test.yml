@@ -26,3 +26,32 @@ jobs:
       - run: npm test
       - if: matrix.browser == 'chromium'
         run: npm run pack:ui
+  backend-examples:
+    name: Inventory example (${{ matrix.backend }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        backend: [go, rust]
+    defaults:
+      run:
+        working-directory: examples/backends
+    steps:
+      - uses: actions/checkout@v4
+      - if: matrix.backend == 'go'
+        run: go build -o "$RUNNER_TEMP/inventory" ./go
+      - if: matrix.backend == 'rust'
+        run: |
+          cargo build --locked --manifest-path rust/Cargo.toml
+          cp rust/target/debug/mero-stock-example "$RUNNER_TEMP/inventory"
+      - name: Check the page, assets and HTML fragment
+        run: |
+          "$RUNNER_TEMP/inventory" &
+          trap 'kill $!' EXIT
+          base=http://127.0.0.1:4180
+          curl --retry 8 --retry-connrefused -fsS "$base/" | grep -F 'Check inventory'
+          for asset in ui/mero.css ui/mero.js vendor/htmx.min.js; do
+            curl -fsS "$base/$asset" -o /dev/null
+          done
+          body=$(curl -fsS -D "$RUNNER_TEMP/headers" "$base/demo/stock-summary")
+          grep -i '^content-type: text/html' "$RUNNER_TEMP/headers"
+          test "$body" = '<strong>6 products</strong> · 4 active'

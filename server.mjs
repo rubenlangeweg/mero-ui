@@ -128,7 +128,7 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
   }
 
   function startPage({ page }) {
-    return page({ title: "Get started", body: catalogLayout({ groups, active: "", content: startGuide() }), nav: "start",
+    return page({ title: "Get started with Go, Rust and HTMX", body: catalogLayout({ groups, active: "", content: startGuide() }), nav: "start",
       assets: ["vendor/htmx.min.js", "catalog-navigation.js"] });
   }
 
