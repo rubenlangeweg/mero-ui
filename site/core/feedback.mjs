@@ -25,7 +25,23 @@ export const groups = [
         <p class="mero-form-status" role="status" data-mero-live-error></p>
         <button type="button" class="mero-button mero-button-secondary" data-mero-live-retry hidden>Retry now</button>
       </section>`,
-      "Return an HTML fragment with the current status. Send Mero-Live: done with the final status to stop polling. A failed read keeps the last status and offers a retry. Polling pauses in background tabs and refreshes when the tab becomes visible. The hidden started field drives this demo. In your app, point hx-get at the operation and omit that field and hx-include."),
+      "Return an HTML fragment with the current status. Send Mero-Live: done with the final status to stop polling. A failed read keeps the last status and offers a retry. Polling pauses in background tabs and refreshes when the tab becomes visible. The hidden started field drives this demo. In your app, point hx-get at the operation and omit that field and hx-include.", [
+        ["Stale status", `
+          <section class="mero-card mero-live" aria-labelledby="stale-deployment-title" tabindex="-1" data-mero-live="3000" data-mero-live-follow
+            hx-get="/demo/catalog/live-progress?outage=1" hx-trigger="mero:refresh"
+            hx-target="find [data-mero-live-status]" hx-swap="innerHTML" hx-include="find input">
+            <h2 class="mero-card-title" id="stale-deployment-title">Production deployment</h2>
+            <div class="mero-live-status" data-mero-live-status role="status" aria-atomic="true">
+              <span class="mero-badge mero-badge-dot">Queued</span>
+              <input type="hidden" name="started" value="">
+            </div>
+            <p class="mero-form-status" role="status" data-mero-live-error="Couldn't refresh. This is the status from {time}. Retrying…"></p>
+            <button type="button" class="mero-button mero-button-secondary" data-mero-live-retry hidden>Retry now</button>
+          </section>`, {
+          description: "Keep showing the last confirmed status, with its time, while reads fail.",
+          notes: "This demo endpoint fails every read after the first. data-mero-live-error fills {time} with the time of the last good read, in the browser's locale. data-mero-live-follow hands an error response with HX-Redirect, HX-Location or HX-Refresh to htmx and stops polling, so an expired session answered with 401 and HX-Redirect: /login goes to the login page instead of retrying forever.",
+        }],
+      ]),
     item("progress-bar", "Progress Bar", "Report measurable progress toward completion.", `
       <div class="mero-field">
         <div class="mero-measure-label"><label class="mero-label" for="demo-progress">Uploading assets</label><span class="mero-description" aria-hidden="true">68%</span></div>

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Live Progress:** `data-mero-live-follow` lets htmx act on `HX-Redirect`, `HX-Location` or `HX-Refresh` from an error response and stops polling, so a 401 for an expired session goes to the login page instead of retrying forever. A `data-mero-live-error` value replaces the default failure text, and `{time}` in it shows when the status was last confirmed. Live Progress has a Stale status variant.
+
 ## 0.7.0 · 23 November 2026
 
 - Try six HTMX 4 workflows in the playground. Review price changes with keyboard approval and undo, correct a spreadsheet before import, assign records from the command menu, publish across pages, share saved views and move cards together on a live board. [Open the workflows](https://mero-ui.rubenlangeweg.com/premium) · [Watch the seven captioned walkthroughs](https://mero-ui.rubenlangeweg.com/premium/watch)

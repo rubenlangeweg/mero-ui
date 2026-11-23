@@ -277,6 +277,8 @@ export function createApp({ siteOrigin = process.env.MERO_SITE_ORIGIN, serveFile
     const now = Date.now();
     const since = Number(searchParams.get("started"));
     const started = since > 0 && since <= now ? since : now;
+    // The Stale status variant fails every read after the first.
+    if (searchParams.has("outage") && since > 0) return send(response, "Status store unavailable.", { status: 503, headers: { "Cache-Control": "no-store" } });
     const done = now - started >= 5000;
     const body = `<span class="mero-badge mero-badge-dot">${done ? "Succeeded" : "Running"}</span>
       <input type="hidden" name="started" value="${started}">`;
