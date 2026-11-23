@@ -27,6 +27,7 @@ export function startGuide() {
     <p>For interactive components, load HTMX 4 once, before mero.js.</p>
     ${example(install)}
     <h2 id="agent-skills">Agent skills</h2>
+    <p>Find a component’s templates and required assets in the <a href="/llms.txt">agent documentation index</a>. For offline use, open <code>agent-docs/llms.txt</code> in your installed Mero package when available.</p>
     <p>Install the Mero UI skill from your app’s root. Ask your coding agent to add a catalog component to an existing page and connect it to your backend.</p>
     ${example("npx skills add rubenlangeweg/mero-ui --skill mero-ui", null, "Shell")}
     <p>For work on the library itself, install <code>mero-ui-contribute</code> from the <a href="https://github.com/rubenlangeweg/mero-ui/tree/main/skills">Mero UI skills directory</a>.</p>

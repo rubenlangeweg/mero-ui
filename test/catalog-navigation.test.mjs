@@ -40,6 +40,8 @@ test("component visits keep the sidebar in place and restore the index, filters 
   assert.equal(await nav.evaluate(el => el.scrollTop), oldTop);
   assert.equal(await page.title(), "Tooltip · Mero UI");
   assert.equal(await canonicalPath(), "/components/tooltip");
+  assert.ok((await page.locator('head link[rel="alternate"][type="text/markdown"]').getAttribute("href")).endsWith("/components/tooltip.md"));
+  assert.equal(await page.locator('head link[rel="describedby"]').getAttribute("href"), "/llms.txt");
   assert.notEqual(await description.getAttribute("content"), indexDescription);
   const schema = JSON.parse(await page.locator('head script[type="application/ld+json"]').textContent());
   assert.ok(schema["@graph"].some(entry => entry.url?.endsWith("/components/tooltip")));
@@ -66,6 +68,7 @@ test("component visits keep the sidebar in place and restore the index, filters 
   await page.goBack();
   await family.waitFor();
   assert.equal(await canonicalPath(), "/components");
+  assert.equal(await page.locator('head link[rel="alternate"][type="text/markdown"]').count(), 0);
   assert.equal(await description.getAttribute("content"), indexDescription);
   assert.equal(await family.inputValue(), "group-studio-collections");
   assert.equal(await search.inputValue(), "data");

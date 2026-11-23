@@ -11,6 +11,7 @@ Start with the host app's template, static asset path and route handler. Mero sh
 ## Find the matching example
 
 - Identify the Mero release from the package lock, installed package metadata, or the banner on copied assets (0.6.2 onward). For older copies, check the original download URL or the commit that added the files. If the release is still unknown, ask which release was used or whether to upgrade the asset set together before choosing a template. Use the matching repository tag for existing apps. [Releases](https://github.com/rubenlangeweg/mero-ui/releases) · [Quick start](https://mero-ui.rubenlangeweg.com/start)
+- Open `node_modules/@rubenlangeweg/mero-ui/agent-docs/llms.txt` when present and follow its relative links offline. For the deployed release, the [hosted index](https://mero-ui.rubenlangeweg.com/llms.txt) provides the same lookup. Older releases can use their matching source checkout.
 - Choose a component **and variant**. Copy **Template** and the tags under **Use in your app**. For a full screen, start with the closest layout, then look up the controls it uses. The hosted catalog tracks the deployed version. [Components](https://mero-ui.rubenlangeweg.com/components) · [Layouts](https://mero-ui.rubenlangeweg.com/layouts)
 - Run the bundled helper with Node 22+ from the root of a trusted checkout of the matching Mero release. Use the script path in this installed skill. The helper executes the checkout's catalog modules. The app itself can run without Node.
 

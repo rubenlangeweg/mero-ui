@@ -212,3 +212,32 @@ export function referencePage() {
     </section>
   </article>`;
 }
+
+// Reference descriptions use only inline code and links to catalog components.
+function inlineMarkdown(html) {
+  return html.replaceAll(/<\/?code>/g, "`")
+    .replaceAll(/<a href="\/components\/([^"]+)">([^<]+)<\/a>/g, "[$2](components/$1.md)")
+    .replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&quot;", '"');
+}
+
+export function referenceMarkdown() {
+  const sections = ["## Events Mero sends", "Events bubble to the document."];
+  for (const [name, , , when, detail, note] of emitted) {
+    sections.push("### " + name, inlineMarkdown(when));
+    if (detail) sections.push(`event.detail: \`${detail}\`. ${inlineMarkdown(note)}`);
+  }
+  sections.push("## Events Mero acts on");
+  for (const [name, what, header] of received) {
+    sections.push("### " + name, inlineMarkdown(what), "```http\n" + header + "\n```");
+  }
+  sections.push("## window.MeroUI");
+  for (const [signature, what] of methods) sections.push("### " + signature, inlineMarkdown(what));
+  sections.push("## Component attributes");
+  for (const [group, file, items] of attributes) {
+    sections.push(`### ${group} · ${file}`, items.map(([name, what]) => {
+      const managed = name.startsWith("*") ? " (set by Mero)" : "";
+      return `- \`${name.replace(/^\*/, "")}\`${managed} — ${inlineMarkdown(what)}`;
+    }).join("\n"));
+  }
+  return sections.join("\n\n");
+}

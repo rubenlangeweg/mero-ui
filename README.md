@@ -6,6 +6,8 @@ Mero UI works with Go, Rust and any backend that renders HTML. Copy a component 
 
 ## Agent skills
 
+Start at the [agent documentation index](https://mero-ui.rubenlangeweg.com/llms.txt) for the hosted catalog. Each component has a Markdown page with its variants, page assets and templates. The index also links to the integration patterns, public API reference and complete catalog. For offline use, open `node_modules/@rubenlangeweg/mero-ui/agent-docs/llms.txt` in releases that include it.
+
 From your app's root, install the skill for building pages with Mero UI:
 
 ```sh
