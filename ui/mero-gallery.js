@@ -1,3 +1,4 @@
+/*! @rubenlangeweg/mero-ui 0.6.1 | MIT */
 (() => {
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 

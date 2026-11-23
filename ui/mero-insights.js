@@ -1,3 +1,4 @@
+/*! @rubenlangeweg/mero-ui 0.6.1 | MIT */
 // Optional delegated behaviors. They also work on fragments added by HTMX.
 (() => {
   function showValue(mark) {

@@ -26,7 +26,7 @@ npm install https://github.com/rubenlangeweg/mero-ui/releases/download/v0.6.1/ru
 
 To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.6.1/ui/mero.css`.
 
-Mero targets htmx 4 only. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
+Mero targets htmx 4 only. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. The first line of each file names its release, for example `/*! @rubenlangeweg/mero-ui 0.6.1 | MIT */`, so a copied file shows which version it is. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
 
 The Mero scripts listen to htmx 4 events and read `event.detail.ctx`. Load `mero.js` on every page that uses a Mero script.
 
@@ -97,6 +97,8 @@ MERO_BROWSER=firefox npm test
 MERO_BROWSER=webkit npm test
 npm run pack:ui
 ```
+
+`npm version` stamps the new version into the first line of every script and stylesheet in `ui/`. After editing the version by hand, run `npm run banner`; a test fails while any file carries another version.
 
 Each run uses two test files in parallel to keep browser sessions responsive on local machines. The npm package contains the UI assets. The downloadable preview includes the reference server and example routes. Browser checks and their environment options are documented next to the tests.
 

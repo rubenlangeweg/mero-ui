@@ -9,6 +9,8 @@
     "test": "node --test --test-concurrency=2",
     "audit:catalog": "node scripts/audit-catalog.mjs",
     "pack:ui": "npm pack --dry-run",
+    "banner": "node scripts/version-banner.mjs",
+    "version": "node scripts/version-banner.mjs && git add ui",
     "build": "node scripts/build-assets.mjs && cf build",
     "deploy": "npm run build && cf deploy --prebuilt"
   },
