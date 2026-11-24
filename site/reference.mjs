@@ -6,7 +6,7 @@ const emitted = [
     "Fires on the <code>data-mero-listbox</code> element when a person chooses an option.",
     "{ value, option }", "<code>value</code> is the option’s <code>data-value</code>, or its text when that is absent. <code>option</code> is the chosen element."],
   ["mero:tab", "/components/tabs", "Tabs",
-    "Fires on the newly selected tab when a person changes the tab with a click or an arrow key, after the tabs and panels are updated. It does not fire for the tab selected at load, or when the selected tab is chosen again.",
+    "Fires on the newly selected tab when a person changes the tab with a click, an arrow key, Home or End, after the tabs and panels are updated. It does not fire for the tab selected at load, or when the selected tab is chosen again.",
     "{ tab, panel }", "<code>tab</code> is the selected tab. <code>panel</code> is the element its <code>aria-controls</code> names, or <code>null</code> when there is none."],
   ["mero:toggle", "/components/toggle-button", "Toggle Button",
     "Fires on a <code>data-mero-toggle</code> button after a click flips its <code>aria-pressed</code>.",

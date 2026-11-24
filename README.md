@@ -99,7 +99,7 @@ A test fails when one of these names disappears from `ui/`. The reviewed list is
 - `--mero-*` custom property names
 - the `renderChart` and `renderMarkdown` exports of `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown`
 
-The same deprecation rule covers what the [reference](https://mero-ui.rubenlangeweg.com/reference) and the catalog document, checked by review instead of a test: the element an event fires on, its `detail` keys and whether it bubbles, the values an attribute accepts, and the `.mero-*` classes in the catalog templates.
+The same deprecation rule covers what the [reference](https://mero-ui.rubenlangeweg.com/docs/reference) and the catalog document, checked by review instead of a test: the element an event fires on, its `detail` keys and whether it bubbles, the values an attribute accepts, and the `.mero-*` classes in the catalog templates.
 
 Mero's scripts set `--mero-shine-x`, `--mero-shine-y`, `--mero-tilt-x`, `--mero-tilt-y`, `--mero-diff-split`, `--mero-tooltip-shift` and `--mero-ws-first` while they run. The names are stable, so your CSS can read them, but do not set them yourself.
 
