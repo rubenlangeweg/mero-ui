@@ -58,7 +58,15 @@ test("pages run on plain htmx 4: no implicit inheritance, one vendored htmx 4 bu
     assert.match(html, /name="htmx-config"/);
     assert.doesNotMatch(html, /implicitInheritance/);
   }
-  assert.match(await readFile("public/vendor/htmx.min.js", "utf8"), /htmx:config:request/);
+  const pinned = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8")).devDependencies["htmx.org"];
+  assert.match(String(pinned), /^\d+\.\d+\.\d+$/, "htmx.org must be an exact devDependency version");
+  const fix = `run npm ci; public/vendor/htmx.min.js must equal htmx.org@${pinned} dist/htmx.min.js. To re-vendor: bump htmx.org in package.json and copy node_modules/htmx.org/dist/htmx.min.js to public/vendor/`;
+  const [vendored, published] = await Promise.all(
+    ["../public/vendor/htmx.min.js", "../node_modules/htmx.org/dist/htmx.min.js"].map((file) =>
+      readFile(new URL(file, import.meta.url)).catch(() => assert.fail(fix)),
+    ),
+  );
+  assert.ok(vendored.equals(published), fix);
   await assert.rejects(access("public/vendor/htmx-4.min.js"));
   assert.doesNotMatch(referencePage(), /HX-Trigger-After/);
 });

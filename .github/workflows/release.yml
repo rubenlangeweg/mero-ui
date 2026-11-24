@@ -32,6 +32,9 @@ jobs:
           mkdir release
           npm pack --pack-destination release
           version="${GITHUB_REF_NAME#v}"
+          # The changelog section for this version, without its heading. A release without one stops here.
+          awk -v v="$version" '/^## /{on = index($0, "## " v " ") == 1; next} on' CHANGELOG.md > "$RUNNER_TEMP/changelog.md"
+          grep -q '[^[:space:]]' "$RUNNER_TEMP/changelog.md"
           {
             echo "Install the UI assets from npm:"
             echo
@@ -39,8 +42,7 @@ jobs:
             echo "npm install @rubenlangeweg/mero-ui@$version"
             echo '```'
             echo
-            # The changelog section for this version, without its heading.
-            awk -v v="$version" '/^## /{on = index($0, "## " v " ") == 1; next} on' CHANGELOG.md
+            cat "$RUNNER_TEMP/changelog.md"
           } > release/notes.md
       - name: Hash the tarball
         id: digest
