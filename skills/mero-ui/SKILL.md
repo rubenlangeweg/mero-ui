@@ -25,7 +25,8 @@ node /path/to/mero-ui/scripts/catalog.mjs show sortable-table 'Row peek'
 1. Serve the listed files at your app's static URLs. The npm release tarball keeps Mero assets under `ui/`. For templates that issue requests, load HTMX 4 before `mero.js`, then the component's deferred scripts. A form or live region can need an extra script even in the core family.
 2. Replace sample records and demo URLs with the app's data and routes. Preserve labels, ID references, focus targets and native links or form actions present in the example. Give repeated instances distinct IDs or retain the example's `data-mero-scope` wrapper.
 3. Keep validation, persistence and permissions in the host handler. On HTTP 422, return the filled replacement form with the invalid field marked. After a successful save, send `HX-Trigger: {"mero:form-saved":{"message":"Saved"}}`. For Typed Confirmation (`data-mero-confirm`), also send `HX-Reswap: none` on success. The original form holds the request state Mero checks before closing the dialog and returning focus. For other forms that the success response replaces, set the event detail's `target` to the surviving form's selector. [Mero reference](https://mero-ui.rubenlangeweg.com/docs/reference)
-4. For a theme change, export or override `--mero-*` tokens in CSS loaded after the base stylesheet. Set `data-theme="light"` or `data-theme="dark"` on the document or section. [Theme studio](https://mero-ui.rubenlangeweg.com/themes)
+4. When the page also runs Alpine or your own scripts, listen for `mero:*` events and leave the state Mero owns to Mero. [With Alpine or your own scripts](https://mero-ui.rubenlangeweg.com/docs/reference#reference-alpine)
+5. For a theme change, export or override `--mero-*` tokens in CSS loaded after the base stylesheet. Set `data-theme="light"` or `data-theme="dark"` on the document or section. [Theme studio](https://mero-ui.rubenlangeweg.com/themes)
 
 ## Check the interaction
 

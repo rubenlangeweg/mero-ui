@@ -235,10 +235,23 @@ const headers = [
 const ownedIntro = "The native and ARIA state Mero writes besides the attributes marked <em>set by Mero</em> above. Render the starting state in your markup, then leave these to Mero: a second writer and Mero overwrite each other. This list covers <code>mero.js</code>, <code>mero-forms.js</code> and <code>mero-live.js</code>. The state the other scripts write is not listed.";
 const headersIntro = "The <code>Mero-*</code> HTTP headers. Your server sends the response headers. Mero sends the request header.";
 
+// [topic, rule]. Each rule is asserted by test/alpine-coexistence-browser.test.mjs; add the case there before a rule here.
+// test/reference.test.mjs fails when alpineIntro does not name the pinned Alpine and htmx versions.
+const alpine = [
+  ["Script order", "With Mero and Alpine both loaded as deferred scripts, either order works."],
+  ["Listen, do not read", "Put <code>x-on:mero:selection</code>, <code>x-on:mero:tab</code> or <code>x-on:mero:toggle</code> on an <code>x-data</code> ancestor of the component. The event arrives after Mero has written the state, so the listener sees the new state. Mero selecting a tab or flipping a toggle inside an <code>x-data</code> root leaves Alpine’s own state alone."],
+  ["mero:action", "For a form that stays in the page, or that a 422 response replaces with another <code>data-mero-form</code>, a listener on an ancestor hears both the pending and the final event. When the swap removes the form and leaves no replacement <code>data-mero-form</code>, the final event fires on the document. An ancestor listener misses it. Use <code>@mero:action.window</code> on an Alpine component or a native listener on <code>document</code>. The detail is <code>{ state }</code> while pending and <code>{ state, status, message }</code> at the end. It does not say which form or button it came from, and a window or document listener hears every action on the page, so it cannot tell which one settled once the element is gone. Tested with <code>data-mero-form</code>."],
+  ["Combobox", "Use <code>x-model.lazy</code> on the combobox input. Choosing an option fires <code>change</code> and no <code>input</code> event."],
+  ["Writing a field value", "A script that sets an input’s value fires no event. Dispatch a bubbling <code>change</code> on the input afterwards, or <code>data-mero-dirty</code> and <code>data-mero-show-when</code> keep their old state."],
+  ["htmx swaps", "After an <code>innerHTML</code> swap into an <code>x-data</code> element, and after an <code>outerMorph</code> swap of one with <code>hx-alpine-compat</code> loaded, the Alpine state survives, Alpine binds the new children and Mero sets up the tabs in the new content."],
+  ["Markup Alpine inserts", "Mero does not set up tabs that <code>x-if</code> inserts. Call <code>MeroUI.init(el)</code> on the inserted element. A second call changes nothing."],
+];
+const alpineIntro = "What a browser test proves about Mero next to Alpine. It runs Alpine 3.14.8, the oldest version tested, and Alpine 3.17.5, with htmx 4.0.2 and its <code>hx-alpine-compat</code> extension loaded straight after htmx. Other Alpine versions and setups without the extension are not tested.";
+
 export function referencePage() {
   return `<article class="design-guide" aria-labelledby="reference-title">
     <header class="docs-heading"><h1 id="reference-title">Reference</h1>
-      <p>The events Mero UI sends and acts on, the functions on <code>window.MeroUI</code>, every <code>data-mero-*</code> attribute, the state Mero writes and the <code>Mero-*</code> headers.</p>
+      <p>The events Mero UI sends and acts on, the functions on <code>window.MeroUI</code>, every <code>data-mero-*</code> attribute, the state Mero writes, the <code>Mero-*</code> headers and what is tested with Alpine.</p>
     </header>
 
     <section aria-labelledby="reference-emitted">
@@ -284,6 +297,12 @@ export function referencePage() {
       <p>${headersIntro}</p>
       <dl class="reference-list">${headers.map(([name, direction, what, script]) => `<div><dt><code>${name}</code> <em>${direction}</em></dt><dd>${what} Used by <code>${script}</code>.</dd></div>`).join("")}</dl>
     </section>
+
+    <section aria-labelledby="reference-alpine">
+      <h2 id="reference-alpine">With Alpine or your own scripts</h2>
+      <p>${alpineIntro} The events are listed under <a class="mero-link" href="#reference-emitted">Events Mero sends</a>.</p>
+      <dl class="reference-list">${alpine.map(([topic, rule]) => `<div><dt>${topic}</dt><dd>${rule}</dd></div>`).join("")}</dl>
+    </section>
   </article>`;
 }
 
@@ -317,5 +336,7 @@ export function referenceMarkdown() {
     owned.map(([component, script, what]) => `- ${component} (${script}) — ${inlineMarkdown(what)}`).join("\n"));
   sections.push("## Headers", inlineMarkdown(headersIntro),
     headers.map(([name, direction, what, script]) => `- \`${name}\` (${direction}, ${script}) — ${inlineMarkdown(what)}`).join("\n"));
+  sections.push("## With Alpine or your own scripts", inlineMarkdown(alpineIntro) + " The events are listed under “Events Mero sends”.",
+    alpine.map(([topic, rule]) => `- ${topic} — ${inlineMarkdown(rule)}`).join("\n"));
   return sections.join("\n\n");
 }
