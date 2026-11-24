@@ -1,4 +1,4 @@
-/*! @rubenlangeweg/mero-ui 0.8.0 | MIT */
+/*! @rubenlangeweg/mero-ui 0.9.0 | MIT */
 /* Optional collection components. Everything inherits the base Mero theme. */
 :where(.mero-collection,.mero-agenda,.mero-item-card,.mero-list-view,.mero-widget,.mero-file-tree,.mero-kanban,.mero-toc,.mero-place-map,.mero-collection-timeline,.mero-hover-card,.mero-collection-empty) {
   box-sizing: border-box;
