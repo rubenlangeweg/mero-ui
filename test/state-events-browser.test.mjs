@@ -59,6 +59,17 @@ test("mero:tab and mero:toggle fire once per change by a person, after the state
     assert.deepEqual(await heard(), [tabEvent(first)], "one event per arrow key");
     assert.equal(await tabs.nth(0).evaluate(node => node === document.activeElement), true);
 
+    // A focus handler that selects another tab must not leave a stale event behind it: the last event names the selected tab.
+    const [, , third] = await tabs.evaluateAll(nodes => nodes.map(node => ({ id: node.id, panel: node.getAttribute("aria-controls") })));
+    await tabs.nth(1).evaluate((node, next) => node.addEventListener("focus", () => document.getElementById(next).click(), { once: true }), third.id);
+    await page.keyboard.press("ArrowRight");
+    assert.deepEqual(await heard(), [tabEvent(second), tabEvent(third)], "events arrive in selection order, each while its tab is selected");
+    await tabs.nth(2).focus();
+    await page.keyboard.press("Home");
+    assert.deepEqual(await heard(), [tabEvent(first)], "Home fires it");
+    await page.keyboard.press("End");
+    assert.equal((await heard()).length, 1, "End fires it");
+
     await page.goto(base + "/preview/toggle-button");
     const toggle = page.locator("[data-mero-toggle]").first();
     await toggle.waitFor();
