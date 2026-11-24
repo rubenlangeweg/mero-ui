@@ -38,7 +38,7 @@ const received = [
 const methods = [
   ["MeroUI.open(dialog, { trigger })", "Opens a <code>&lt;dialog&gt;</code> as a modal. Pass the element or its ID. Focus returns to <code>trigger</code> on close, by default the element focused when you call it."],
   ["MeroUI.close(dialog, { focus, value })", "Closes an open dialog. <code>focus</code> overrides where focus returns. <code>value</code> becomes the dialog’s <code>returnValue</code>."],
-  ["MeroUI.toast(message, { tone, duration })", "Shows a notification. <code>tone</code> is <code>accent</code>, <code>success</code>, <code>warning</code> or <code>danger</code>. <code>duration</code> is in milliseconds, 4800 by default. Use 0 to keep it until dismissed."],
+  ["MeroUI.toast(message, { tone, duration, trigger })", "Shows a notification. <code>tone</code> is <code>accent</code>, <code>success</code>, <code>warning</code> or <code>danger</code>. <code>duration</code> is in milliseconds, 4800 by default. Use 0 to keep it until dismissed. <code>trigger</code> is the element the notification belongs to, by default the focused element. When it is inside an open dialog, the notification shows in that dialog."],
   ["MeroUI.init(root)", "Sets up tabs, listboxes, comboboxes and auto-opening dialogs inside <code>root</code>. Mero calls it for every htmx swap. Call it yourself for markup you insert another way."],
 ];
 
@@ -123,7 +123,7 @@ const attributes = [
     ["data-mero-live-error", "An initially empty status region that announces a failed read. The last good status stays visible until a successful read. The attribute value, when set, replaces the default text; <code>{time}</code> becomes the time of the last good read in the browser’s locale, or the page load when no read has succeeded yet."],
     ["data-mero-live-follow", "On the <code>data-mero-live</code> region. An error response with <code>HX-Redirect</code>, <code>HX-Location</code> or <code>HX-Refresh: true</code>, such as a 401 for an expired session, is handed to htmx instead of retried, and polling stops. Without it Mero ignores those headers on an error response and keeps retrying."],
     ["data-mero-live-retry", "On a hidden button. Mero shows it after a failed read. Activating it refreshes the status immediately. If a successful read hides the focused button, focus returns to the region."],
-    ["data-mero-live-done", "On an operation with a final status. Mero sets it after a successful response with the terminal header, and after following a redirect with <code>data-mero-live-follow</code>. Render it yourself if the operation has already finished."],
+    ["*data-mero-live-done", "On an operation with a final status. Mero sets it after a successful response with the terminal header, and after following a redirect with <code>data-mero-live-follow</code>. Render it yourself if the operation has already finished."],
   ]],
   ["Gallery", "mero-gallery.js", [
     ["data-mero-slide", "On each slide. Its value links the slide to a choice control."],
@@ -199,10 +199,46 @@ const attributes = [
   ]],
 ];
 
+// [component, script, state Mero writes]. Covers mero.js, mero-forms.js and mero-live.js only.
+// test/reference.test.mjs fails when one of those scripts writes an aria-* attribute missing here.
+const owned = [
+  ["Dialog", "mero.js", "The <code>open</code> state of a dialog opened with <code>data-mero-open</code> or <code>MeroUI.open</code>."],
+  ["Scoped IDs", "mero.js", "Inside a <code>data-mero-scope</code> or <code>data-mero-tabs</code>: the <code>id</code> of an element whose ID is already used elsewhere on the page, and every reference to it in that scope: <code>for</code>, <code>aria-controls</code>, <code>aria-labelledby</code>, <code>aria-describedby</code>, <code>aria-activedescendant</code>, <code>popovertarget</code>, <code>data-mero-open</code> and the ID selectors <code>data-mero-scope</code> lists. Read these from the element. Do not write back the ID you rendered."],
+  ["Tabs", "mero.js", "<code>aria-selected</code> and <code>tabindex</code> on each tab, and <code>hidden</code> on each panel a tab names in <code>aria-controls</code>."],
+  ["List box", "mero.js", "<code>aria-selected</code> and <code>tabindex</code> on each option."],
+  ["Combobox", "mero.js", "On the input: <code>aria-expanded</code>, <code>aria-activedescendant</code> and, while a remote query runs, <code>aria-busy</code>. On the list it controls: <code>hidden</code> on the list, on options that do not match and on the empty row, and <code>aria-selected</code> on options. The input’s value when a person chooses an option. Opening a <code>data-mero-command</code> dialog clears its combobox input."],
+  ["Accordion", "mero.js", "The <code>name</code> of each <code>details</code> directly inside a <code>data-mero-accordion</code>."],
+  ["Toggle button", "mero.js", "<code>aria-pressed</code> on a <code>data-mero-toggle</code> button."],
+  ["Menu", "mero.js", "<code>aria-expanded</code> on the button that opens a popover with <code>role=\"menu\"</code>."],
+  ["Shortcuts", "mero.js", "<code>aria-keyshortcuts</code> on a <code>data-mero-shortcut</code> element. On a <code>data-mero-shortcuts-toggle</code>: <code>checked</code> on a checkbox, otherwise <code>aria-checked</code> or <code>aria-pressed</code>."],
+  ["Radio group", "mero.js", "For a <code>data-mero-radio-group</code> outside a form: the <code>form</code> attribute on each radio, pointing at a hidden form Mero adds, and <code>checked</code> on the selected radio."],
+  ["Toast and peek", "mero.js", "Mero creates these elements and sets their <code>role</code>, <code>aria-label</code>, <code>aria-live</code> and <code>aria-hidden</code>."],
+  ["Form", "mero-forms.js", "On a <code>data-mero-form</code> while its request runs: <code>aria-busy</code> on the form and <code>disabled</code> on its submit buttons. <code>hidden</code> on its <code>data-mero-form-error</code> element and on a <code>data-mero-action-unknown</code> panel. With <code>data-mero-clear-passwords</code>: the value of its password inputs, cleared when the request ends unless it was cancelled."],
+  ["Action button", "mero-forms.js", "On a <code>data-mero-action</code> button while its request runs: <code>aria-busy</code> and <code>aria-disabled</code>. <code>hidden</code> on a <code>data-mero-action-unknown</code> panel, and <code>hidden</code> and <code>data-tone</code> on <code>data-mero-action-status</code>. <code>aria-busy</code> on the region a <code>data-mero-action-reread</code> selector names, while Mero reads it again. That is the selected region, not the button, form or ancestor that carries the attribute, and it applies to a <code>data-mero-form</code> too."],
+  ["Typed confirmation", "mero-forms.js", "<code>disabled</code> on <code>data-mero-confirm-submit</code>. The value of <code>data-mero-confirm-input</code>, cleared when its dialog closes."],
+  ["Show-when", "mero-forms.js", "<code>hidden</code> on the branch, and <code>disabled</code> on a fieldset branch and on the controls inside a branch."],
+  ["Dirty", "mero-forms.js", "<code>disabled</code> on the submit buttons of a <code>data-mero-dirty</code> form."],
+  ["Search", "mero-forms.js", "<code>hidden</code> on <code>data-mero-search-error</code>. After a successful read: <code>defaultSelected</code> on each option and <code>defaultChecked</code> on each checkbox and radio of the form, set to the current choice, so a form reset returns to the last search that worked. After a failed read: <code>selected</code> and <code>checked</code>, put back to those defaults."],
+  ["Live progress", "mero-live.js", "<code>aria-busy</code> on the <code>data-mero-live</code> region while a read runs, and <code>hidden</code> on <code>data-mero-live-retry</code>."],
+  ["Focus targets", "mero.js, mero-forms.js, mero-live.js", "<code>tabindex=\"-1\"</code> on a region Mero moves focus to when it has no <code>tabindex</code>: the boosted region, a <code>data-mero-live</code> region and an emptied <code>data-mero-ephemeral</code> element."],
+];
+
+// [name, direction, values, script]. test/reference.test.mjs fails when ui/*.js names a Mero-* header missing here.
+const headers = [
+  ["Mero-Action-Outcome", "response", "<code>succeeded</code>, <code>rejected</code> or <code>unknown</code>. Overrides the outcome Mero derives from the status code of a <code>data-mero-action</code> or <code>data-mero-form</code> request. Any other value is ignored.", "mero-forms.js"],
+  ["Mero-Action-Message", "response", "Text to show for the outcome of a <code>data-mero-action</code> or <code>data-mero-form</code> request.", "mero-forms.js"],
+  ["Mero-Form-Error", "response", "Fallback text for a failed request. A form shows it when there is no <code>Mero-Action-Message</code> and no <code>data-mero-action-unknown</code> text, and never for a 422 without <code>Mero-Action-Outcome</code>, where the replacement form shows its own errors. A search shows it when <code>data-mero-search-error</code> has no value.", "mero-forms.js"],
+  ["Mero-Live", "response", "<code>done</code> on the final successful read of a <code>data-mero-live</code> region. Polling stops.", "mero-live.js"],
+  ["Mero-Reread", "request", "A number Mero sends with the GET that reads again the region a <code>data-mero-action-reread</code> selector names.", "mero-forms.js"],
+];
+
+const ownedIntro = "The native and ARIA state Mero writes besides the attributes marked <em>set by Mero</em> above. Render the starting state in your markup, then leave these to Mero: a second writer and Mero overwrite each other. This list covers <code>mero.js</code>, <code>mero-forms.js</code> and <code>mero-live.js</code>. The state the other scripts write is not listed.";
+const headersIntro = "The <code>Mero-*</code> HTTP headers. Your server sends the response headers. Mero sends the request header.";
+
 export function referencePage() {
   return `<article class="design-guide" aria-labelledby="reference-title">
     <header class="docs-heading"><h1 id="reference-title">Reference</h1>
-      <p>The events Mero UI sends and acts on, the functions on <code>window.MeroUI</code>, and every <code>data-mero-*</code> attribute.</p>
+      <p>The events Mero UI sends and acts on, the functions on <code>window.MeroUI</code>, every <code>data-mero-*</code> attribute, the state Mero writes and the <code>Mero-*</code> headers.</p>
     </header>
 
     <section aria-labelledby="reference-emitted">
@@ -236,12 +272,24 @@ export function referencePage() {
       ${attributes.map(([group, file, items]) => `<h3>${group} · <code>${file}</code></h3>
       <dl class="reference-list">${items.map(([name, what]) => `<div><dt><code>${name.replace("*", "")}</code>${name[0] === "*" ? " <em>set by Mero</em>" : ""}</dt><dd>${what}</dd></div>`).join("")}</dl>`).join("")}
     </section>
+
+    <section aria-labelledby="reference-owned">
+      <h2 id="reference-owned">State Mero owns</h2>
+      <p>${ownedIntro}</p>
+      <dl class="reference-list">${owned.map(([component, script, what]) => `<div><dt>${component} · ${script}</dt><dd>${what}</dd></div>`).join("")}</dl>
+    </section>
+
+    <section aria-labelledby="reference-headers">
+      <h2 id="reference-headers">Headers</h2>
+      <p>${headersIntro}</p>
+      <dl class="reference-list">${headers.map(([name, direction, what, script]) => `<div><dt><code>${name}</code> <em>${direction}</em></dt><dd>${what} Used by <code>${script}</code>.</dd></div>`).join("")}</dl>
+    </section>
   </article>`;
 }
 
-// Reference descriptions use only inline code and links to catalog components.
+// Reference descriptions use only inline code, emphasis and links to catalog components.
 function inlineMarkdown(html) {
-  return html.replaceAll(/<\/?code>/g, "`")
+  return html.replaceAll(/<\/?code>/g, "`").replaceAll(/<\/?em>/g, "")
     .replaceAll(/<a href="\/components\/([^"]+)">([^<]+)<\/a>/g, "[$2](components/$1.md)")
     .replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&quot;", '"');
 }
@@ -265,5 +313,9 @@ export function referenceMarkdown() {
       return `- \`${name.replace(/^\*/, "")}\`${managed} — ${inlineMarkdown(what)}`;
     }).join("\n"));
   }
+  sections.push("## State Mero owns", inlineMarkdown(ownedIntro),
+    owned.map(([component, script, what]) => `- ${component} (${script}) — ${inlineMarkdown(what)}`).join("\n"));
+  sections.push("## Headers", inlineMarkdown(headersIntro),
+    headers.map(([name, direction, what, script]) => `- \`${name}\` (${direction}, ${script}) — ${inlineMarkdown(what)}`).join("\n"));
   return sections.join("\n\n");
 }
