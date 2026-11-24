@@ -16,7 +16,7 @@ Start in the Mero source checkout. Find the closest existing component by ID or 
 | Gallery, collection, workspace, insight or composition component | Follow the family module imported by `site/catalog.mjs`. Its registry builds the component index and rejects duplicate IDs. |
 | Shipped styles and behavior | Edit the owning files in `ui/`. Reuse the base tokens and existing delegated handlers. Site-only styles and scripts live in `public/`. |
 | Assets shown to adopters | Inspect `exampleAssets` in `site/catalog-pages.mjs`. The result depends on the family and the selected variant's markup. Check both **Template** and **Use in your app**. |
-| Public hook or event | Document it in `site/reference.mjs`. Mark runtime-managed attributes the same way as neighboring entries. Check `test/reference.test.mjs`. A new name also goes into `test/api-surface.json`: run `node scripts/api-surface.mjs --write`. Never remove or rename a public name in the same release: keep the old one working, add a changelog bullet that starts with `**Deprecated:**`, and remove it in a later release under a bullet that starts with `**Breaking:**`. The README's Stability section has the policy. |
+| Public hook or event | Document it in `site/reference.mjs`. Mark runtime-managed attributes the same way as neighboring entries. Check `test/reference.test.mjs`. A new name also goes into `test/api-surface.json`: run `node scripts/api-surface.mjs --write`. Removing or renaming a public name needs a changelog bullet that starts with `**Breaking:**`. Where it is cheap, keep the old name working for a release first under a bullet that starts with `**Deprecated:**`. The README's Stability section has the policy. |
 
 ## Implement the contract
 
