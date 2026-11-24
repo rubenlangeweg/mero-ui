@@ -2,7 +2,7 @@
 
 ## 0.9.0 · Unreleased
 
-- **Stability:** the README now states the versioning and deprecation policy. The public names in `ui/` (`data-mero-*` attributes, `mero:*` events, `window.MeroUI` methods, `Mero-*` headers, `--mero-*` properties and the chart and Markdown exports) are recorded in `test/api-surface.json`, and a test fails when one is removed or renamed. From this release, changelog bullets that start with **Deprecated:** or **Breaking:** are the ones to read before an upgrade.
+- **Stability:** the README now states the versioning policy for 0.x. The public names in `ui/` (`data-mero-*` attributes, `mero:*` events, `window.MeroUI` methods, `Mero-*` headers, `--mero-*` properties and the chart and Markdown exports) are recorded in `test/api-surface.json`, and a test fails when one is removed or renamed. From this release, changelog bullets that start with **Deprecated:** or **Breaking:** are the ones to read before an upgrade.
 
 ## 0.8.0 · 23 November 2026
 
