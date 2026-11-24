@@ -15,7 +15,7 @@ const surface = {
   // dataset.meroReturnFocus is data-mero-return-focus.
   attributes: names(all.replace(/dataset\.(mero[A-Za-z]+)/g, (_, key) => "data-" + key.replace(/[A-Z]/g, letter => "-" + letter.toLowerCase())), /data-mero-[a-z-]*[a-z]/g),
   events: names(scripts, /mero:[a-z-]*[a-z]/g),
-  api: scripts.match(/window\.MeroUI = Object\.freeze\(\{([^}]+)\}\)/)[1].split(",").map(name => name.trim()).sort(),
+  api: scripts.match(/window\.MeroUI = Object\.freeze\(\{([^}]+)\}\)/)[1].split(",").map(name => name.split(":")[0].trim()).sort(),
   headers: names(scripts, /\bMero-[A-Z][A-Za-z]*(?:-[A-Z][A-Za-z]*)*/g),
   tokens: names(all, /--mero-[a-z0-9-]*[a-z0-9]/g),
   exports: [...modules.matchAll(/^export (?:async )?function (\w+)/gm)].map(match => match[1]).sort()
