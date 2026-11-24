@@ -16,7 +16,7 @@ Start in the Mero source checkout. Find the closest existing component by ID or 
 | Gallery, collection, workspace, insight or composition component | Follow the family module imported by `site/catalog.mjs`. Its registry builds the component index and rejects duplicate IDs. |
 | Shipped styles and behavior | Edit the owning files in `ui/`. Reuse the base tokens and existing delegated handlers. Site-only styles and scripts live in `public/`. |
 | Assets shown to adopters | Inspect `exampleAssets` in `site/catalog-pages.mjs`. The result depends on the family and the selected variant's markup. Check both **Template** and **Use in your app**. |
-| Public hook or event | Document it in `site/reference.mjs`. Mark runtime-managed attributes the same way as neighboring entries. Check `test/reference.test.mjs`. |
+| Public hook or event | Document it in `site/reference.mjs`. Mark runtime-managed attributes the same way as neighboring entries. Check `test/reference.test.mjs`. A new name also goes into `test/api-surface.json`: run `node scripts/api-surface.mjs --write`. Never remove or rename a public name in the same release: keep the old one working, add a changelog bullet that starts with `**Deprecated:**`, and remove it in a later release under a bullet that starts with `**Breaking:**`. The README's Stability section has the policy. |
 
 ## Implement the contract
 
@@ -26,6 +26,6 @@ For HTMX requests, preserve Mero's explicit wrapper inheritance, v4 event names 
 
 ## Verify what adopters copy
 
-- Run `node --test test/catalog-release.test.mjs test/reference.test.mjs` and the test covering the affected family. Use the repo's browser setup when the interaction changes.
+- Run `node --test test/catalog-release.test.mjs test/reference.test.mjs test/api-surface.test.mjs` and the test covering the affected family. Use the repo's browser setup when the interaction changes.
 - Open `/components/<id>` and `/preview/<id>` with the requested variant. Put the copied template and its listed assets on a plain host page. If intended for repeated use, render it twice and operate the second copy. Check the first copy, keyboard focus and the next interaction after a swap.
 - Audit the affected routes, for example `npm run audit:catalog -- /components/sortable-table '/preview/sortable-table?variant=Row%20peek'`. Use `docs/component-standards.md` for measurements and narrow-layout checks. For changed shipped assets, also run `npm run pack:ui` and check the files in the package listing.

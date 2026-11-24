@@ -86,6 +86,25 @@ Use the [theme studio](http://127.0.0.1:4173/themes) to try colors, fonts and ra
 
 Media uses `mero-gallery` assets. Collections use `mero-collections`. Workspace controls use `mero-workspace`. Charts and conversation examples use `mero-insights`. Presentation utilities use `mero-composition`. Each pair comprises a stylesheet and a deferred script. Two optional server helpers render charts and a small Markdown subset. Import them as `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown`.
 
+## Stability
+
+Mero follows [semantic versioning](https://semver.org). From 0.9.0 its public API is frozen: nothing in it is removed, renamed or changed in meaning without a deprecation first. A deprecated name keeps working for at least one minor release. The [changelog](CHANGELOG.md) marks it **Deprecated:** in the release that deprecates it and **Breaking:** in the release that removes it, and a breaking release is a new minor version while Mero is 0.x and a new major version after 1.0. Read those two bullets before each upgrade.
+
+A test fails when one of these names disappears from `ui/`. The reviewed list is `test/api-surface.json`:
+
+- `data-mero-*` attribute names
+- `mero:*` event names
+- `window.MeroUI` method names
+- `Mero-*` request and response header names
+- `--mero-*` custom property names
+- the `renderChart` and `renderMarkdown` exports of `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown`
+
+The same deprecation rule covers what the [reference](https://mero-ui.rubenlangeweg.com/reference) and the catalog document, checked by review instead of a test: the element an event fires on, its `detail` keys and whether it bubbles, the values an attribute accepts, and the `.mero-*` classes in the catalog templates.
+
+Mero's scripts set `--mero-shine-x`, `--mero-shine-y`, `--mero-tilt-x`, `--mero-tilt-y`, `--mero-diff-split`, `--mero-tooltip-shift` and `--mero-ws-first` while they run. The names are stable, so your CSS can read them, but do not set them yourself.
+
+Everything else is internal and can change in any release: custom properties without the `mero-` prefix such as `--_height`, classes that no catalog template uses, and the `localStorage` and `sessionStorage` keys Mero writes (`mero-shortcuts`, `mero-focus:*` and `mero.split.*`). Do not read or write those keys.
+
 ## Upgrade from 0.4
 
 Release 0.5 drops htmx 2. Load htmx 4, send `HX-Trigger` instead of `HX-Trigger-After-Settle`, and recopy templates that set `hx-*` attributes on a wrapper. The [changelog](CHANGELOG.md) lists every step.
@@ -128,6 +147,8 @@ npm run pack:ui
 ```
 
 `npm version` stamps the new version into the first line of every script and stylesheet in `ui/`. After editing the version by hand, run `npm run banner`; a test fails while any file carries another version.
+
+After adding a public name, run `node scripts/api-surface.mjs --write` and commit `test/api-surface.json`. `test/api-surface.test.mjs` fails while the snapshot and `ui/` differ, and names what was removed or added.
 
 Each run uses two test files in parallel to keep browser sessions responsive on local machines. The npm package contains the UI assets. The downloadable preview includes the reference server and example routes. Browser checks and their environment options are documented next to the tests.
 

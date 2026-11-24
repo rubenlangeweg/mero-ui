@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0 · Unreleased
+
+- **Stability:** the README now states the versioning and deprecation policy. The public names in `ui/` (`data-mero-*` attributes, `mero:*` events, `window.MeroUI` methods, `Mero-*` headers, `--mero-*` properties and the chart and Markdown exports) are recorded in `test/api-surface.json`, and a test fails when one is removed or renamed. From this release, changelog bullets that start with **Deprecated:** or **Breaking:** are the ones to read before an upgrade.
+
 ## 0.8.0 · 23 November 2026
 
 - **Copy:** any button can copy a value with `data-mero-copy="…"` or another element's value or text with `data-mero-copy-target`, and confirms it with a notification. When the clipboard is blocked, Mero selects the text instead. The Button has a Copy to clipboard variant.
