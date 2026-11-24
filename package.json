@@ -35,6 +35,7 @@
     "@cloudflare/vite-plugin": "2.0.0-rc.2",
     "axe-core": "^4.14.1",
     "cf": "1.0.0-rc.2",
+    "htmx.org": "4.0.2",
     "playwright": "^1.65.1",
     "vite": "8.3.8"
   },
