@@ -413,7 +413,7 @@
 
   document.addEventListener("htmx:before:swap", event => {
     const { ctx, tasks } = event.detail;
-    const id = ctx.request.headers?.["Mero-Reread"];
+    const id = ctx.request?.headers?.["Mero-Reread"];
     if (!id) return;
     const target = typeof ctx.target === "string" ? document.querySelector(ctx.target) : ctx.target;
     const url = new URL(ctx.request.action, location.href);

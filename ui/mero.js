@@ -164,9 +164,10 @@
     return [...list.querySelectorAll(tabSelector)].filter(tab => tab.closest('[role="tablist"]') === list);
   }
 
-  function selectTab(tab, focus = false) {
+  function selectTab(tab) {
     const list = tab.closest('[role="tablist"]');
-    if (!list || disabled(tab)) return;
+    if (!list || disabled(tab)) return false;
+    const changed = tab.getAttribute("aria-selected") !== "true";
     for (const item of tabsFor(list)) {
       const selected = item === tab;
       item.tabIndex = selected ? 0 : -1;
@@ -174,7 +175,14 @@
       const panel = element(item.getAttribute("aria-controls"));
       if (panel) panel.hidden = !selected;
     }
-    if (focus) tab.focus();
+    return changed;
+  }
+
+  // A person chose the tab. initTabs calls selectTab directly, so nothing fires at init.
+  function chooseTab(tab, focus) {
+    if (selectTab(tab)) tab.dispatchEvent(new CustomEvent("mero:tab", { bubbles: true, detail: { tab, panel: element(tab.getAttribute("aria-controls")) } }));
+    // Focus last, and only if a listener left this tab selected: a focus handler can select another tab.
+    if (focus && tab.getAttribute("aria-selected") === "true") tab.focus();
   }
 
   function initTabs(root) {
@@ -597,12 +605,16 @@
       pointerStarts.delete(target);
       if (beganOutside && outsideDialog(event, target)) close(target);
     }
-    if (tab?.closest("[data-mero-tabs]")) selectTab(tab);
+    if (tab?.closest("[data-mero-tabs]")) chooseTab(tab);
     const combo = option?.closest("[data-mero-combo]");
     const list = !combo && option?.closest("[data-mero-listbox]");
     if (combo) selectCombo(combo.querySelector('[role="combobox"]'), option);
     if (list && !disabled(option)) chooseOption(list, option);
-    if (toggle && !disabled(toggle)) toggle.setAttribute("aria-pressed", String(toggle.getAttribute("aria-pressed") !== "true"));
+    if (toggle && !disabled(toggle)) {
+      const pressed = toggle.getAttribute("aria-pressed") !== "true";
+      toggle.setAttribute("aria-pressed", String(pressed));
+      toggle.dispatchEvent(new CustomEvent("mero:toggle", { bubbles: true, detail: { pressed } }));
+    }
     if (notifier && !disabled(notifier)) toast(notifier.dataset.meroToast, { tone: notifier.dataset.meroTone, trigger: notifier });
     if (copier && !disabled(copier)) copy(copier);
     if (shortcutToggle && !disabled(shortcutToggle)) {
@@ -684,7 +696,7 @@
       const candidate = step(tab, tabsFor(list).filter(item => !disabled(item)), event.key, previous, next);
       if (candidate) {
         event.preventDefault();
-        selectTab(candidate, true);
+        chooseTab(candidate, true);
       }
       return;
     }
