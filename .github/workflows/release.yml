@@ -3,33 +3,35 @@ on:
   push:
     tags: ["v*"]
 permissions:
-  contents: write
-  packages: write
+  contents: read
 jobs:
   test:
     uses: ./.github/workflows/test.yml
-    permissions:
-      contents: read
-  release:
+  pack:
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+      sha256: ${{ steps.digest.outputs.sha256 }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check the tagged commit is on main
+        run: git merge-base --is-ancestor HEAD refs/remotes/origin/main
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
-          registry-url: https://npm.pkg.github.com
       - name: Check the tag matches package.json
         run: test "$GITHUB_REF_NAME" = "v$(node -p 'require("./package.json").version')"
       - run: npm ci
-      - run: npm pack
-      - name: Create the GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Pack the release and prepare its notes
         run: |
+          mkdir release
+          npm pack --pack-destination release
           version="${GITHUB_REF_NAME#v}"
-          tarball="rubenlangeweg-mero-ui-$version.tgz"
           {
             echo "Install the UI assets from npm:"
             echo
@@ -39,21 +41,59 @@ jobs:
             echo
             # The changelog section for this version, without its heading.
             awk -v v="$version" '/^## /{on = index($0, "## " v " ") == 1; next} on' CHANGELOG.md
-          } > notes.md
-          gh release create "$GITHUB_REF_NAME" "$tarball" --title "Mero UI $GITHUB_REF_NAME" --notes-file notes.md
-      # Last, so a registry failure still leaves the release and its tarball.
+          } > release/notes.md
+      - name: Hash the tarball
+        id: digest
+        run: |
+          digest=$(sha256sum "release/rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz")
+          echo "sha256=${digest%% *}" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: upload
+        with:
+          name: release-${{ github.run_attempt }}
+          path: |
+            release/*.tgz
+            release/notes.md
+          if-no-files-found: error
+
+  release:
+    needs: pack
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: ${{ needs.pack.outputs.artifact-id }}
+          merge-multiple: true
+      - name: Verify the tarball
+        env:
+          SHA256: ${{ needs.pack.outputs.sha256 }}
+        run: printf '%s  %s\n' "$SHA256" "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz" | sha256sum -c -
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz" \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --title "Mero UI $GITHUB_REF_NAME" --notes-file notes.md
       - name: Publish to GitHub Packages
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
-        run: npm publish "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz"
+        run: npm publish "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz" --ignore-scripts --registry=https://npm.pkg.github.com
+
   publish-npm:
-    needs: release
+    needs: [pack, release]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     steps:
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
       - name: Download the release tarball
@@ -62,7 +102,11 @@ jobs:
         run: |
           gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
             --pattern "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz"
+      - name: Verify the release tarball
+        env:
+          SHA256: ${{ needs.pack.outputs.sha256 }}
+        run: printf '%s  %s\n' "$SHA256" "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz" | sha256sum -c -
       - name: Publish to npm with provenance
         run: |
           npm publish "rubenlangeweg-mero-ui-${GITHUB_REF_NAME#v}.tgz" \
-            --registry=https://registry.npmjs.org --access public --provenance
+            --registry=https://registry.npmjs.org --access public --provenance --ignore-scripts
