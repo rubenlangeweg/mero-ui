@@ -20,11 +20,11 @@ const surface = {
   api: scripts.match(/window\.MeroUI = Object\.freeze\(\{([^}]+)\}\)/)[1].split(",").map(name => name.split(":")[0].trim()).sort(),
   headers: names(code, /\bMero-[A-Z][A-Za-z]*(?:-[A-Z][A-Za-z]*)*/g),
   tokens: names(all, /--mero-[a-z0-9-]*[a-z0-9]/g),
-  exports: [
+  exports: [...new Set([
     ...[...modules.matchAll(/^export (?:async )?(?:function\*?|const|let|var|class) (\w+)/gm)].map(match => match[1]),
     // export { a, b as c } exports a and c.
     ...[...modules.matchAll(/^export \{([^}]*)\}/gm)].flatMap(match => match[1].split(",").map(name => name.trim().split(/\s+as\s+/).pop()).filter(Boolean))
-  ].sort()
+  ])].sort()
 };
 
 const path = new URL("test/api-surface.json", root);
