@@ -39,8 +39,13 @@ test("mero:tab and mero:toggle fire once per change by a person, after the state
 
     await page.goto(base + "/preview/tabs");
     await page.locator("[data-mero-tabs-ready]").first().waitFor();
-    await page.evaluate(() => window.MeroUI.init());
-    assert.deepEqual(await heard(), [], "nothing fires while the script loads or from MeroUI.init()");
+    assert.deepEqual(await heard(), [], "nothing fires while the script loads");
+    // The preview ships a selected tab, so init would have nothing to change. Clear it so init has to select one.
+    await page.evaluate(() => {
+      for (const tab of document.querySelectorAll("[data-mero-tabs] [role=tab]")) tab.removeAttribute("aria-selected");
+      window.MeroUI.init();
+    });
+    assert.deepEqual(await heard(), [], "nothing fires when MeroUI.init() selects a tab");
 
     const tabs = page.locator("[data-mero-tabs]").first().getByRole("tab");
     const [first, second] = await tabs.evaluateAll(nodes => nodes.map(node => ({ id: node.id, panel: node.getAttribute("aria-controls") })));
@@ -57,8 +62,6 @@ test("mero:tab and mero:toggle fire once per change by a person, after the state
     await page.goto(base + "/preview/toggle-button");
     const toggle = page.locator("[data-mero-toggle]").first();
     await toggle.waitFor();
-    await page.evaluate(() => window.MeroUI.init());
-    assert.deepEqual(await heard(), []);
     const label = (await toggle.textContent()).trim();
     await toggle.click();
     assert.deepEqual(await heard(), [{ type: "mero:toggle", target: label, selected: null, pressedAttribute: "true", pressed: true, tabIsTarget: false }]);
