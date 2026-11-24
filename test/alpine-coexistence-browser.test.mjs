@@ -35,7 +35,8 @@ const regionBody = served => `<span id="served">${served}</span>
 const region = served => `<section id="island" x-data="{ n: 0 }">${regionBody(served)}</section>`;
 
 const pageHtml = scripts => `<!doctype html><html lang="en"><head><title>Mero with Alpine</title>
-<script>document.addEventListener('alpine:initialized', () => { window.__alpineReady = true })</script>
+<script>document.addEventListener('alpine:initialized', () => { window.__alpineReady = true })
+window.__native = []; document.addEventListener('mero:action', event => window.__native.push(event.detail))</script>
 <script src="/htmx.js"></script><script src="/hx-alpine-compat.js"></script>
 ${scripts.map(src => `<script defer src="${src}"></script>`).join("")}</head><body>
 <main id="app" x-data="{ count: 0, picked: '', choice: '', typed: '', show: false, tab: null, toggle: null, local: [], heard: [] }"
@@ -62,6 +63,7 @@ ${scripts.map(src => `<script defer src="${src}"></script>`).join("")}</head><bo
   </div>
   <form id="stay" data-mero-form hx-post="/save" hx-swap="none"><button>Save</button></form>
   <div id="gone-region"><form id="gone" data-mero-form hx-post="/replace" hx-target="#gone-region" hx-swap="innerHTML"><button>Replace form</button></form></div>
+  <form id="invalid" data-mero-form hx-post="/invalid" hx-swap="outerHTML"><button>Validate</button></form>
   <form id="dirty" data-mero-dirty>
     <input id="dirty-name" name="name" value="a" aria-label="Name" x-ref="name">
     <fieldset id="branch" data-mero-show-when="name=b" hidden disabled><legend>Only for b</legend></fieldset>
@@ -97,6 +99,7 @@ for (const build of builds) for (const [order, scripts] of Object.entries(orders
         if (pathname === "/") return html(pageHtml(scripts));
         if (pathname === "/save") return html("");
         if (pathname === "/replace") return html('<p id="replaced">Saved</p>');
+        if (pathname === "/invalid") return route.fulfill({ status: 422, contentType: "text/html", body: '<form id="invalid" data-mero-form hx-post="/invalid" hx-swap="outerHTML"><p id="invalid-error">Fix the name</p><button>Validate</button></form>' });
         if (pathname === "/region") return html(region(3));
         if (pathname === "/region-inner") return html(regionBody(2));
         const filename = pathname === "/alpine.js" ? `node_modules/${build.name}/dist/cdn.min.js` : files[pathname];
@@ -125,7 +128,7 @@ for (const build of builds) for (const [order, scripts] of Object.entries(orders
         assert.equal((await data()).picked, "beacon");
       });
 
-      await t.test("c: mero:action reaches .window listeners; a removed form is heard only there", async () => {
+      await t.test("c: mero:action reaches ancestors from a kept or replacement form, and only document and window when no form is left", async () => {
         const settled = { state: "succeeded", status: 200, message: null };
         await page.getByRole("button", { name: "Save" }).click();
         await page.waitForFunction(() => window.Alpine.$data(document.querySelector("#app")).heard.length === 2);
@@ -141,6 +144,16 @@ for (const build of builds) for (const [order, scripts] of Object.entries(orders
         // The final event is dispatched on document and carries no source identity.
         assert.deepEqual(state.heard, [{ state: "pending" }, settled]);
         assert.deepEqual(state.local, [{ state: "pending" }], "an element listener misses the final step of a form the swap removed");
+        assert.deepEqual((await page.evaluate(() => window.__native)).slice(-2), state.heard, "a native document listener hears it too");
+
+        await page.evaluate(() => { const state = window.Alpine.$data(document.querySelector("#app")); state.heard = []; state.local = []; });
+        await page.getByRole("button", { name: "Validate" }).click();
+        await page.locator("#invalid-error").waitFor();
+        await page.waitForFunction(() => window.Alpine.$data(document.querySelector("#app")).heard.length === 2);
+        state = await data();
+        // A 422 swaps in a replacement data-mero-form; the final event fires on it and bubbles.
+        assert.deepEqual(state.local, [{ state: "pending" }, { state: "rejected", status: 422, message: null }], "an ancestor hears the final step from the replacement form");
+        assert.deepEqual(state.heard, state.local);
       });
 
       await t.test("d: Mero writes tab and toggle state without touching Alpine state, and Alpine hears the updated state", async () => {
