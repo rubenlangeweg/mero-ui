@@ -181,11 +181,11 @@ for (const build of builds) for (const [order, scripts] of Object.entries(orders
         assert.equal(await page.locator("#late").getAttribute("data-mero-tabs-ready"), "");
         assert.equal(await tab("late-tab-one").getAttribute("aria-selected"), "true");
         assert.equal(await tab("late-panel-two").isHidden(), true);
-        const once = await html();
-        await page.evaluate(() => window.MeroUI.init(document.querySelector("#late")));
-        assert.equal(await html(), once);
         await selectsSecondTab("late");
         assert.equal((await data()).tab.id, "late-tab-two");
+        const once = await html();
+        await page.evaluate(() => window.MeroUI.init(document.querySelector("#late")));
+        assert.equal(await html(), once, "a second init keeps the tab the person selected");
       });
 
       await t.test("a: no page error and no Alpine warning during the cases above", () => {
