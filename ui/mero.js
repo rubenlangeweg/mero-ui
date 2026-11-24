@@ -164,7 +164,7 @@
     return [...list.querySelectorAll(tabSelector)].filter(tab => tab.closest('[role="tablist"]') === list);
   }
 
-  function selectTab(tab, focus = false) {
+  function selectTab(tab) {
     const list = tab.closest('[role="tablist"]');
     if (!list || disabled(tab)) return false;
     const changed = tab.getAttribute("aria-selected") !== "true";
@@ -175,14 +175,14 @@
       const panel = element(item.getAttribute("aria-controls"));
       if (panel) panel.hidden = !selected;
     }
-    if (focus) tab.focus();
     return changed;
   }
 
   // A person chose the tab. initTabs calls selectTab directly, so nothing fires at init.
   function chooseTab(tab, focus) {
-    if (!selectTab(tab, focus)) return;
-    tab.dispatchEvent(new CustomEvent("mero:tab", { bubbles: true, detail: { tab, panel: element(tab.getAttribute("aria-controls")) } }));
+    if (selectTab(tab)) tab.dispatchEvent(new CustomEvent("mero:tab", { bubbles: true, detail: { tab, panel: element(tab.getAttribute("aria-controls")) } }));
+    // Focus last, and only if a listener left this tab selected: a focus handler can select another tab.
+    if (focus && tab.getAttribute("aria-selected") === "true") tab.focus();
   }
 
   function initTabs(root) {

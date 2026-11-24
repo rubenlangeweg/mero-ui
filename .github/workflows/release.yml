@@ -34,7 +34,7 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           # The changelog section for this version, without its heading. A release without one stops here.
           awk -v v="$version" '/^## /{on = index($0, "## " v " ") == 1; next} on' CHANGELOG.md > "$RUNNER_TEMP/changelog.md"
-          test -s "$RUNNER_TEMP/changelog.md"
+          grep -q '[^[:space:]]' "$RUNNER_TEMP/changelog.md"
           {
             echo "Install the UI assets from npm:"
             echo
