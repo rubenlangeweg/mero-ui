@@ -31,9 +31,10 @@ test("the reference documents every data-mero attribute in the shipped scripts a
 test("the reference documents every Mero header in the shipped scripts", () => {
   const names = new Set(scripts.match(/Mero-[A-Z][A-Za-z-]+/g));
   assert.ok(names.size >= 5);
-  const markdown = referenceMarkdown();
+  const section = page.match(/<section aria-labelledby="reference-headers">[^]*?<\/section>/)?.[0] ?? "";
+  const markdown = referenceMarkdown().match(/## Headers[^]*?(?=\n## |$)/)?.[0] ?? "";
   for (const name of names) {
-    assert.ok(page.includes(`<code>${name}</code>`), name);
+    assert.ok(section.includes(`<code>${name}</code>`), name);
     assert.ok(markdown.includes("`" + name + "`"), name + " in Markdown");
   }
 });
@@ -42,7 +43,7 @@ test("the owned-state list names every ARIA attribute the covered scripts write"
   // The page says the list covers these three scripts.
   const covered = ["mero.js", "mero-forms.js", "mero-live.js"].map(name => readFileSync("ui/" + name, "utf8")).join("\n");
   const names = new Set([...covered.matchAll(/(?:set|remove|toggle)Attribute\(\s*"(aria-[a-z]+)"/g)].map(match => match[1]));
-  assert.ok(names.size >= 9);
+  assert.ok(names.size >= 10);
   const section = page.match(/<section aria-labelledby="reference-owned">[^]*?<\/section>/)?.[0] ?? "";
   const markdown = referenceMarkdown().match(/## State Mero owns[^]*?(?=\n## |$)/)?.[0] ?? "";
   for (const name of names) {
