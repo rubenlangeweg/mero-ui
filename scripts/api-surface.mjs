@@ -8,17 +8,23 @@ const files = (await readdir(new URL("ui/", root))).sort();
 const read = async pattern => (await Promise.all(files.filter(file => pattern.test(file)).map(file => readFile(new URL("ui/" + file, root), "utf8")))).join("\n");
 const scripts = await read(/\.js$/);
 const modules = await read(/\.mjs$/);
-const all = scripts + modules + await read(/\.css$/);
+const code = scripts + "\n" + modules;
+const all = code + await read(/\.css$/);
 const names = (source, pattern) => [...new Set(source.match(pattern))].sort();
 
 const surface = {
   // dataset.meroReturnFocus is data-mero-return-focus.
   attributes: names(all.replace(/dataset\.(mero[A-Za-z]+)/g, (_, key) => "data-" + key.replace(/[A-Z]/g, letter => "-" + letter.toLowerCase())), /data-mero-[a-z-]*[a-z]/g),
-  events: names(scripts, /mero:[a-z-]*[a-z]/g),
+  // The whole name, not its lowercase prefix: a rename to mero:queryReady must show up as a removal.
+  events: names(code, /mero:[\w:-]*\w/g),
   api: scripts.match(/window\.MeroUI = Object\.freeze\(\{([^}]+)\}\)/)[1].split(",").map(name => name.split(":")[0].trim()).sort(),
-  headers: names(scripts, /\bMero-[A-Z][A-Za-z]*(?:-[A-Z][A-Za-z]*)*/g),
+  headers: names(code, /\bMero-[A-Z][A-Za-z]*(?:-[A-Z][A-Za-z]*)*/g),
   tokens: names(all, /--mero-[a-z0-9-]*[a-z0-9]/g),
-  exports: [...modules.matchAll(/^export (?:async )?function (\w+)/gm)].map(match => match[1]).sort()
+  exports: [
+    ...[...modules.matchAll(/^export (?:async )?(?:function\*?|const|let|var|class) (\w+)/gm)].map(match => match[1]),
+    // export { a, b as c } exports a and c.
+    ...[...modules.matchAll(/^export \{([^}]*)\}/gm)].flatMap(match => match[1].split(",").map(name => name.trim().split(/\s+as\s+/).pop()).filter(Boolean))
+  ].sort()
 };
 
 const path = new URL("test/api-surface.json", root);

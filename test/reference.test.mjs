@@ -63,3 +63,13 @@ test("the Alpine section names the Alpine and htmx versions the coexistence test
   }
   assert.ok(section.includes('href="#reference-emitted"'));
 });
+
+test("the owned-state list names the writes a literal-attribute scan cannot see", () => {
+  const section = page.match(/<section aria-labelledby="reference-owned">[^]*?<\/section>/)?.[0] ?? "";
+  // scopeIds() rewrites these through a variable; a search stores the reset defaults as properties.
+  for (const name of ["id", "for", "aria-controls", "aria-labelledby", "aria-describedby", "defaultSelected", "defaultChecked"]) {
+    assert.ok(section.includes(`<code>${name}</code>`), name);
+  }
+  const headers = page.match(/<section aria-labelledby="reference-headers">[^]*?<\/section>/)?.[0] ?? "";
+  assert.match(headers, /<code>Mero-Form-Error<\/code>[^]*?Fallback text/);
+});
