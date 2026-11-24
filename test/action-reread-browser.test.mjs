@@ -87,3 +87,21 @@ test("an unknown outcome re-reads the region without repeating the action, and d
     }
     assert.deepEqual(errors, []);
   });
+
+test("a scripted htmx.swap() without a request raises no error from the re-read guard",
+  { skip: !playwright && "Install Playwright to run the browser regression" }, async t => {
+    const server = createApp();
+    await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+    t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
+    const engine = browserConfig.engine || "chromium";
+    const browser = await playwright[engine].launch({ executablePath: engine === "chromium" ? browserConfig.chromeExecutable : undefined });
+    t.after(() => browser.close());
+    const page = await browser.newPage();
+    page.setDefaultTimeout(5000);
+    const errors = [];
+    page.on("pageerror", error => errors.push(error.message));
+    await page.goto("http://127.0.0.1:" + server.address().port + "/preview/action-button?variant=Re-read%20after%20unknown");
+    await page.evaluate(() => htmx.swap({ text: "<p data-scripted>Swapped by the host</p>", target: "#export-run", swap: "innerHTML" }));
+    await page.locator("#export-run [data-scripted]").waitFor();
+    assert.deepEqual(errors, []);
+  });

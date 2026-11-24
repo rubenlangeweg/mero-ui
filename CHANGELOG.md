@@ -4,6 +4,7 @@
 
 - **Stability:** the README now states the versioning and deprecation policy. The public names in `ui/` (`data-mero-*` attributes, `mero:*` events, `window.MeroUI` methods, `Mero-*` headers, `--mero-*` properties and the chart and Markdown exports) are recorded in `test/api-surface.json`, and a test fails when one is removed or renamed. From this release, changelog bullets that start with **Deprecated:** or **Breaking:** are the ones to read before an upgrade.
 - **htmx pin:** Mero is tested against exactly htmx 4.0.2. `htmx.org` is an exact devDependency, and a test fails unless the htmx build the catalog and the browser tests load is byte for byte that release. The README install line names `htmx.org@4.0.2`; later 4.x releases are expected to work but are not tested until the pin moves.
+- **Scripted swaps:** `htmx.swap({ text, target, swap })` without a `request` no longer raises an uncaught error from the re-read guard. The swap itself always happened; only the error is gone.
 
 ## 0.8.0 · 23 November 2026
 
