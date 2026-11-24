@@ -62,6 +62,13 @@ ${scripts.map(src => `<script defer src="${src}"></script>`).join("")}</head><bo
   </div>
   <form id="stay" data-mero-form hx-post="/save" hx-swap="none"><button>Save</button></form>
   <div id="gone-region"><form id="gone" data-mero-form hx-post="/replace" hx-target="#gone-region" hx-swap="innerHTML"><button>Replace form</button></form></div>
+  <form id="dirty" data-mero-dirty>
+    <input id="dirty-name" name="name" value="a" aria-label="Name" x-ref="name">
+    <fieldset id="branch" data-mero-show-when="name=b" hidden disabled><legend>Only for b</legend></fieldset>
+    <button id="apply">Apply</button>
+  </form>
+  <button id="write" type="button" @click="$refs.name.value = 'b'">Write</button>
+  <button id="tell" type="button" @click="$refs.name.dispatchEvent(new Event('change', { bubbles: true }))">Tell</button>
   <template x-if="show">${tabs("late", false)}</template>
 </main>
 ${region(1)}</body></html>`;
@@ -186,6 +193,18 @@ for (const build of builds) for (const [order, scripts] of Object.entries(orders
         assert.equal(await html(), once);
         await selectsSecondTab("late");
         assert.equal((await data()).tab.id, "late-tab-two");
+      });
+
+      await t.test("i: a value Alpine writes reaches data-mero-dirty and data-mero-show-when only after a bubbling change", async () => {
+        assert.equal(await page.locator("#apply").isDisabled(), true);
+        await page.locator("#write").click();
+        assert.equal(await page.locator("#dirty-name").inputValue(), "b");
+        assert.equal(await page.locator("#apply").isDisabled(), true, "a programmatic write fires no event");
+        assert.equal(await page.locator("#branch").isHidden(), true);
+        await page.locator("#tell").click();
+        assert.equal(await page.locator("#apply").isDisabled(), false);
+        assert.equal(await page.locator("#branch").isVisible(), true);
+        assert.equal(await page.locator("#branch").isDisabled(), false);
       });
 
       await t.test("a: no page error and no Alpine warning during the cases above", () => {

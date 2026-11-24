@@ -51,3 +51,15 @@ test("the owned-state list names every ARIA attribute the covered scripts write"
     assert.ok(markdown.includes("`" + name + "`"), name + " in Markdown");
   }
 });
+
+test("the Alpine section names the Alpine and htmx versions the coexistence test pins", () => {
+  const packages = JSON.parse(readFileSync("package.json", "utf8")).devDependencies;
+  const versions = ["alpinejs-floor", "alpinejs-current", "htmx.org"].map(name => packages[name].split("@").at(-1));
+  const section = page.match(/<section aria-labelledby="reference-alpine">[^]*?<\/section>/)?.[0] ?? "";
+  const markdown = referenceMarkdown().match(/## With Alpine or your own scripts[^]*?(?=\n## |$)/)?.[0] ?? "";
+  for (const version of versions) {
+    assert.ok(section.includes(version), version);
+    assert.ok(markdown.includes(version), version + " in Markdown");
+  }
+  assert.ok(section.includes('href="#reference-emitted"'));
+});
