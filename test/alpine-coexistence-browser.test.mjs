@@ -25,15 +25,16 @@ const tabs = (prefix, selected = true) => `<div data-mero-tabs id="${prefix}">
   <div role="tabpanel" id="${prefix}-panel-two" aria-labelledby="${prefix}-tab-two"${selected ? " hidden" : ""}>Second</div>
 </div>`;
 
-// served numbers each response so a test can wait for the swap it asked for.
+// served numbers each response so a test can wait for the swap it asked for. The tabs
+// carry no state, so a selected tab after a swap proves Mero initialised the new content.
 const regionBody = served => `<span id="served">${served}</span>
   <button id="n" type="button" @click="n++" x-text="n"></button>
-  ${tabs("region")}
-  <button id="inner" type="button" hx-get="/region-inner" hx-target="#region" hx-swap="innerHTML">Replace</button>
-  <button id="morph" type="button" hx-get="/region" hx-target="#region" hx-swap="outerMorph">Morph</button>`;
-const region = served => `<section id="region" x-data="{ n: 0 }">${regionBody(served)}</section>`;
+  ${tabs("region", false)}
+  <button id="inner" type="button" hx-get="/region-inner" hx-target="#island" hx-swap="innerHTML">Replace</button>
+  <button id="morph" type="button" hx-get="/region" hx-target="#island" hx-swap="outerMorph">Morph</button>`;
+const region = served => `<section id="island" x-data="{ n: 0 }">${regionBody(served)}</section>`;
 
-const document = scripts => `<!doctype html><html lang="en"><head><title>Mero with Alpine</title>
+const pageHtml = scripts => `<!doctype html><html lang="en"><head><title>Mero with Alpine</title>
 <script>document.addEventListener('alpine:initialized', () => { window.__alpineReady = true })</script>
 <script src="/htmx.js"></script><script src="/hx-alpine-compat.js"></script>
 ${scripts.map(src => `<script defer src="${src}"></script>`).join("")}</head><body>
@@ -86,7 +87,7 @@ for (const build of builds) for (const [order, scripts] of Object.entries(orders
       await page.route("http://mero.test/**", async route => {
         const { pathname } = new URL(route.request().url());
         const html = body => route.fulfill({ contentType: "text/html", body });
-        if (pathname === "/") return html(document(scripts));
+        if (pathname === "/") return html(pageHtml(scripts));
         if (pathname === "/save") return html("");
         if (pathname === "/replace") return html('<p id="replaced">Saved</p>');
         if (pathname === "/region") return html(region(3));
@@ -156,14 +157,15 @@ for (const build of builds) for (const [order, scripts] of Object.entries(orders
         assert.equal(state.typed, "At", "choosing fires change, not input, so a plain x-model keeps the typed text");
       });
 
-      await t.test("f: tabs work and Alpine state survives an innerHTML swap and an outerMorph swap", async () => {
+      await t.test("f: Mero initialises swapped tabs and Alpine state survives an innerHTML swap and an outerMorph swap", async () => {
         await page.locator("#n").click({ clickCount: 3 });
         for (const [button, count] of [["#inner", "2"], ["#morph", "3"]]) {
           await selectsSecondTab("region");
           await page.locator(button).click();
           await page.locator("#served").getByText(count, { exact: true }).waitFor();
-          assert.equal(await tab("region-tab-one").getAttribute("aria-selected"), "true", "the server's markup wins");
-          await page.locator("#region[x-data] #n").getByText("3", { exact: true }).waitFor();
+          await page.locator("#region[data-mero-tabs-ready] #region-tab-one[aria-selected=true]").waitFor();
+          assert.equal(await tab("region-panel-two").isHidden(), true, "Mero initialises the swapped tabs");
+          await page.locator("#island[x-data] #n").getByText("3", { exact: true }).waitFor();
         }
         await selectsSecondTab("region");
         await page.locator("#n").click();
