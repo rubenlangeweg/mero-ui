@@ -195,7 +195,7 @@ for (const build of builds) for (const [order, scripts] of Object.entries(orders
         assert.equal((await data()).tab.id, "late-tab-two");
       });
 
-      await t.test("i: a value Alpine writes reaches data-mero-dirty and data-mero-show-when only after a bubbling change", async () => {
+      await t.test("h: a value Alpine writes reaches data-mero-dirty and data-mero-show-when only after a bubbling change", async () => {
         assert.equal(await page.locator("#apply").isDisabled(), true);
         await page.locator("#write").click();
         assert.equal(await page.locator("#dirty-name").inputValue(), "b");
