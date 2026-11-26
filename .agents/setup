@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Prepares a fresh Amp orb: npm dependencies and the Playwright browsers the tests use.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+step() {
+  local start=$SECONDS
+  echo "==> $1"
+  shift
+  "$@"
+  echo "    done in $((SECONDS - start))s"
+}
+
+install_browsers() {
+  # Downloads are skipped when the browsers for this Playwright version already exist.
+  npx --no-install playwright install chromium firefox webkit
+  # System libraries need apt-get update, so install them once per Playwright version.
+  local version marker
+  version=$(node -p 'require("playwright/package.json").version')
+  marker="$HOME/.cache/ms-playwright/.deps-$version"
+  if [[ ! -f $marker ]]; then
+    sudo -E npx --no-install playwright install-deps chromium firefox webkit
+    touch "$marker"
+  fi
+}
+
+step "Installing npm dependencies" npm ci --no-audit --no-fund
+step "Installing Playwright browsers" install_browsers

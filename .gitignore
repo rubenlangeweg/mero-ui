@@ -11,3 +11,5 @@ dist/
 .dev.vars*
 
 /examples/backends/rust/target/
+
+.amp/portals/*

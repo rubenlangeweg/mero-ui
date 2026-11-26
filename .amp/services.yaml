@@ -1,0 +1,6 @@
+services:
+  catalog:
+    command: npm run dev
+    health: /
+    portal:
+      title: Mero UI catalog
