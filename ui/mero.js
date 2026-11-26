@@ -23,6 +23,7 @@
     comboSuggestionMany: "{count} suggestions",
     shortcutsOn: "Keyboard shortcuts on",
     shortcutsOff: "Keyboard shortcuts off",
+    removeItem: "Remove {label}",
   };
   function msg(key, vars) {
     let text = config.messages[key] ?? defaultMessages[key] ?? "";
@@ -360,6 +361,69 @@
     option.setAttribute("aria-selected", "true");
   }
 
+  function multiselectValues(multi) {
+    return [...multi.querySelectorAll('[data-mero-multiselect-chips] input[type="hidden"]')].map(input => input.value);
+  }
+
+  function syncMultiselect(multi) {
+    const input = multi.querySelector('[role="combobox"]');
+    const list = input && element(input.getAttribute("aria-controls"));
+    if (!list) return;
+    const selected = new Set(multiselectValues(multi));
+    for (const option of list.querySelectorAll(optionSelector)) {
+      if (option.hasAttribute("data-mero-empty-option")) continue;
+      const val = option.dataset.value ?? option.textContent.trim();
+      option.setAttribute("aria-selected", String(selected.has(val)));
+    }
+  }
+
+  function updateMultiselect(multi, input, { option, removeValue }) {
+    const chips = multi.querySelector("[data-mero-multiselect-chips]");
+    if (!chips) return;
+    const fieldName = multi.getAttribute("data-mero-multiselect-name") || multi.dataset.name || input.getAttribute("name") || "";
+    let added = null, removed = null;
+    if (option) {
+      const value = option.dataset.value ?? option.textContent.trim();
+      const label = option.textContent.trim();
+      const existing = [...chips.querySelectorAll("li")].find(li => (li.dataset.value ?? li.querySelector('input[type="hidden"]')?.value) === value);
+      if (existing) {
+        existing.remove();
+        removed = value;
+      } else {
+        const li = document.createElement("li");
+        li.className = "mero-chip";
+        li.dataset.value = value;
+        const hidden = document.createElement("input");
+        hidden.type = "hidden";
+        if (fieldName) hidden.name = fieldName;
+        hidden.value = value;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.setAttribute("data-mero-multiselect-remove", "");
+        button.setAttribute("aria-label", msg("removeItem", { label }));
+        button.textContent = "×";
+        li.append(document.createTextNode(label), hidden, button);
+        chips.append(li);
+        added = value;
+      }
+      input.value = "";
+      if (!multi.hasAttribute("data-mero-combo-remote")) filterCombo(input);
+      else setComboOpen(input, false);
+      input.focus();
+    } else if (removeValue !== undefined) {
+      const target = [...chips.querySelectorAll("li")].find(li => (li.dataset.value ?? li.querySelector('input[type="hidden"]')?.value) === removeValue);
+      if (!target) return;
+      target.remove();
+      removed = removeValue;
+    }
+    syncMultiselect(multi);
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    multi.dispatchEvent(new CustomEvent("mero:selection", {
+      bubbles: true,
+      detail: { values: multiselectValues(multi), added, removed, option: option ?? null },
+    }));
+  }
+
   function selectCombo(input, option) {
     // Command options act through their own click: link navigation, hx-*, or data-mero-toast.
     const command = input?.closest("dialog[data-mero-command]");
@@ -368,6 +432,11 @@
       return;
     }
     if (!input || !option || disabled(option)) return;
+    const multi = input.closest("[data-mero-multiselect]");
+    if (multi) {
+      updateMultiselect(multi, input, { option });
+      return;
+    }
     const value = option.dataset.value ?? option.textContent.trim();
     const label = option.textContent.trim();
     input.value = value;
@@ -386,6 +455,7 @@
     if (input !== document.activeElement) return;
     const list = element(input.getAttribute("aria-controls"));
     if (!list) return;
+    if (input.closest("[data-mero-multiselect]")) syncMultiselect(input.closest("[data-mero-multiselect]"));
     filterCombo(input);
     if (input.closest("[data-mero-command]") && !input.hasAttribute("aria-activedescendant")) activateCombo(input, list, optionsFor(list)[0]);
   }
@@ -619,6 +689,7 @@
     initTabs(root);
     initListboxes(root);
     reconcileCombos(root, request);
+    for (const multi of matching(root, "[data-mero-multiselect]", true)) syncMultiselect(multi);
     localizeTimes(root);
     syncShortcuts(root);
     for (const dialog of matching(root, "dialog[data-mero-autoopen]")) {
@@ -702,6 +773,7 @@
     const toggle = target.closest("[data-mero-toggle]");
     const notifier = target.closest("[data-mero-toast]");
     const removable = target.closest("[data-mero-remove]");
+    const multiRemove = target.closest("[data-mero-multiselect-remove]");
     const copier = target.closest("[data-mero-copy-target], [data-mero-copy]:not([data-mero-copy=''])");
     const shortcutToggle = target.closest("[data-mero-shortcuts-toggle]");
     if (trigger && !disabled(trigger)) {
@@ -740,6 +812,17 @@
       const next = chip?.nextElementSibling?.querySelector(focusable) ?? chip?.previousElementSibling?.querySelector(focusable);
       chip?.remove();
       next?.focus();
+    }
+    if (multiRemove && !disabled(multiRemove)) {
+      const multi = multiRemove.closest("[data-mero-multiselect]");
+      const chip = multiRemove.closest("li");
+      const input = multi?.querySelector('[role="combobox"]');
+      const next = chip?.nextElementSibling?.querySelector(focusable) ?? chip?.previousElementSibling?.querySelector(focusable) ?? input;
+      const val = chip?.dataset.value ?? chip?.querySelector('input[type="hidden"]')?.value;
+      if (multi && input && val !== undefined) {
+        updateMultiselect(multi, input, { removeValue: val });
+        next?.focus();
+      }
     }
   });
 
@@ -883,6 +966,14 @@
         event.preventDefault();
         if (target.closest("[data-mero-command]")) active.click();
         else selectCombo(target, active);
+      } else if (event.key === "Backspace" && !target.value && target.closest("[data-mero-multiselect]")) {
+        const multi = target.closest("[data-mero-multiselect]");
+        const last = multi.querySelector("[data-mero-multiselect-chips] li:last-child");
+        const val = last?.dataset.value ?? last?.querySelector('input[type="hidden"]')?.value;
+        if (val !== undefined) {
+          event.preventDefault();
+          updateMultiselect(multi, target, { removeValue: val });
+        }
       } else if (event.key === "ArrowUp" || event.key === "ArrowDown" ||
         (!list.hidden && target.closest("[data-mero-command]") && (event.key === "Home" || event.key === "End"))) {
         event.preventDefault();
@@ -933,7 +1024,8 @@
       comboStatus(input, msg("comboLoading"));
       setComboOpen(input, false);
     } else {
-      filterCombo(input);
+      if (input.closest("[data-mero-multiselect]")) syncMultiselect(input.closest("[data-mero-multiselect]"));
+    filterCombo(input);
     }
   });
 

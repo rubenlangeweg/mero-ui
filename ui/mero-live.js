@@ -29,14 +29,16 @@
   function schedule(region, state) {
     clearTimeout(state.timer);
     if (state.request || !region.isConnected || region.hasAttribute("data-mero-live-done") || document.visibilityState !== "visible") return;
-    const interval = Number(region.dataset.meroLive);
-    state.timer = setTimeout(() => refresh(region), Number.isFinite(interval) && interval > 0 ? interval : 3000);
+    const raw = state.interval ?? Number(region.dataset.meroLive);
+    const base = Number.isFinite(raw) && raw > 0 ? raw : 3000;
+    const delay = state.failures > 1 ? Math.min(base * 2 ** Math.min(state.failures - 1, 4), Math.max(base * 8, 30000)) : base;
+    state.timer = setTimeout(() => refresh(region), delay);
   }
 
   function init(region) {
     if (states.has(region)) return;
     // The server rendered the region, so the page load counts as the first good read.
-    const state = { timer: null, request: null, goodAt: Date.now(), followed: false };
+    const state = { timer: null, request: null, goodAt: Date.now(), followed: false, failures: 0, interval: null };
     states.set(region, state);
     schedule(region, state);
   }
@@ -94,7 +96,11 @@
 
   document.addEventListener("click", event => {
     const region = event.target.closest?.("[data-mero-live-retry]")?.closest(selector);
-    if (region) refresh(region);
+    if (region) {
+      const state = states.get(region);
+      if (state) state.failures = 0;
+      refresh(region);
+    }
   });
 
   document.addEventListener("htmx:config:request", event => {
@@ -154,7 +160,14 @@
     if (ctx.response || String(ctx.status).startsWith("error")) {
       const failed = !ctx.response?.raw.ok || String(ctx.status).startsWith("error");
       const error = region.querySelector("[data-mero-live-error]");
-      if (!failed) state.goodAt = Date.now();
+      if (!failed) {
+        state.goodAt = Date.now();
+        state.failures = 0;
+        const nextInterval = Number(ctx.response.headers.get("Mero-Live-Interval"));
+        if (Number.isFinite(nextInterval) && nextInterval > 0) state.interval = nextInterval;
+      } else {
+        state.failures += 1;
+      }
       // The author's text may name the last good read: "Couldn't refresh. Showing the status from {time}."
       const template = error?.getAttribute("data-mero-live-error");
       const time = new Date(state.goodAt).toLocaleTimeString(resolveLocale(region), { hour: "2-digit", minute: "2-digit" });

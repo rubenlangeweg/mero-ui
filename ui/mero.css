@@ -947,6 +947,36 @@
 :where(.mero-menu-item-danger) { color: var(--mero-danger); }
 :where(.mero-menu-item-danger:hover, .mero-menu-item-danger:focus) { background: color-mix(in srgb, var(--mero-danger) 12%, var(--mero-surface)); }
 :where(.mero-combo) { position: relative; inline-size: 100%; }
+:where(.mero-multiselect) { position: relative; inline-size: 100%; }
+:where(.mero-multiselect-control) {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem;
+  min-block-size: var(--mero-control-height);
+  padding: .3rem var(--mero-control-padding-inline);
+  border: 1px solid var(--mero-control-line);
+  border-radius: var(--mero-radius);
+  background: var(--mero-raised);
+  transition: border-color var(--mero-fast), box-shadow var(--mero-fast);
+}
+:where(.mero-multiselect-control):focus-within {
+  border-color: var(--mero-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mero-accent), transparent 85%);
+}
+:where(.mero-multiselect-chips) { display: contents; }
+:where(.mero-multiselect-input) {
+  flex: 1 1 7rem;
+  min-inline-size: 4rem;
+  min-block-size: 1.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--mero-text);
+  font: 400 .9rem/1.4 var(--mero-font);
+}
+:where(.mero-multiselect-input):focus { outline: none; }
 :where(.mero-combo-list:not([hidden])) {
   position: absolute;
   z-index: 4;

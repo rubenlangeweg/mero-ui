@@ -26,6 +26,7 @@
     actionUnknown: "The result is unknown. Check the current state before you try again.",
     searchError: "Couldn't update the results. The list still shows the previous results.",
     holdWarning: "Copy what is shown before you leave this page. It cannot be shown again.",
+    dirtyLeaveWarning: "You have unsaved changes. Leave without saving?",
   };
   const msg = key => config.messages[key] ?? defaultMessages[key] ?? "";
   const formSelector = "form[data-mero-form]";
@@ -170,16 +171,17 @@
     }
     const status = ctx.response?.status;
     if (!(status >= 400) || !requestForm(event)) return;
-    // htmx 4 swaps every error response. Only a 422 carries a replacement form.
-    if (status !== 422) event.preventDefault();
+    // htmx 4 swaps every error response. Only 422, and 409 when opted in, carry a replacement form.
+    if (status !== 422 && !(status === 409 && form?.hasAttribute("data-mero-conflict-swap"))) event.preventDefault();
   });
 
   // after:swap, not after:settle: htmx 4 applies [autofocus] in the new form after settling.
   // It fires on the source, which htmx points at the new form when the swap replaced it.
   document.addEventListener("htmx:after:swap", (event) => {
-    if (event.detail.ctx.response?.status !== 422) return;
+    const status = event.detail.ctx.response?.status;
     const form = event.target.closest?.(formSelector);
-    const field = form?.querySelector('[aria-invalid="true"]');
+    if (status !== 422 && !(status === 409 && form?.hasAttribute("data-mero-conflict-swap"))) return;
+    const field = form?.querySelector('[data-mero-conflict-focus], [aria-invalid="true"]');
     field?.focus();
   });
 
@@ -222,8 +224,8 @@
     let message = headerMessage;
     if (state === "succeeded") {
       if (message) window.MeroUI?.toast(message, { tone: "success", trigger: live ?? undefined });
-    } else if (state === "rejected" && status === 422 && !explicit) {
-      // The replacement form shows its own field errors.
+    } else if (state === "rejected" && (status === 422 || (status === 409 && form.hasAttribute("data-mero-conflict-swap"))) && !explicit) {
+      // The replacement form shows its own field or conflict details.
     } else {
       if (state === "unknown") {
         message ||= unknownText(owners);
@@ -261,6 +263,10 @@
       const parent = form.hasAttribute("data-mero-close-all") ? dialog.parentElement.closest("dialog") : null;
       window.MeroUI.close(dialog, { focus: parent ? null : focus });
       dialog = parent;
+    }
+    if (form.isConnected && form.matches("[data-mero-dirty]")) {
+      commitBaseline(form);
+      updateForm(form);
     }
     focus?.focus({ preventScroll: true });
     if (event.detail.message) window.MeroUI.toast(event.detail.message, { tone: "success" });
@@ -337,6 +343,16 @@
   // form[data-mero-dirty] keeps its submit buttons disabled until a control differs from the rendered value.
   const disabledByBranch = new WeakSet();
   const dirtyStates = new WeakMap();
+  const multiBaselines = new WeakMap();
+  const multiSnapshot = multi => [...multi.querySelectorAll('[data-mero-multiselect-chips] input[type="hidden"]')].map(i => i.value).join("\0");
+  function commitBaseline(form) {
+    for (const control of form.elements) {
+      if (control.matches("input[type=checkbox], input[type=radio]")) control.defaultChecked = control.checked;
+      else if (control.matches("select")) for (const option of control.options) option.defaultSelected = option.selected;
+      else if (control.matches("input, textarea") && !control.matches("[type=submit], [type=button], [type=reset], [type=image]")) control.defaultValue = control.value;
+    }
+    for (const multi of form.querySelectorAll("[data-mero-multiselect]")) multiBaselines.set(multi, multiSnapshot(multi));
+  }
   function fieldValues(form, name) {
     const values = [];
     for (const control of form.elements) {
@@ -348,7 +364,13 @@
     return values;
   }
   function changed(form) {
+    const multis = [...form.querySelectorAll("[data-mero-multiselect]")];
+    for (const multi of multis) {
+      if (!multiBaselines.has(multi)) multiBaselines.set(multi, multiSnapshot(multi));
+      if (multiSnapshot(multi) !== multiBaselines.get(multi)) return true;
+    }
     return [...form.elements].some(control => {
+      if (control.closest?.("[data-mero-multiselect]")) return false;
       if (control.matches("input[type=checkbox], input[type=radio]")) return control.checked !== control.defaultChecked;
       if (control.matches("select")) return [...control.options].some(option => option.selected !== option.defaultSelected);
       return control.matches("input, textarea") && !control.matches("[type=submit], [type=button], [type=reset], [type=image]") && control.value !== control.defaultValue;
@@ -357,10 +379,15 @@
   function updateForm(form) {
     // Outer branches first, so a nested branch reads the state its parent left.
     for (const branch of form.querySelectorAll("[data-mero-show-when]")) {
-      const [name, wanted = ""] = branch.getAttribute("data-mero-show-when").split("=");
+      const expr = branch.getAttribute("data-mero-show-when");
+      const negated = expr.includes("!=");
+      const [name, wanted = ""] = expr.split(negated ? "!=" : "=");
       const values = fieldValues(form, name.trim());
-      const show = wanted.trim().split(/\s+/).some(value => values.includes(value)) && !branch.parentElement.closest("[data-mero-show-when][hidden]");
+      const targets = wanted.trim().split(/\s+/).filter(Boolean);
+      const matched = targets.some(value => values.includes(value));
+      const show = (negated ? !matched : matched) && !branch.parentElement.closest("[data-mero-show-when][hidden]");
       branch.hidden = !show;
+      if (branch.hasAttribute("data-mero-show-when-keep-enabled")) continue;
       if (branch.matches("fieldset")) branch.disabled = !show;
       else for (const control of branch.querySelectorAll("input, select, textarea, button")) {
         if (!show && !control.disabled) { control.disabled = true; disabledByBranch.add(control); }
@@ -381,6 +408,26 @@
       }
     }
   }
+  function dirtyGuarded() {
+    return [...document.querySelectorAll("form[data-mero-dirty][data-mero-dirty-guard]")]
+      .find(form => form.isConnected && !requesting.has(form) && changed(form)) ?? null;
+  }
+  document.addEventListener("htmx:config:request", event => {
+    const { ctx } = event.detail;
+    if (event.defaultPrevented || ctx.request.method.toUpperCase() !== "GET") return;
+    const guarded = dirtyGuarded();
+    if (!guarded || guarded.contains(ctx.sourceElement)) return;
+    const target = typeof ctx.target === "string" ? document.querySelector(ctx.target) : ctx.target;
+    const leaves = ctx.request.headers["HX-Boosted"] || target === document.body || target === document.documentElement || target?.contains(guarded);
+    if (leaves && !window.confirm(guarded.getAttribute("data-mero-dirty-guard") || msg("dirtyLeaveWarning"))) {
+      event.preventDefault();
+    }
+  });
+  addEventListener("beforeunload", event => {
+    if (!dirtyGuarded()) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
   const stateForms = root => [...(root.matches?.("form") ? [root] : []), ...(root.querySelectorAll?.("form") ?? [])]
     .filter(form => form.matches("[data-mero-dirty]") || form.querySelector("[data-mero-show-when]"));
   function initForms(root = document) {

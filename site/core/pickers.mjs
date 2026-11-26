@@ -26,6 +26,30 @@ function combo(id, { remote = false, label = "Workspace", names = workspaceNames
     </div>`
 }
 
+function multiselect(id) {
+  return `
+    <div class="mero-field">
+      <label class="mero-label" for="${id}">Channels</label>
+      <div class="mero-multiselect" data-mero-multiselect data-mero-combo data-mero-multiselect-name="channels">
+        <div class="mero-multiselect-control">
+          <ul class="mero-tag-group mero-multiselect-chips" data-mero-multiselect-chips>
+            <li class="mero-chip" data-value="webshop">Webshop<input type="hidden" name="channels" value="webshop"><button type="button" aria-label="Remove Webshop" data-mero-multiselect-remove>×</button></li>
+          </ul>
+          <input class="mero-multiselect-input" id="${id}" type="text" role="combobox"
+            aria-expanded="false" aria-controls="${id}-options" aria-autocomplete="list"
+            autocomplete="off" placeholder="Add channel…">
+        </div>
+        <ul class="mero-listbox mero-combo-list" id="${id}-options" role="listbox" aria-label="Channels" aria-multiselectable="true" hidden>
+          <li class="mero-option" id="${id}-webshop" role="option" data-value="webshop" aria-selected="true">Webshop</li>
+          <li class="mero-option" id="${id}-wholesale" role="option" data-value="wholesale" aria-selected="false">Wholesale</li>
+          <li class="mero-option" id="${id}-retail" role="option" data-value="retail" aria-selected="false">Retail</li>
+          <li class="mero-option" role="option" aria-disabled="true" data-mero-empty-option hidden>No matches</li>
+        </ul>
+        <span class="mero-description" data-mero-combo-status role="status"></span>
+      </div>
+    </div>`
+}
+
 export const groups = [
   section("Pickers", [
     item("autocomplete", "Autocomplete", "Request matching options from the server as a user types.",
@@ -37,7 +61,12 @@ export const groups = [
         }],
       ]),
     item("combo-box", "Combo Box", "Filter and select from suggestions already on the page.", combo("demo-combo-box"),
-      "Type to filter. Use the arrow keys and Enter to select an option. A named input submits the chosen text."),
+      "Type to filter. Use the arrow keys and Enter to select an option. A named input submits the chosen text.", [
+        ["Multi-select", multiselect("demo-multiselect"), {
+          description: "Select multiple options as removable chips that submit as named hidden fields.",
+          notes: "Type to filter, press Enter to toggle options, Backspace on an empty input to remove the last chip, or listen to mero:selection for changes.",
+        }],
+      ]),
     item("select", "Select", "Choose one of a fixed set of values using the platform’s picker.", `
       <div class="mero-field">
         <label class="mero-label" for="demo-select">Role</label>

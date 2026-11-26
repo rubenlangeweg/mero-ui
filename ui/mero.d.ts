@@ -22,6 +22,7 @@ export interface MeroMessages {
   comboSuggestionMany?: string;
   shortcutsOn?: string;
   shortcutsOff?: string;
+  removeItem?: string;
   confirmTypePhrase?: string;
   confirmEnterReason?: string;
   confirmReady?: string;
@@ -34,6 +35,7 @@ export interface MeroMessages {
   actionUnknown?: string;
   searchError?: string;
   holdWarning?: string;
+  dirtyLeaveWarning?: string;
   liveError?: string;
 }
 
@@ -97,8 +99,11 @@ export interface MeroToggleEventDetail {
 }
 
 export interface MeroSelectionEventDetail {
-  value: string;
-  option: Element;
+  value?: string;
+  values?: string[];
+  added?: string | null;
+  removed?: string | null;
+  option: Element | null;
 }
 
 export interface MeroSelectEventDetail {

@@ -13,6 +13,10 @@
 - **TypeScript & minified builds:** added `ui/mero.d.ts`, `ui/insight-charts.d.ts`, `ui/insight-markdown.d.ts`, `npm run build:ui` (`dist/ui/*.min.{js,css}` and `dist/manifest.json` with SHA-384 SRI hashes), and automated gzip size-budget checks.
 - **Package hygiene:** moved the demo image (`studio-lamp.webp`) and Studio demo files (`mero-inventory.css`, `mero-inventory.js`) out of `ui/` into `public/` so `@rubenlangeweg/mero-ui/ui` ships text-only reusable assets; fixed `mero-insights.js` so `data-mero-copy="…"` and `data-mero-copy-target` never collide with empty `data-mero-copy` code-block buttons.
 - **Deprecated:** `data-mero-check-form` (`mero-composition.js`) and `data-mero-ws-command` (`mero-workspace.js`, prefer core `dialog[data-mero-command]`) are deprecated and scheduled for removal in 1.0.
+- **Multi-select combobox:** added `data-mero-multiselect` (with `data-mero-multiselect-chips`, `data-mero-multiselect-name`, `data-mero-multiselect-remove`) supporting local and remote option lists, chip removal via click or Backspace, hidden input form submission, `data-mero-dirty` integration and `mero:selection` events.
+- **Draft leave guard & conditional fields:** added `data-mero-dirty-guard` to prompt before boosted navigation or page unload when a `data-mero-dirty` form has unsaved edits (resetting its baseline on `mero:form-saved` when kept in the page); added `field!=value` negation and `data-mero-show-when-keep-enabled` to `data-mero-show-when`.
+- **Optimistic concurrency (HTTP 409):** added `data-mero-conflict-swap` and `data-mero-conflict-focus` on `data-mero-form` so 409 conflict/merge fragments swap and focus cleanly like HTTP 422 validation forms.
+- **Live progress backoff & dynamic cadence:** `mero-live.js` now applies bounded exponential backoff after consecutive poll failures (resetting on success or manual retry) and honors the `Mero-Live-Interval` response header.
 
 ## 0.9.0 · 24 November 2026
 

@@ -21,9 +21,9 @@ test("every shipped stylesheet wraps its rules in @layer mero and Core 4 stay wi
     assert.ok(css.trimEnd().endsWith("}"), `${file} closes @layer mero`);
   }
   const budgets = {
-    "ui/mero.css": 13_000,
-    "ui/mero.js": 16_000,
-    "ui/mero-forms.js": 10_500,
+    "ui/mero.css": 13_500,
+    "ui/mero.js": 17_500,
+    "ui/mero-forms.js": 11_000,
     "ui/mero-live.js": 3_000,
   };
   for (const [path, maxGzip] of Object.entries(budgets)) {
