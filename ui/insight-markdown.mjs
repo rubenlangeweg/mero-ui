@@ -22,7 +22,7 @@ export function renderMarkdown(source) {
     if (list.length) html.push(`<ul>${list.splice(0).map(text => `<li>${inline(text)}</li>`).join('')}</ul>`);
   }
   for (const line of String(source).replace(/\r\n?/g,'\n').split('\n')) {
-    if (/^```/.test(line)) {
+    if (line.startsWith('```')) {
       if (code) { html.push(`<pre><code>${escape(code.join('\n'))}</code></pre>`); code = null; }
       else { flushBlock(); code = []; }
     } else if (code) code.push(line);

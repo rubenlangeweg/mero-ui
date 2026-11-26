@@ -32,7 +32,10 @@ export function records(query, { filters = false, peek = false } = {}) {
   const link = changes => {
     const next = new URLSearchParams(params)
     next.delete("open")
-    for (const [name, value] of Object.entries(changes)) value == null ? next.delete(name) : next.set(name, value)
+    for (const [name, value] of Object.entries(changes)) {
+      if (value == null) next.delete(name)
+      else next.set(name, value)
+    }
     return escapeHtml("?" + next)
   }
   const rows = products.filter(row => Object.entries(applied).every(([field, value]) => row[field] === value)).toSorted((a, b) =>

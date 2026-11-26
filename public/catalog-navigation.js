@@ -264,7 +264,7 @@
       else window.scrollTo(0, variant ? previousY : 0);
       focusDestination(saved, variant, saved ? null : anchor);
       persist();
-    } catch (error) {
+    } catch {
       if (request.signal.aborted) return;
       if (saved) location.reload();
       else notice.textContent = "Couldn’t open that page. Select the link to try again.";

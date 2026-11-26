@@ -9,7 +9,7 @@ const playwright = await import(browserConfig.playwrightModule || "playwright").
 });
 
 // A small boosted app served through route(): every page shares the shell and differs in <main>.
-const shell = (title, main) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${title}</title>
+const shell = title => `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${title}</title>
   <link rel="stylesheet" href="/mero.css"><script src="/vendor/htmx.min.js"></script><script src="/mero.js"></script></head>
   <body hx-boost:inherited="true" hx-select:inherited="#main" hx-target:inherited="#main" hx-swap:inherited="outerHTML" data-mero-boost="#main">
     <nav aria-label="App">
@@ -45,11 +45,11 @@ test("boosted navigation: newest GET wins, foreign responses load fully, drawers
     await page.route("**/boost/**", async route => {
       const path = new URL(route.request().url()).pathname;
       const html = body => route.fulfill({ status: 200, contentType: "text/html", body }).catch(() => {});
-      if (path === "/boost/slow") { await slowGate; return html(shell("Slow page", "")); }
-      if (path === "/boost/save") { await saveGate; return html(shell("Saved", "")); }
+      if (path === "/boost/slow") { await slowGate; return html(shell("Slow page")); }
+      if (path === "/boost/save") { await saveGate; return html(shell("Saved")); }
       if (path === "/boost/login") return html('<!doctype html><title>Sign in</title><form><h1>Sign in</h1></form>');
       if (path === "/boost/down") return route.abort();
-      return html(shell(path === "/boost/b" ? "Page B" : "Page A", ""));
+      return html(shell(path === "/boost/b" ? "Page B" : "Page A"));
     });
     const heading = page.locator("#main h1");
     const start = async () => { await page.goto(base + "/boost/a"); await page.waitForFunction(() => window.htmx && window.MeroUI); };

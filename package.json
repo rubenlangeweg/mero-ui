@@ -14,7 +14,8 @@
     "banner": "node scripts/version-banner.mjs",
     "version": "node scripts/version-banner.mjs && git add ui",
     "build": "node scripts/build-assets.mjs && cf build",
-    "deploy": "npm run build && cf deploy --prebuilt"
+    "deploy": "npm run build && cf deploy --prebuilt",
+    "lint": "oxlint --deny-warnings"
   },
   "exports": {
     "./charts": "./ui/insight-charts.mjs",
@@ -38,6 +39,7 @@
     "axe-core": "^4.14.1",
     "cf": "1.0.0-rc.2",
     "htmx.org": "4.0.2",
+    "oxlint": "^1.95.0",
     "playwright": "^1.65.1",
     "vite": "8.3.8"
   },
