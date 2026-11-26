@@ -28,24 +28,30 @@ When changing the library itself, run `npx skills add . --skill mero-ui-contribu
 <script defer src="/mero.js"></script>
 ```
 
-### Try Go or Rust
+### Try a runnable backend
 
-Both [runnable examples](https://github.com/rubenlangeweg/mero-ui/tree/main/examples/backends) serve the same inventory button. From the repository root, choose one backend.
+Choose a minimal single-fragment quick start in Go or Rust, or the full-flow Node starter (CRUD, 422 validation, 409 conflict swap, CSRF 403, multi-select, typed confirmation and live progress with 401 redirect) in [examples/backends](https://github.com/rubenlangeweg/mero-ui/tree/main/examples/backends).
 
 | Backend | Run | Guide |
 | --- | --- | --- |
 | Go 1.22+ with `net/http` and `html/template` | `cd examples/backends && go run ./go/main.go` | [Go quick start](https://mero-ui.rubenlangeweg.com/start#go) |
 | Rust stable with Cargo and Axum | `cd examples/backends && cargo run --locked --manifest-path rust/Cargo.toml` | [Rust quick start](https://mero-ui.rubenlangeweg.com/start#rust) |
+| Node 22+ full-flow CRUD starter | `node examples/backends/node/server.mjs` | [Full-flow starter](examples/backends/node/README.md) |
 
-Open <http://127.0.0.1:4180> and choose **Check inventory**. Your handler returns an HTML fragment showing **6 products · 4 active**.
+Open <http://127.0.0.1:4180> (Go/Rust) or <http://127.0.0.1:4181> (Node full-flow starter).
 
-### Install with npm
+### Install and vendor with npm
 
-Install Mero UI and HTMX from npm.
+Install Mero UI and HTMX from npm, then use the zero-dependency `mero-ui` CLI to vendor pinned files with a `MERO.json` checksum manifest and `LICENSE.txt`.
 
 ```sh
 npm install @rubenlangeweg/mero-ui htmx.org@4.0.2
+npx mero-ui init public/mero --with layouts,gallery
+npx mero-ui verify public/mero
+npx mero-ui upgrade public/mero
 ```
+
+Pass `--minified` to copy `dist/ui/*.min.{css,js}` instead of unminified `ui/` files. `mero-ui verify` exits non-zero if any vendored file drifted from `MERO.json`, and `mero-ui upgrade` prints every **Breaking:** and **Deprecated:** changelog entry since the previously vendored version.
 
 To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.9.0/ui/mero.css`.
 

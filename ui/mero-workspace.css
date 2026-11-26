@@ -4,7 +4,7 @@
 :where(.mero-ws-cell,.mero-ws-labeled,.mero-ws-cardform,.mero-ws-inline,.mero-ws-upload,.mero-ws-editor,.mero-ws-shell,.mero-ws-navbar,.mero-ws-command,.mero-ws-context,.mero-ws-segment,.mero-ws-wizard,.mero-ws-split,.mero-ws-emoji,.mero-ws-filter,.mero-ws-dock,.mero-ws-mega,.mero-ws-fab) {
   box-sizing:border-box; max-inline-size:100%; color:var(--mero-text); font:400 .9rem/1.45 var(--mero-font);
 }
-:where([class^="mero-ws-"],[class*=" mero-ws-"]) [hidden] { display:none!important }
+[class^="mero-ws-"] [hidden][hidden], [class*=" mero-ws-"] [hidden][hidden] { display: none; }
 :where(.mero-ws-cell,.mero-ws-labeled,.mero-ws-choice,.mero-ws-shell,.mero-ws-upload,.mero-ws-context,.mero-ws-split,.mero-ws-results) small { display:block; color:var(--mero-muted); font-size:.79rem; }
 :where(.mero-ws-cell,.mero-ws-choice,.mero-ws-context,.mero-ws-dock,.mero-ws-mega,.mero-ws-navbar,.mero-ws-shell,.mero-ws-editor,.mero-ws-split,.mero-ws-wizard,.mero-ws-launch) {
   background:var(--mero-surface); border:1px solid var(--mero-line); border-radius:var(--mero-radius-panel);

@@ -39,7 +39,7 @@ import { agentDocument } from "./site/agent-docs.mjs";
 import { referencePage } from "./site/reference.mjs";
 
 export const sourceArchiveEntries = [
-  "LICENSE", ".gitignore", "README.md", "package.json", "package-lock.json", "server.mjs", "site", "ui", "public", "examples",
+  "LICENSE", ".gitignore", "README.md", "package.json", "package-lock.json", "server.mjs", "bin", "site", "ui", "public", "examples",
   "test", "scripts", "skills", "docs", "worker.mjs", "vite.config.mjs", "cloudflare.config.ts",
 ];
 // The files the npm package ships live in ui/. Site-only and demo files stay in public/.

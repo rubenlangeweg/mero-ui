@@ -19,6 +19,7 @@ test("every shipped stylesheet wraps its rules in @layer mero and Core 4 stay wi
     const css = await readFile(new URL("ui/" + file, root), "utf8");
     assert.match(css, /^\/\*![^\n]*\*\/\n@layer mero \{/, `${file} declares @layer mero after its version banner`);
     assert.ok(css.trimEnd().endsWith("}"), `${file} closes @layer mero`);
+    assert.doesNotMatch(css, /!important\b/i, `${file} must not use !important inside @layer mero (reversed layer priority breaks unlayered overrides)`);
   }
   const budgets = {
     "ui/mero.css": 13_500,

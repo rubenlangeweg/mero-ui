@@ -35,7 +35,11 @@
     "./package.json": "./package.json"
   },
   "types": "./ui/mero.d.ts",
+  "bin": {
+    "mero-ui": "./bin/mero-ui.mjs"
+  },
   "files": [
+    "bin",
     "ui",
     "dist",
     "agent-docs",

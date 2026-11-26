@@ -91,8 +91,10 @@
   outline-offset: 3px;
 }
 
-:where([data-mero-tabs], [data-mero-combo], [data-mero-listbox]) [hidden] {
-  display: none !important;
+[data-mero-tabs] [hidden],
+[data-mero-combo] [hidden],
+[data-mero-listbox] [hidden] {
+  display: none;
 }
 
 :where(.mero-scope) { display: contents; }
