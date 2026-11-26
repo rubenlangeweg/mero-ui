@@ -24,6 +24,15 @@ async function visit(t, route) {
   return page;
 }
 
+// The live examples above the homepage inventory load lazily and then grow to fit. Load them first,
+// or WebKit can move a row between the press and the release of a click, which then misses its button.
+async function settleLiveExamples(page) {
+  for (const frame of await page.locator("[data-live-specimen]").all()) {
+    await frame.scrollIntoViewIfNeeded();
+    await page.waitForFunction(el => el.style.getPropertyValue("--specimen-content-height"), await frame.elementHandle());
+  }
+}
+
 test("the quick start's first request runs on the page and exposes its actual response", options, async t => {
   const page = await visit(t, "/start");
   const brand = page.getByRole("banner").getByRole("link", { name: "Mero UI home" });
@@ -40,6 +49,7 @@ test("the quick start's first request runs on the page and exposes its actual re
 
 test("the homepage tracks an edited or deleted feature and preserves unrelated gallery choices", options, async t => {
   const page = await visit(t, "/");
+  await settleLiveExamples(page);
   const stage = page.locator("#studio-feature");
   const selectFinish = stage.getByText("Graphite", { exact: true }).first();
   await selectFinish.click();
@@ -61,6 +71,7 @@ test("the homepage tracks an edited or deleted feature and preserves unrelated g
   assert.equal(await stage.locator(".ps-image-status").innerText(), "Draft");
   assert.match(await editLink.getAttribute("href"), /finish=sand/);
   await page.reload();
+  await settleLiveExamples(page);
   await stage.getByRole("heading", { name: "Desk light & shade", exact: true }).waitFor();
   await page.getByRole("button", { name: "Edit Desk light & shade" }).click();
   await page.getByRole("button", { name: "Delete product", exact: true }).click();

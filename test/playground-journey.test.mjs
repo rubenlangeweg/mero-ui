@@ -115,6 +115,8 @@ test("the phone tab bar stays still while panels resize and rapid switches settl
   assert.equal(await page.getByRole("combobox", { name: "Preview theme" }).count(), 0);
 
   await page.emulateMedia({ reducedMotion: "no-preference" });
+  // WebKit updates the playground's cached MediaQueryList at the next frame, not at emulateMedia.
+  await page.evaluate(() => new Promise(requestAnimationFrame));
   const [before, start, end] = await lab.evaluate(async el => {
     const before = el.offsetHeight;
     el.querySelector('[aria-controls$="-preview"]').click();
