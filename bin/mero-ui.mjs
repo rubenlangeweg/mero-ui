@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
+import { realpathSync } from "node:fs";
 import { copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -60,6 +61,24 @@ function parseSemver(version) {
   return { major: Number(match[1]), minor: Number(match[2]), patch: Number(match[3]), pre: match[4] || "" };
 }
 
+function comparePrerelease(a, b) {
+  const pa = a.split(".");
+  const pb = b.split(".");
+  const len = Math.max(pa.length, pb.length);
+  for (let i = 0; i < len; i++) {
+    if (i >= pa.length) return -1;
+    if (i >= pb.length) return 1;
+    if (pa[i] === pb[i]) continue;
+    const numA = /^\d+$/.test(pa[i]);
+    const numB = /^\d+$/.test(pb[i]);
+    if (numA && numB) return Number(pa[i]) > Number(pb[i]) ? 1 : -1;
+    if (numA) return -1;
+    if (numB) return 1;
+    return pa[i] > pb[i] ? 1 : -1;
+  }
+  return 0;
+}
+
 export function compareSemver(a, b) {
   const pa = parseSemver(a);
   const pb = parseSemver(b);
@@ -70,7 +89,7 @@ export function compareSemver(a, b) {
   if (pa.pre === pb.pre) return 0;
   if (!pa.pre) return 1;
   if (!pb.pre) return -1;
-  return pa.pre > pb.pre ? 1 : -1;
+  return comparePrerelease(pa.pre, pb.pre);
 }
 
 export function extractChangelogNotices(changelogText, previousVersion, currentVersion) {
@@ -98,6 +117,17 @@ export function extractChangelogNotices(changelogText, previousVersion, currentV
     }
   }
   return sections.filter(section => section.notices.length > 0);
+}
+
+function isSafeFilename(name) {
+  return typeof name === "string" && name.length > 0 && basename(name) === name &&
+    !name.includes("..") && !name.includes("/") && !name.includes("\\");
+}
+
+function safeTargetPath(targetDir, name) {
+  if (!isSafeFilename(name)) return null;
+  const full = resolve(targetDir, name);
+  return relative(targetDir, full) === name ? full : null;
 }
 
 function parseArgs(argv) {
@@ -167,6 +197,21 @@ function assetDescriptor(file, minified) {
   return { destName: file, sourceRel: "ui/" + file };
 }
 
+function expectedBundlePlan(families, minified) {
+  const plan = [];
+  const seen = new Set();
+  for (const family of families) {
+    for (const file of FAMILIES[family]) {
+      const desc = assetDescriptor(file, minified);
+      if (seen.has(desc.destName)) continue;
+      seen.add(desc.destName);
+      plan.push({ ...desc, srcAbs: join(pkgRoot, desc.sourceRel) });
+    }
+  }
+  plan.push({ destName: "LICENSE.txt", sourceRel: "LICENSE", srcAbs: join(pkgRoot, "LICENSE") });
+  return plan;
+}
+
 async function fileExists(path) {
   try {
     await stat(path);
@@ -181,30 +226,22 @@ async function readPkg() {
 }
 
 async function writeBundle(targetDir, pkg, families, minified) {
-  const plan = [];
-  const seen = new Set();
-  for (const family of families) {
-    for (const file of FAMILIES[family]) {
-      const desc = assetDescriptor(file, minified);
-      if (seen.has(desc.destName)) continue;
-      seen.add(desc.destName);
-      const srcAbs = join(pkgRoot, desc.sourceRel);
-      if (!await fileExists(srcAbs)) {
-        throw new Error(
-          minified
-            ? `Minified asset ${desc.sourceRel} is not present in the installed package. Run "npm run build:ui" or omit --minified.`
-            : `Package asset ${desc.sourceRel} was not found.`
-        );
-      }
-      plan.push({ ...desc, srcAbs });
+  const plan = expectedBundlePlan(families, minified);
+  for (const item of plan) {
+    if (!await fileExists(item.srcAbs)) {
+      throw new Error(
+        minified
+          ? `Minified asset ${item.sourceRel} is not present in the installed package. Run "npm run build:ui" or omit --minified.`
+          : `Package asset ${item.sourceRel} was not found.`
+      );
     }
   }
-  plan.push({ destName: "LICENSE.txt", sourceRel: "LICENSE", srcAbs: join(pkgRoot, "LICENSE") });
 
   await mkdir(targetDir, { recursive: true });
   const filesManifest = {};
   for (const item of plan) {
-    const destAbs = join(targetDir, item.destName);
+    const destAbs = safeTargetPath(targetDir, item.destName);
+    if (!destAbs) throw new Error(`Refusing to write unsafe destination filename: ${item.destName}`);
     await copyFile(item.srcAbs, destAbs);
     const bytes = await readFile(destAbs);
     filesManifest[item.destName] = {
@@ -278,9 +315,29 @@ async function cmdVerify(targetArg, options, io) {
   }
 
   const sameVersion = manifest.version === pkg.version;
+  let expectedSources = null;
+  if (sameVersion) {
+    try {
+      const families = resolveFamilies(Array.isArray(manifest.families) ? manifest.families : ["core"]);
+      const plan = expectedBundlePlan(families, Boolean(manifest.minified));
+      expectedSources = new Map(plan.map(item => [item.destName, item]));
+      for (const item of plan) {
+        if (!Object.hasOwn(manifest.files, item.destName)) {
+          errors.push(`Manifest is missing expected family file: ${item.destName}`);
+        }
+      }
+    } catch (error) {
+      errors.push(`Invalid families in MERO.json: ${error.message}`);
+    }
+  }
+
   const entries = Object.entries(manifest.files);
   for (const [name, expected] of entries) {
-    const filePath = join(targetDir, name);
+    const filePath = safeTargetPath(targetDir, name);
+    if (!filePath) {
+      errors.push(`Invalid manifest path: ${name}`);
+      continue;
+    }
     let actual;
     try {
       actual = await readFile(filePath);
@@ -289,21 +346,34 @@ async function cmdVerify(targetArg, options, io) {
       continue;
     }
     const actualHash = sha256Hex(actual);
-    if (actualHash !== expected.sha256) {
-      errors.push(`Checksum mismatch for ${name}: expected ${expected.sha256}, got ${actualHash}`);
+    if (actualHash !== expected?.sha256) {
+      errors.push(`Checksum mismatch for ${name}: expected ${expected?.sha256}, got ${actualHash}`);
       continue;
     }
     if (typeof expected.bytes === "number" && actual.byteLength !== expected.bytes) {
       errors.push(`Byte-length mismatch for ${name}: expected ${expected.bytes}, got ${actual.byteLength}`);
       continue;
     }
-    if (sameVersion && typeof expected.source === "string") {
-      const pkgFile = join(pkgRoot, expected.source);
-      if (await fileExists(pkgFile)) {
-        const pkgBytes = await readFile(pkgFile);
-        if (!actual.equals(pkgBytes)) {
-          errors.push(`Package drift for ${name}: differs from installed ${expected.source}`);
-        }
+    if (sameVersion) {
+      const planned = expectedSources?.get(name);
+      const sourceRel = planned?.sourceRel ?? expected.source;
+      if (typeof sourceRel !== "string" || !sourceRel) {
+        errors.push(`Missing package source metadata for ${name}`);
+        continue;
+      }
+      if (planned && expected.source && expected.source !== planned.sourceRel) {
+        errors.push(`Source mismatch for ${name}: manifest lists ${expected.source}, expected ${planned.sourceRel}`);
+        continue;
+      }
+      const pkgFile = resolve(pkgRoot, sourceRel);
+      const relToPkg = relative(pkgRoot, pkgFile);
+      if (relToPkg.startsWith("..") || !await fileExists(pkgFile)) {
+        errors.push(`Missing package source for ${name}: ${sourceRel} was not found in installed package`);
+        continue;
+      }
+      const pkgBytes = await readFile(pkgFile);
+      if (!actual.equals(pkgBytes)) {
+        errors.push(`Package drift for ${name}: differs from installed ${sourceRel}`);
       }
     }
   }
@@ -327,6 +397,17 @@ async function cmdUpgrade(targetArg, options, io) {
     io.stderr(`Failed to read ${manifestPath}: ${error.message}\n`);
     return 1;
   }
+  if (!previous || typeof previous !== "object" || !previous.files || typeof previous.files !== "object") {
+    io.stderr(`Invalid manifest in ${manifestPath}: missing "files" map.\n`);
+    return 1;
+  }
+  const prevFiles = Object.keys(previous.files);
+  for (const oldName of prevFiles) {
+    if (!safeTargetPath(targetDir, oldName)) {
+      io.stderr(`Error: Refusing upgrade because ${manifestPath} contains an unsafe file path: ${oldName}\n`);
+      return 1;
+    }
+  }
 
   const pkg = await readPkg();
   const prevVersion = previous.version || "0.0.0";
@@ -336,10 +417,10 @@ async function cmdUpgrade(targetArg, options, io) {
   const minified = options.minified !== undefined ? options.minified : Boolean(previous.minified);
 
   const { manifest, orderedAssets } = await writeBundle(targetDir, pkg, families, minified);
-  const prevFiles = previous.files && typeof previous.files === "object" ? Object.keys(previous.files) : [];
   for (const oldName of prevFiles) {
     if (!Object.hasOwn(manifest.files, oldName)) {
-      await rm(join(targetDir, oldName), { force: true });
+      const safePath = safeTargetPath(targetDir, oldName);
+      if (safePath) await rm(safePath, { force: true });
     }
   }
 
@@ -396,8 +477,16 @@ export async function runCli(argv, io = { stdout: text => process.stdout.write(t
   }
 }
 
-const isMain = process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
-if (isMain) {
+function isMainEntry() {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
+  }
+}
+
+if (isMainEntry()) {
   const code = await runCli(process.argv.slice(2));
   process.exitCode = code;
 }

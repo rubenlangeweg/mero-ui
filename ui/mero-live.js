@@ -3,19 +3,25 @@
 // With data-mero-live-follow, an error response carrying HX-Redirect, HX-Location or HX-Refresh
 // (such as a 401 after the session expired) is handed to htmx instead of retried.
 (() => {
-  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), config: { locale: null, dialogBackdrop: "all", messages: {} } });
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), defaults: {}, config: { locale: null, dialogBackdrop: "all", messages: {} } });
   const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "all", messages: {} });
+  const defaults = (lifecycle.defaults ??= {});
   const defaultMessages = { liveError: "Couldn't refresh. Retrying…" };
+  Object.assign(defaults, defaultMessages);
   const msg = key => config.messages[key] ?? defaultMessages[key] ?? "";
+  function validLocale(tag) {
+    if (!tag) return null;
+    try { return Intl.getCanonicalLocales(tag)[0] ?? null; } catch { return null; }
+  }
   function resolveLocale(node) {
-    const explicit = node.closest("[data-mero-locale]")?.getAttribute("data-mero-locale") || config.locale;
+    const explicit = node.closest("[data-mero-locale]")?.getAttribute("data-mero-locale")?.trim() || config.locale;
     if (explicit === "browser") return undefined;
-    if (explicit && explicit !== "document") return explicit;
-    const lang = node.closest("[lang]")?.getAttribute("lang")?.trim();
-    if (!lang) return undefined;
-    if (explicit === "document" || lang.includes("-")) return lang;
+    if (explicit && explicit !== "document") return validLocale(explicit) ?? undefined;
+    const valid = validLocale(node.closest("[lang]")?.getAttribute("lang")?.trim());
+    if (!valid) return undefined;
+    if (explicit === "document" || valid.includes("-")) return valid;
     const reader = (typeof navigator !== "undefined" && navigator.language || "").split("-")[0].toLowerCase();
-    return lang.toLowerCase() !== reader ? lang : undefined;
+    return valid.toLowerCase() !== reader ? valid : undefined;
   }
   const selector = "[data-mero-live]";
   const states = new WeakMap();
@@ -37,6 +43,9 @@
 
   function init(region) {
     if (states.has(region)) return;
+    if (window.htmx?.process && !region.hasAttribute("data-htmx-powered")) {
+      try { window.htmx.process(region); } catch {}
+    }
     // The server rendered the region, so the page load counts as the first good read.
     const state = { timer: null, request: null, goodAt: Date.now(), followed: false, failures: 0, interval: null };
     states.set(region, state);
@@ -170,7 +179,9 @@
       }
       // The author's text may name the last good read: "Couldn't refresh. Showing the status from {time}."
       const template = error?.getAttribute("data-mero-live-error");
-      const time = new Date(state.goodAt).toLocaleTimeString(resolveLocale(region), { hour: "2-digit", minute: "2-digit" });
+      let time;
+      try { time = new Date(state.goodAt).toLocaleTimeString(resolveLocale(region), { hour: "2-digit", minute: "2-digit" }); }
+      catch { time = new Date(state.goodAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }); }
       const message = !failed ? "" : template ? template.replaceAll("{time}", time) : msg("liveError");
       if (error && error.textContent !== message) error.textContent = message;
       const retry = region.querySelector("[data-mero-live-retry]");

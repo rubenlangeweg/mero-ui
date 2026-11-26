@@ -322,7 +322,6 @@ for (const build of builds) for (const [order, scripts] of Object.entries(orders
         await page.locator("#late-live").waitFor();
         await page.evaluate(() => {
           const wrap = document.querySelector("#late-live-wrap");
-          window.htmx.process(wrap);
           window.MeroUI.init(wrap);
         });
         await page.waitForFunction(() => document.querySelector("#late-live [data-mero-live-status]")?.textContent.includes("Tick"));

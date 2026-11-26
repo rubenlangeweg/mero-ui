@@ -2,8 +2,9 @@
 (() => {
   "use strict";
 
-  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), config: { locale: null, dialogBackdrop: "all", messages: {} } });
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), defaults: {}, config: { locale: null, dialogBackdrop: "all", messages: {} } });
   const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "all", messages: {} });
+  const defaults = (lifecycle.defaults ??= {});
   const defaultMessages = {
     notificationsLabel: "Notifications",
     dismissNotification: "Dismiss notification",
@@ -25,27 +26,34 @@
     shortcutsOff: "Keyboard shortcuts off",
     removeItem: "Remove {label}",
   };
+  Object.assign(defaults, defaultMessages);
   function msg(key, vars) {
     let text = config.messages[key] ?? defaultMessages[key] ?? "";
     if (vars) for (const [name, value] of Object.entries(vars)) text = text.replaceAll("{" + name + "}", String(value));
     return text;
   }
+  function validLocale(tag) {
+    if (!tag) return null;
+    try { return Intl.getCanonicalLocales(tag)[0] ?? null; } catch { return null; }
+  }
   function resolveLocale(node) {
-    const explicit = node.closest("[data-mero-locale]")?.getAttribute("data-mero-locale") || config.locale;
+    const explicit = node.closest("[data-mero-locale]")?.getAttribute("data-mero-locale")?.trim() || config.locale;
     if (explicit === "browser") return undefined;
-    if (explicit && explicit !== "document") return explicit;
-    const lang = node.closest("[lang]")?.getAttribute("lang")?.trim();
-    if (!lang) return undefined;
-    if (explicit === "document" || lang.includes("-")) return lang;
+    if (explicit && explicit !== "document") return validLocale(explicit) ?? undefined;
+    const valid = validLocale(node.closest("[lang]")?.getAttribute("lang")?.trim());
+    if (!valid) return undefined;
+    if (explicit === "document" || valid.includes("-")) return valid;
     const reader = (typeof navigator !== "undefined" && navigator.language || "").split("-")[0].toLowerCase();
-    return lang.toLowerCase() !== reader ? lang : undefined;
+    return valid.toLowerCase() !== reader ? valid : undefined;
   }
   function handlesDialog(dialog) {
     return config.dialogBackdrop === "all" || dialog.matches(".mero-dialog, [data-mero-dialog]") || dialogOpeners.has(dialog);
   }
   const dialogOpeners = new WeakMap();
   const dialogFocus = new WeakMap();
-  const dialogClosed = new WeakSet();
+  const dialogPendingClose = new WeakMap();
+  const preservedToasts = new WeakSet();
+  const initialMultiChips = new WeakMap();
   const autoOpened = new WeakSet();
   const menuFocusLast = new WeakSet();
   const tabbedMenus = new WeakSet();
@@ -72,8 +80,14 @@
     const dialog = element(ref);
     if (!(dialog instanceof HTMLDialogElement) || dialog.open || !dialog.isConnected) return;
     dialogOpeners.set(dialog, { trigger, previouslyFocused: document.activeElement });
-    dialogClosed.delete(dialog);
     dialog.showModal();
+    const pageRegion = document.body?.querySelector(":scope > .mero-toast-region");
+    const carried = pageRegion ? [...pageRegion.children].filter(node => preservedToasts.has(node)) : [];
+    if (carried.length) {
+      carried.forEach(node => preservedToasts.delete(node));
+      toastRegion(dialog).append(...carried);
+      if (!pageRegion.children.length) pageRegion.remove();
+    }
     const input = dialog.matches("[data-mero-command]") && dialog.querySelector('[role="combobox"]');
     if (input) {
       input.value = "";
@@ -88,7 +102,11 @@
   function clearDialogToasts(dialog, preserve = false) {
     const region = dialog.querySelector(":scope > .mero-toast-region");
     if (!region) return;
-    if (preserve && region.children.length) toastRegion(document.body).append(...region.children);
+    if (preserve && region.children.length) {
+      const moving = [...region.children];
+      moving.forEach(node => preservedToasts.add(node));
+      toastRegion(document.body).append(...moving);
+    }
     region.remove();
   }
 
@@ -104,7 +122,7 @@
     if (!(dialog instanceof HTMLDialogElement) || !dialog.open) return;
     if (focus) dialogFocus.set(dialog, focus);
     clearDialogToasts(dialog, Boolean(preserveToasts));
-    dialogClosed.add(dialog);
+    dialogPendingClose.set(dialog, (dialogPendingClose.get(dialog) || 0) + 1);
     dialog.close(value);
     emitDialogClose(dialog);
   }
@@ -351,7 +369,7 @@
     setComboOpen(input, true);
     list.querySelector("[data-mero-active]")?.removeAttribute("data-mero-active");
     option.setAttribute("data-mero-active", "true");
-    markComboChoice(list, option);
+    if (!input.closest("[data-mero-multiselect]")) markComboChoice(list, option);
     if (option.id) input.setAttribute("aria-activedescendant", option.id);
     option.scrollIntoView({ block: "nearest" });
   }
@@ -363,6 +381,35 @@
 
   function multiselectValues(multi) {
     return [...multi.querySelectorAll('[data-mero-multiselect-chips] input[type="hidden"]')].map(input => input.value);
+  }
+
+  function captureMultiChips(multi) {
+    const chips = multi.querySelector("[data-mero-multiselect-chips]");
+    if (!chips) return [];
+    return [...chips.querySelectorAll("li")].map(li => {
+      const hidden = li.querySelector('input[type="hidden"]');
+      const value = li.dataset.value ?? hidden?.value ?? "";
+      const clone = li.cloneNode(true);
+      clone.querySelectorAll("input, button").forEach(node => node.remove());
+      return { value, label: clone.textContent.trim() || value };
+    });
+  }
+
+  function createMultiChip(value, label, fieldName) {
+    const li = document.createElement("li");
+    li.className = "mero-chip";
+    li.dataset.value = value;
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    if (fieldName) hidden.name = fieldName;
+    hidden.value = value;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.setAttribute("data-mero-multiselect-remove", "");
+    button.setAttribute("aria-label", msg("removeItem", { label }));
+    button.textContent = "×";
+    li.append(document.createTextNode(label), hidden, button);
+    return li;
   }
 
   function syncMultiselect(multi) {
@@ -377,10 +424,15 @@
     }
   }
 
+  function initMultiselect(multi) {
+    if (!initialMultiChips.has(multi)) initialMultiChips.set(multi, captureMultiChips(multi));
+    syncMultiselect(multi);
+  }
+
   function updateMultiselect(multi, input, { option, removeValue }) {
     const chips = multi.querySelector("[data-mero-multiselect-chips]");
     if (!chips) return;
-    const fieldName = multi.getAttribute("data-mero-multiselect-name") || multi.dataset.name || input.getAttribute("name") || "";
+    const fieldName = multi.getAttribute("data-mero-multiselect-name") || "";
     let added = null, removed = null;
     if (option) {
       const value = option.dataset.value ?? option.textContent.trim();
@@ -390,20 +442,7 @@
         existing.remove();
         removed = value;
       } else {
-        const li = document.createElement("li");
-        li.className = "mero-chip";
-        li.dataset.value = value;
-        const hidden = document.createElement("input");
-        hidden.type = "hidden";
-        if (fieldName) hidden.name = fieldName;
-        hidden.value = value;
-        const button = document.createElement("button");
-        button.type = "button";
-        button.setAttribute("data-mero-multiselect-remove", "");
-        button.setAttribute("aria-label", msg("removeItem", { label }));
-        button.textContent = "×";
-        li.append(document.createTextNode(label), hidden, button);
-        chips.append(li);
+        chips.append(createMultiChip(value, label, fieldName));
         added = value;
       }
       input.value = "";
@@ -611,6 +650,13 @@
     return true;
   }
 
+  function emitPeekClosed(region, key) {
+    (region?.isConnected ? region : document).dispatchEvent(new CustomEvent("mero:peek", {
+      bubbles: true,
+      detail: { open: false, key, href: null, link: null, panel: null },
+    }));
+  }
+
   function closePeek(focusRow) {
     if (!peek) return;
     const { panel, key } = peek;
@@ -620,10 +666,7 @@
     panel.remove();
     peek = null;
     if (focusRow || focusLost) link?.focus();
-    (region?.isConnected ? region : document).dispatchEvent(new CustomEvent("mero:peek", {
-      bubbles: true,
-      detail: { open: false, key, href: null, link: null, panel: null },
-    }));
+    emitPeekClosed(region, key);
   }
 
   // After a swap or morph, show the same row from the new markup, or close when it is gone.
@@ -635,32 +678,33 @@
     peek.panel.remove();
     peek = null;
     if (document.activeElement === document.body) region?.querySelector(".mero-row-link")?.focus({ preventScroll: true });
-    (region?.isConnected ? region : document).dispatchEvent(new CustomEvent("mero:peek", {
-      bubbles: true,
-      detail: { open: false, key, href: null, link: null, panel: null },
-    }));
+    emitPeekClosed(region, key);
   }
 
   // time[data-mero-time]: show the datetime attribute in the reader's locale and time zone.
   // relative: "3 minutes ago", refreshed every minute, with the full date in title. absolute, date, time: formatted.
   const timeUnits = [["year", 31536e6], ["month", 2592e6], ["week", 6048e5], ["day", 864e5], ["hour", 36e5], ["minute", 6e4], ["second", 1e3]];
+  function formatTimeNode(date, style, locale) {
+    const full = date.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+    if (style === "date") return { text: date.toLocaleDateString(locale, { dateStyle: "medium" }), full };
+    if (style === "time") return { text: date.toLocaleTimeString(locale, { timeStyle: "short" }), full };
+    if (style === "relative") {
+      const delta = date.getTime() - Date.now();
+      const [unit, size] = timeUnits.find(([, size]) => Math.abs(delta) >= size) ?? ["second", 1e3];
+      return { text: new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(Math.round(delta / size), unit), full };
+    }
+    return { text: full, full };
+  }
   function localizeTimes(root = document) {
     for (const node of matching(root, "time[data-mero-time]")) {
       const date = new Date(node.getAttribute("datetime"));
       if (Number.isNaN(date.getTime())) continue;
       const style = node.dataset.meroTime;
       const locale = resolveLocale(node);
-      const full = date.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
-      let text = full;
-      if (style === "date") text = date.toLocaleDateString(locale, { dateStyle: "medium" });
-      else if (style === "time") text = date.toLocaleTimeString(locale, { timeStyle: "short" });
-      else if (style === "relative") {
-        const delta = date.getTime() - Date.now();
-        const [unit, size] = timeUnits.find(([, size]) => Math.abs(delta) >= size) ?? ["second", 1e3];
-        text = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(Math.round(delta / size), unit);
-        if (node.title !== full) node.title = full;
-      }
-      if (node.textContent !== text) node.textContent = text;
+      let formatted;
+      try { formatted = formatTimeNode(date, style, locale); } catch { formatted = formatTimeNode(date, style, undefined); }
+      if (style === "relative" && node.title !== formatted.full) node.title = formatted.full;
+      if (node.textContent !== formatted.text) node.textContent = formatted.text;
     }
   }
   setInterval(() => document.querySelector('time[data-mero-time="relative"]') && localizeTimes(), 60000);
@@ -689,7 +733,7 @@
     initTabs(root);
     initListboxes(root);
     reconcileCombos(root, request);
-    for (const multi of matching(root, "[data-mero-multiselect]", true)) syncMultiselect(multi);
+    for (const multi of matching(root, "[data-mero-multiselect]", true)) initMultiselect(multi);
     localizeTimes(root);
     syncShortcuts(root);
     for (const dialog of matching(root, "dialog[data-mero-autoopen]")) {
@@ -710,10 +754,7 @@
       const region = panel.parentElement;
       panel.remove();
       peek = null;
-      (region?.isConnected ? region : document).dispatchEvent(new CustomEvent("mero:peek", {
-        bubbles: true,
-        detail: { open: false, key, href: null, link: null, panel: null },
-      }));
+      emitPeekClosed(region, key);
     }
     for (const fn of lifecycle.cleanup) fn(root);
   }
@@ -1055,12 +1096,30 @@
     }
   });
 
-  document.addEventListener("close", event => {
-    if (event.target instanceof HTMLDialogElement) {
-      clearDialogToasts(event.target, false);
-      returnFocus(event.target);
-      if (!dialogClosed.delete(event.target)) emitDialogClose(event.target);
+  document.addEventListener("reset", event => {
+    if (!(event.target instanceof HTMLFormElement)) return;
+    for (const multi of event.target.querySelectorAll("[data-mero-multiselect]")) {
+      const initial = initialMultiChips.get(multi);
+      const chips = multi.querySelector("[data-mero-multiselect-chips]");
+      if (!initial || !chips) continue;
+      const fieldName = multi.getAttribute("data-mero-multiselect-name") || "";
+      chips.replaceChildren(...initial.map(({ value, label }) => createMultiChip(value, label, fieldName)));
+      syncMultiselect(multi);
     }
+  });
+
+  document.addEventListener("close", event => {
+    if (!(event.target instanceof HTMLDialogElement)) return;
+    const dialog = event.target;
+    const pending = dialogPendingClose.get(dialog) || 0;
+    if (pending > 0) {
+      if (pending === 1) dialogPendingClose.delete(dialog);
+      else dialogPendingClose.set(dialog, pending - 1);
+    }
+    if (dialog.open) return;
+    clearDialogToasts(dialog, false);
+    returnFocus(dialog);
+    if (pending === 0) emitDialogClose(dialog);
   }, true);
 
   document.addEventListener("mero:toast", event => {
@@ -1290,7 +1349,7 @@
     return Object.freeze({
       locale: config.locale,
       dialogBackdrop: config.dialogBackdrop,
-      messages: Object.freeze({ ...defaultMessages, ...config.messages }),
+      messages: Object.freeze({ ...defaults, ...config.messages }),
     });
   }
 

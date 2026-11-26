@@ -8,3 +8,14 @@
 .doc-standalone.is-embedded{padding:14px;font-size:14px;overflow-x:hidden}
 .doc-preview-title { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
 [data-tenant-preview] { --mero-accent:#9a3620; --mero-primary:#82331e; --mero-primary-ink:#fff; --mero-radius:.35rem; --mero-radius-panel:.65rem; --mero-bg:#f7f3ee; --mero-surface:#fffaf5; }
+.mero-lamp-photo { position: absolute; inset-inline: 0; inset-block-start: 50%; aspect-ratio: 1120/747; transform: translateY(-50%); display: block; direction: ltr; }
+.mero-lamp-photo > img { display: block; inline-size: 100%; block-size: 100%; }
+.mero-lamp-photo:is([data-finish="sand"], [data-finish="graphite"])::after {
+  content: ""; pointer-events: none; position: absolute; inset: 0;
+  background: url("/studio-lamp.webp") center / 100% 100% no-repeat;
+  clip-path: polygon(38.8% 33.55%,39% 31.7%,39.6% 28.9%,40.7% 26.3%,42.1% 23.8%,44.0% 21.5%,46% 19.7%,48.5% 18.1%,51.4% 16.95%,54% 16.45%,56.1% 16.4%,58.6% 16.7%,61.2% 17.5%,63.8% 18.8%,66.1% 20.5%,68.0% 22.6%,69.7% 24.9%,71% 27.6%,71.9% 30.5%,72.4% 33.5%,70.6% 33.05%,67.2% 32.82%,62.0% 32.65%,55.5% 32.62%,48.5% 32.73%,42.6% 32.99%,40.0% 33.25%);
+}
+.mero-lamp-photo[data-finish="sand"]::after { filter: sepia(.45) saturate(1.15) brightness(.70); }
+.mero-lamp-photo[data-finish="graphite"]::after { filter: grayscale(1) brightness(.4) contrast(1.1); }
+.mero-lamp-photo[data-view="shade"] { transform-origin: 56% 28%; transform: translateY(-50%) scale(2.25); }
+.mero-lamp-photo[data-view="base"] { transform-origin: 43% 86%; transform: translateY(-50%) scale(2.2); }

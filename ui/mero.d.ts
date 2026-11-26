@@ -53,7 +53,7 @@ export interface MeroResolvedConfig {
     | "previewLabel" | "closePreview" | "openPreview" | "previewHint"
     | "comboLoading" | "comboEmpty" | "comboError"
     | "comboResultOne" | "comboResultMany" | "comboSuggestionOne" | "comboSuggestionMany"
-    | "shortcutsOn" | "shortcutsOff"> & MeroMessages>>;
+    | "shortcutsOn" | "shortcutsOff" | "removeItem">> & MeroMessages>;
 }
 
 export interface MeroOpenOptions {
@@ -98,13 +98,9 @@ export interface MeroToggleEventDetail {
   pressed: boolean;
 }
 
-export interface MeroSelectionEventDetail {
-  value?: string;
-  values?: string[];
-  added?: string | null;
-  removed?: string | null;
-  option: Element | null;
-}
+export type MeroSelectionEventDetail =
+  | { value: string; option: Element }
+  | { values: string[]; added: string | null; removed: string | null; option: Element | null };
 
 export interface MeroSelectEventDetail {
   value: string;

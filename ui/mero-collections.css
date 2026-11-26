@@ -19,7 +19,7 @@
 .mero-grid-mount { width:min(100%,60rem); }
 .mero-agenda-mount { width:min(100%,36rem); }
 .mero-collection { container-type:inline-size; }
-.mero-collection [hidden][hidden], .mero-place-map [hidden][hidden], .mero-hover-card [hidden][hidden], .mero-agenda [hidden][hidden] { display: none; }
+:where(.mero-collection [hidden],.mero-place-map [hidden],.mero-hover-card [hidden],.mero-agenda [hidden]) { display: none !important; }
 .mero-collection-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .mero-collection-head,.mero-widget header,.mero-place-map figcaption { display:flex; align-items:center; justify-content:space-between; gap:.8rem; }
 :where(.mero-collection,.mero-agenda,.mero-widget,.mero-toc,.mero-kanban-lane) :is(h2,h3) { margin:0; color:var(--mero-text); font-size:1.07rem; letter-spacing:-.035em; line-height:1.25; }

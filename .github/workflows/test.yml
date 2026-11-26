@@ -24,6 +24,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run build:ui
       - if: matrix.browser == 'chromium'
         run: npm run lint
       - run: npx playwright install --with-deps "${{ matrix.browser }}"

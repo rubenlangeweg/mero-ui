@@ -1,5 +1,5 @@
 // Zero-dependency Node 22+ full-flow Mero UI reference starter.
-// Demonstrates CRUD, CSRF (403), validation (422), optimistic concurrency (409),
+// Demonstrates CRUD, per-client CSRF (403), validation (422), optimistic concurrency (409),
 // multi-select channels, conditional fields, draft leave guard, typed confirmation
 // delete, boosted navigation, and live polling with server interval + 401 redirect.
 import { createServer } from "node:http";
@@ -17,6 +17,13 @@ const CHANNELS = [
 ];
 const STATUSES = ["Draft", "Active", "Archived"];
 
+class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
 function esc(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -26,12 +33,24 @@ function esc(value) {
     .replaceAll("'", "&#39;");
 }
 
+// HTTP headers must be pure ASCII so Unicode product names never throw ERR_INVALID_CHAR.
+function asciiJson(value) {
+  return JSON.stringify(value).replace(/[^\x20-\x7e]/g, ch => "\\u" + ch.charCodeAt(0).toString(16).padStart(4, "0"));
+}
+
+function asciiHeader(value) {
+  return String(value ?? "").replace(/[^\x20-\x7e]/g, "?");
+}
+
 function parseCookies(header) {
   const out = Object.create(null);
   for (const part of String(header || "").split(";")) {
     const idx = part.indexOf("=");
     if (idx === -1) continue;
-    out[part.slice(0, idx).trim()] = decodeURIComponent(part.slice(idx + 1).trim());
+    const key = part.slice(0, idx).trim();
+    const raw = part.slice(idx + 1).trim();
+    if (!key) continue;
+    try { out[key] = decodeURIComponent(raw); } catch { out[key] = raw; }
   }
   return out;
 }
@@ -47,7 +66,7 @@ async function readForm(request) {
   let size = 0;
   for await (const chunk of request) {
     size += chunk.length;
-    if (size > 32768) throw new Error("Payload too large");
+    if (size > 32768) throw new HttpError(413, "Payload too large.");
     chunks.push(chunk);
   }
   return new URLSearchParams(Buffer.concat(chunks).toString("utf8"));
@@ -103,8 +122,7 @@ function renderProductRows(products) {
             <button type="button" class="mero-button mero-button-sm" data-mero-action
                     hx-post="/products/${item.id}/bump" hx-target="#product-table" hx-swap="outerHTML">Simulate external edit</button>
             <button type="button" class="mero-button mero-button-sm mero-button-danger"
-                    hx-get="/products/${item.id}/delete" hx-target="#dialog-host" hx-swap="innerHTML"
-                    hx-on::after-swap="MeroUI.open(document.getElementById('delete-dialog'))">Delete</button>
+                    hx-get="/products/${item.id}/delete" hx-target="#dialog-host" hx-swap="innerHTML">Delete</button>
           </td>
         </tr>`).join("")}
       </tbody>
@@ -122,10 +140,9 @@ function renderEditForm(draft, { csrfToken, errors = {}, conflict = null, notice
     Review your draft below and save again to overwrite v${conflict.version}.
   </div>` : "";
   const showNote = draft.status !== "Draft";
-  const dirtyAttrs = conflict || Object.keys(errors).length > 0
-    ? ""
-    : ' data-mero-dirty data-mero-dirty-guard="You have unsaved product edits. Leave anyway?"';
-  return `<form id="product-edit-form" class="mero-stack" data-mero-form${dirtyAttrs}
+  const dirtyAttr = conflict || Object.keys(errors).length > 0 ? 'data-mero-dirty="dirty"' : "data-mero-dirty";
+  return `<form id="product-edit-form" class="mero-stack" data-mero-form ${dirtyAttr}
+                data-mero-dirty-guard="You have unsaved product edits. Leave anyway?"
                 data-mero-conflict-swap
                 hx-post="/products/${draft.id}" hx-target="this" hx-swap="outerHTML">
     <input type="hidden" name="csrf" value="${esc(csrfToken)}">
@@ -168,7 +185,7 @@ function renderEditForm(draft, { csrfToken, errors = {}, conflict = null, notice
 function renderDeleteForm(product, { csrfToken, errors = {}, phrase = "", reason = "" } = {}) {
   const expected = `delete ${product.sku}`;
   return `<form id="delete-form" class="mero-stack" data-mero-form data-mero-confirm
-        hx-post="/products/${product.id}/delete" hx-target="#product-table" hx-swap="outerHTML">
+        hx-post="/products/${product.id}/delete" hx-target="this" hx-swap="outerHTML">
     <input type="hidden" name="csrf" value="${esc(csrfToken)}">
     <h2>Delete ${esc(product.name)}</h2>
     <p>Type <code class="mero-confirm-phrase" data-mero-confirm-phrase>${esc(expected)}</code> and give a reason (8+ characters) to permanently delete this product.</p>
@@ -194,7 +211,7 @@ function renderDeleteForm(product, { csrfToken, errors = {}, phrase = "", reason
 }
 
 function renderDeleteDialog(product, options = {}) {
-  return `<dialog id="delete-dialog" class="mero-dialog" role="alertdialog" data-mero-dialog data-mero-static>
+  return `<dialog id="delete-dialog" class="mero-dialog" role="alertdialog" data-mero-dialog data-mero-static data-mero-autoopen>
     <div class="mero-dialog-body">${renderDeleteForm(product, options)}</div>
   </dialog>`;
 }
@@ -255,8 +272,8 @@ function renderPage({ title, main, csrfToken }) {
 </html>`;
 }
 
-export function createStarterApp({ assetsDir = resolve(repoRoot, "ui"), vendorDir = resolve(repoRoot, "public/vendor") } = {}) {
-  const csrfToken = randomBytes(16).toString("hex");
+export function createStarterApp({ assetsDir = process.env.MERO_ASSETS_DIR || resolve(repoRoot, "ui"), vendorDir = resolve(repoRoot, "public/vendor") } = {}) {
+  const sessions = new Set();
   const initialProducts = () => [
     { id: 1, name: "Arc Task Lamp", sku: "RL-1001", status: "Active", publishedNote: "Spring catalog", channels: ["web", "b2b"], version: 1 },
     { id: 2, name: "Halo Pendant", sku: "RL-1002", status: "Draft", publishedNote: "", channels: ["web"], version: 1 },
@@ -273,15 +290,19 @@ export function createStarterApp({ assetsDir = resolve(repoRoot, "ui"), vendorDi
     store.nextJobId = 1;
   }
 
-  function verifyCsrf(request, params) {
-    const cookies = parseCookies(request.headers.cookie);
-    const cookieToken = cookies.mero_csrf || csrfToken;
-    const submitted = request.headers["x-csrf-token"] || params?.get("csrf") || "";
-    return safeEqual(submitted, csrfToken) && safeEqual(cookieToken, csrfToken);
+  function issueCsrf(request) {
+    const existing = parseCookies(request.headers.cookie).mero_csrf;
+    if (existing && sessions.has(existing)) return { token: existing, cookie: null };
+    const token = randomBytes(16).toString("hex");
+    sessions.add(token);
+    return { token, cookie: `mero_csrf=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax` };
   }
 
-  function csrfCookieHeader() {
-    return `mero_csrf=${encodeURIComponent(csrfToken)}; Path=/; HttpOnly; SameSite=Lax`;
+  function verifyCsrf(request, params) {
+    const cookieToken = parseCookies(request.headers.cookie).mero_csrf;
+    if (!cookieToken || !sessions.has(cookieToken)) return false;
+    const submitted = request.headers["x-csrf-token"] || params?.get("csrf") || "";
+    return safeEqual(submitted, cookieToken);
   }
 
   async function serveStatic(pathname, response) {
@@ -299,33 +320,39 @@ export function createStarterApp({ assetsDir = resolve(repoRoot, "ui"), vendorDi
     return true;
   }
 
-  async function handler(request, response) {
-    const url = new URL(request.url, "http://127.0.0.1");
+  async function routeRequest(request, response) {
+    let url;
+    try {
+      url = new URL(request.url, "http://127.0.0.1");
+    } catch {
+      throw new HttpError(400, "Bad request URL.");
+    }
     const { pathname, searchParams } = url;
     const method = request.method || "GET";
 
     if (method === "GET" && await serveStatic(pathname, response)) return;
 
-    const cookieHeaders = { "Set-Cookie": csrfCookieHeader() };
+    const session = issueCsrf(request);
+    const cookieHeaders = session.cookie ? { "Set-Cookie": session.cookie } : {};
 
     if (method === "GET" && (pathname === "/" || pathname === "/products")) {
       const main = `<h1>Products</h1>
         <div id="product-table">${renderProductRows(store.products)}</div>
         ${renderExportWidget(null)}`;
-      return send(response, renderPage({ title: "Products", main, csrfToken }), { headers: cookieHeaders });
+      return send(response, renderPage({ title: "Products", main, csrfToken: session.token }), { headers: cookieHeaders });
     }
 
     if (method === "GET" && pathname === "/login") {
       const main = `<h1>Session expired</h1><p>Your session expired while polling. <a href="/">Return to products</a>.</p>`;
-      return send(response, renderPage({ title: "Sign in", main, csrfToken }), { headers: cookieHeaders });
+      return send(response, renderPage({ title: "Sign in", main, csrfToken: session.token }), { headers: cookieHeaders });
     }
 
     const editMatch = pathname.match(/^\/products\/(\d+)\/edit$/);
     if (method === "GET" && editMatch) {
       const product = store.products.find(p => p.id === Number(editMatch[1]));
       if (!product) return send(response, "Not found", { status: 404 });
-      const main = `<h1>Edit ${esc(product.name)}</h1>${renderEditForm(product, { csrfToken })}`;
-      return send(response, renderPage({ title: `Edit ${product.name}`, main, csrfToken }), { headers: cookieHeaders });
+      const main = `<h1>Edit ${esc(product.name)}</h1>${renderEditForm(product, { csrfToken: session.token })}`;
+      return send(response, renderPage({ title: `Edit ${product.name}`, main, csrfToken: session.token }), { headers: cookieHeaders });
     }
 
     const bumpMatch = pathname.match(/^\/products\/(\d+)\/bump$/);
@@ -344,7 +371,7 @@ export function createStarterApp({ assetsDir = resolve(repoRoot, "ui"), vendorDi
       return send(response, `<div id="product-table">${renderProductRows(store.products)}</div>`, {
         headers: {
           "Mero-Action-Outcome": "succeeded",
-          "Mero-Action-Message": `External edit bumped ${product.sku} to v${product.version}.`,
+          "Mero-Action-Message": asciiHeader(`External edit bumped ${product.sku} to v${product.version}.`),
         },
       });
     }
@@ -376,11 +403,11 @@ export function createStarterApp({ assetsDir = resolve(repoRoot, "ui"), vendorDi
       if (!/^[A-Z]{2,4}-\d{3,4}$/.test(draft.sku)) errors.sku = "SKU must match pattern like RL-1001.";
       if (draft.channels.length === 0) errors.channels = "Select at least one sales channel.";
       if (Object.keys(errors).length > 0) {
-        return send(response, renderEditForm(draft, { csrfToken, errors }), { status: 422 });
+        return send(response, renderEditForm(draft, { csrfToken: session.token, errors }), { status: 422 });
       }
 
       if (draft.version !== product.version) {
-        return send(response, renderEditForm(draft, { csrfToken, conflict: product }), {
+        return send(response, renderEditForm(draft, { csrfToken: session.token, conflict: product }), {
           status: 409,
           headers: { "Mero-Form-Error": "Record changed on the server. Review and save again." },
         });
@@ -394,8 +421,8 @@ export function createStarterApp({ assetsDir = resolve(repoRoot, "ui"), vendorDi
         channels: draft.channels,
         version: product.version + 1,
       });
-      const trigger = JSON.stringify({ "mero:form-saved": { message: `Saved ${product.name} (v${product.version}).` } });
-      return send(response, renderEditForm(product, { csrfToken, notice: `Saved revision v${product.version}.` }), {
+      const trigger = asciiJson({ "mero:form-saved": { message: `Saved ${product.name} (v${product.version}).` } });
+      return send(response, renderEditForm(product, { csrfToken: session.token, notice: `Saved revision v${product.version}.` }), {
         headers: { "HX-Trigger": trigger },
       });
     }
@@ -405,7 +432,7 @@ export function createStarterApp({ assetsDir = resolve(repoRoot, "ui"), vendorDi
       const product = store.products.find(p => p.id === Number(deleteMatch[1]));
       if (!product) return send(response, "Not found", { status: 404 });
       if (method === "GET") {
-        return send(response, renderDeleteDialog(product, { csrfToken }), { headers: cookieHeaders });
+        return send(response, renderDeleteDialog(product, { csrfToken: session.token }), { headers: cookieHeaders });
       }
       if (method === "POST") {
         const params = await readForm(request);
@@ -421,12 +448,12 @@ export function createStarterApp({ assetsDir = resolve(repoRoot, "ui"), vendorDi
         if (phrase !== `delete ${product.sku}`) errors.phrase = `Enter "delete ${product.sku}" exactly.`;
         if (reason.length < 8) errors.reason = "Reason must be at least 8 characters.";
         if (Object.keys(errors).length > 0) {
-          return send(response, renderDeleteForm(product, { csrfToken, errors, phrase, reason }), { status: 422 });
+          return send(response, renderDeleteForm(product, { csrfToken: session.token, errors, phrase, reason }), { status: 422 });
         }
         store.products = store.products.filter(p => p.id !== product.id);
-        const trigger = JSON.stringify({ "mero:form-saved": { message: `Deleted ${product.name}.`, target: "#delete-form" } });
-        return send(response, `<div id="product-table">${renderProductRows(store.products)}</div>`, {
-          headers: { "HX-Trigger": trigger },
+        const trigger = asciiJson({ "mero:form-saved": { message: `Deleted ${product.name}.`, target: "#delete-form" } });
+        return send(response, `<div id="product-table" hx-swap-oob="outerHTML">${renderProductRows(store.products)}</div>`, {
+          headers: { "HX-Reswap": "none", "HX-Trigger": trigger },
         });
       }
     }
@@ -461,7 +488,16 @@ export function createStarterApp({ assetsDir = resolve(repoRoot, "ui"), vendorDi
     send(response, "Not found", { status: 404 });
   }
 
-  return { handler, store, csrfToken, reset };
+  async function handler(request, response) {
+    try {
+      await routeRequest(request, response);
+    } catch (error) {
+      const status = error instanceof HttpError ? error.status : 400;
+      if (!response.headersSent) send(response, error.message || "Bad request.", { status, type: "text/plain; charset=utf-8" });
+    }
+  }
+
+  return { handler, store, reset };
 }
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));

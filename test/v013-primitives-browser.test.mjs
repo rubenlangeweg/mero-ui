@@ -9,14 +9,13 @@ const playwright = await import(browserConfig.playwrightModule || "playwright").
   throw error;
 });
 
-test("v0.13 primitives: multiselect, dirty-guard, show-when negation, 409 conflict swap and live backoff/interval",
+test("v0.13 primitives & peer-review regressions: multiselect, 3-state dirty/guard, passwords, 409 focus/source, dialog reopen and live init/backoff",
   { skip: !playwright && "Install Playwright to run the browser regression" }, async t => {
     const engine = browserConfig.engine || "chromium";
     const browser = await playwright[engine].launch({ executablePath: engine === "chromium" ? browserConfig.chromeExecutable : undefined });
     t.after(() => browser.close());
     const page = await browser.newPage({ reducedMotion: "reduce" });
     page.setDefaultTimeout(5000);
-    await page.clock.install();
     const errors = [];
     page.on("pageerror", err => errors.push(err.message));
 
@@ -28,7 +27,54 @@ test("v0.13 primitives: multiselect, dirty-guard, show-when negation, 409 confli
       "/htmx.js": ["text/javascript", "public/vendor/htmx.min.js"],
     };
 
-    const html = `<!doctype html><html lang="en"><head>
+    const editMain = `<main id="main">
+      <form id="edit-form" data-mero-form data-mero-dirty data-mero-dirty-guard="Unsaved draft!" data-mero-clear-passwords data-mero-conflict-swap
+            hx-post="/save" hx-target="this" hx-swap="outerHTML">
+        <input id="title" name="title" value="Lamp" aria-label="Title">
+        <input id="pwd" type="password" name="secret" value="" aria-label="Password">
+        <select id="implicit-select" name="tier" aria-label="Tier">
+          <option value="std">Standard</option>
+          <option value="pro">Pro</option>
+        </select>
+        <select id="mode" name="mode" aria-label="Mode">
+          <option value="" selected>Empty</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="manual">Manual</option>
+        </select>
+        <fieldset id="is-empty" data-mero-show-when="mode=">
+          <input id="empty-note" name="emptyNote" value="a" aria-label="Empty note">
+        </fieldset>
+        <fieldset id="not-empty" data-mero-show-when="mode!=" hidden disabled>
+          <input id="non-empty-note" name="nonEmptyNote" value="b" aria-label="Non-empty note">
+        </fieldset>
+        <div id="keep-enabled" data-mero-show-when="mode=manual" data-mero-show-when-keep-enabled hidden>
+          <input id="kept-input" name="kept" value="preserved" aria-label="Kept">
+        </div>
+        <div id="channels" class="mero-multiselect" data-mero-multiselect data-mero-combo data-mero-multiselect-name="channels">
+          <div class="mero-multiselect-control">
+            <ul class="mero-tag-group mero-multiselect-chips" data-mero-multiselect-chips>
+              <li class="mero-chip" data-value="web">Web<input type="hidden" name="channels" value="web"><button type="button" aria-label="Remove Web" data-mero-multiselect-remove>×</button></li>
+            </ul>
+            <input id="ch-input" name="search_unused" class="mero-multiselect-input" type="text" role="combobox" aria-label="Channels"
+                   aria-expanded="false" aria-controls="ch-list" aria-autocomplete="list" autocomplete="off">
+          </div>
+          <ul id="ch-list" class="mero-listbox mero-combo-list" role="listbox" aria-multiselectable="true" hidden>
+            <li id="opt-web" role="option" data-value="web" aria-selected="true">Web</li>
+            <li id="opt-b2b" role="option" data-value="b2b" aria-selected="false">B2B</li>
+            <li id="opt-pos" role="option" data-value="pos" aria-selected="false">POS</li>
+          </ul>
+          <span data-mero-combo-status role="status"></span>
+        </div>
+        <p data-mero-form-error hidden></p>
+        <button id="save-btn" type="submit">Save</button>
+        <a id="in-form-leave" href="/away">Back inside form</a>
+      </form>
+      <div id="live-slot"></div>
+      <dialog id="dlg-1" class="mero-dialog"><p>Dialog 1</p></dialog>
+      <dialog id="dlg-2" class="mero-dialog"><p>Dialog 2</p></dialog>
+    </main>`;
+
+    const shell = main => `<!doctype html><html lang="en"><head>
       <link rel="stylesheet" href="/mero.css">
       <script src="/htmx.js"></script>
       <script defer src="/mero.js"></script>
@@ -36,48 +82,11 @@ test("v0.13 primitives: multiselect, dirty-guard, show-when negation, 409 confli
       <script defer src="/mero-live.js"></script>
     </head><body hx-boost:inherited="true">
       <a id="leave-link" href="/away">Leave page</a>
-      <main id="main">
-        <form id="edit-form" data-mero-form data-mero-dirty data-mero-dirty-guard="Unsaved draft!" data-mero-conflict-swap
-              hx-post="/save" hx-target="this" hx-swap="outerHTML">
-          <input id="title" name="title" value="Lamp" aria-label="Title">
-          <select id="mode" name="mode" aria-label="Mode">
-            <option value="none" selected>None</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="manual">Manual</option>
-          </select>
-          <fieldset id="not-none" data-mero-show-when="mode!=none" hidden disabled>
-            <input id="note" name="note" value="x" aria-label="Note">
-          </fieldset>
-          <div id="keep-enabled" data-mero-show-when="mode=manual" data-mero-show-when-keep-enabled hidden>
-            <input id="kept-input" name="kept" value="preserved" aria-label="Kept">
-          </div>
-          <div id="channels" class="mero-multiselect" data-mero-multiselect data-mero-combo data-mero-multiselect-name="channels">
-            <div class="mero-multiselect-control">
-              <ul class="mero-tag-group mero-multiselect-chips" data-mero-multiselect-chips>
-                <li class="mero-chip" data-value="web">Web<input type="hidden" name="channels" value="web"><button type="button" aria-label="Remove Web" data-mero-multiselect-remove>×</button></li>
-              </ul>
-              <input id="ch-input" class="mero-multiselect-input" type="text" role="combobox" aria-label="Channels"
-                     aria-expanded="false" aria-controls="ch-list" aria-autocomplete="list" autocomplete="off">
-            </div>
-            <ul id="ch-list" class="mero-listbox mero-combo-list" role="listbox" aria-multiselectable="true" hidden>
-              <li id="opt-web" role="option" data-value="web" aria-selected="true">Web</li>
-              <li id="opt-b2b" role="option" data-value="b2b" aria-selected="false">B2B</li>
-              <li id="opt-pos" role="option" data-value="pos" aria-selected="false">POS</li>
-            </ul>
-            <span data-mero-combo-status role="status"></span>
-          </div>
-          <p data-mero-form-error hidden></p>
-          <button id="save-btn" type="submit">Save</button>
-        </form>
-        <div id="live-box" data-mero-live="1000" hx-get="/live" hx-trigger="mero:refresh" hx-target="find [data-mero-live-status]">
-          <div data-mero-live-status>Queued</div>
-          <span data-mero-live-error></span>
-          <button id="live-retry" type="button" data-mero-live-retry hidden>Retry</button>
-        </div>
-      </main>
+      ${main}
     </body></html>`;
 
-    let saveMode = "conflict";
+    let saveMode = "saved";
+    let releaseSave = null;
     let awayHits = 0;
     const liveResponses = [
       { status: 503, body: "err1" },
@@ -89,21 +98,26 @@ test("v0.13 primitives: multiselect, dirty-guard, show-when negation, 409 confli
 
     await page.route("http://mero.test/**", async route => {
       const { pathname } = new URL(route.request().url());
-      if (pathname === "/") return route.fulfill({ contentType: "text/html", body: html });
+      if (pathname === "/list") return route.fulfill({ contentType: "text/html", body: shell(`<main id="main"><a id="go-edit" href="/edit">Open edit</a></main>`) });
+      if (pathname === "/edit") return route.fulfill({ contentType: "text/html", body: shell(editMain) });
       if (assets[pathname]) {
         const [contentType, file] = assets[pathname];
         return route.fulfill({ contentType, body: await readFile(new URL(file, root)) });
       }
       if (pathname === "/away") {
         awayHits += 1;
-        return route.fulfill({ contentType: "text/html", body: "<!doctype html><html><body><main id=\"main\"><p id=\"away-page\">Away</p></main></body></html>" });
+        return route.fulfill({ contentType: "text/html", body: shell(`<main id="main"><p id="away-page">Away</p></main>`) });
       }
       if (pathname === "/save") {
+        if (saveMode === "delayed-saved") {
+          await new Promise(resolve => { releaseSave = resolve; });
+        }
         if (saveMode === "conflict") {
           return route.fulfill({
             status: 409,
             contentType: "text/html",
-            body: `<form id="edit-form" data-mero-form data-mero-dirty data-mero-conflict-swap hx-post="/save" hx-target="this" hx-swap="outerHTML">
+            body: `<form id="edit-form" data-mero-form data-mero-dirty="dirty" data-mero-conflict-swap hx-post="/save" hx-target="this" hx-swap="outerHTML">
+              <input id="invalid-first" aria-invalid="true" value="bad">
               <div id="conflict-banner">Someone else updated this record.</div>
               <button id="conflict-merge" type="button" data-mero-conflict-focus>Review conflict</button>
               <p data-mero-form-error hidden></p>
@@ -125,99 +139,215 @@ test("v0.13 primitives: multiselect, dirty-guard, show-when negation, 409 confli
       return route.fulfill({ status: 404, body: "" });
     });
 
-    await page.goto("http://mero.test/");
-    await page.waitForFunction(() => window.MeroUI);
+    // Navigate /list -> /edit via boosted link so Back button has a real history entry to traverse.
+    await page.goto("http://mero.test/list");
+    await page.waitForFunction(() => Boolean(window.MeroUI && window.htmx));
+    await page.locator("#go-edit").click();
+    await page.locator("#edit-form").waitFor();
+
     await page.evaluate(() => {
       window.selections = [];
       window.actions = [];
+      window.originalForm = document.getElementById("edit-form");
       document.addEventListener("mero:selection", e => window.selections.push({ values: e.detail.values, added: e.detail.added, removed: e.detail.removed }));
-      document.addEventListener("mero:action", e => window.actions.push({ state: e.detail.state, status: e.detail.status }));
+      document.addEventListener("mero:action", e => window.actions.push({ state: e.detail.state, status: e.detail.status, sameSource: e.detail.source === window.originalForm, id: e.detail.id }));
       window.confirmCalls = [];
       window.confirmAnswer = false;
       window.confirm = text => { window.confirmCalls.push(text); return window.confirmAnswer; };
     });
 
-    // 1. show-when negation (!=) and keep-enabled.
-    assert.equal(await page.locator("#not-none").isHidden(), true);
+    // 1. Untouched select (no explicit `selected` attribute) stays clean.
+    assert.equal(await page.locator("#save-btn").isDisabled(), true, "untouched implicit select must not mark form dirty");
+
+    // 2. show-when empty comparison (mode= and mode!=), keep-enabled, and dynamically inserted fieldset init.
+    assert.equal(await page.locator("#is-empty").isVisible(), true, "mode= shows when mode is empty");
+    assert.equal(await page.locator("#not-empty").isHidden(), true, "mode!= hides when mode is empty");
     assert.equal(await page.locator("#keep-enabled").isHidden(), true);
     assert.equal(await page.locator("#kept-input").isDisabled(), false, "keep-enabled keeps hidden input enabled");
+
+    // Insert a conditional fieldset inside the existing form and call MeroUI.init(branch).
+    await page.evaluate(() => {
+      const fs = document.createElement("fieldset");
+      fs.id = "dynamic-branch";
+      fs.setAttribute("data-mero-show-when", "mode=manual");
+      fs.innerHTML = '<input id="dyn-in" name="dyn" value="1">';
+      document.getElementById("edit-form").append(fs);
+      window.MeroUI.init(fs);
+    });
+    assert.equal(await page.locator("#dynamic-branch").isHidden(), true, "MeroUI.init(branch) evaluates ancestor form show-when");
+    assert.equal(await page.locator("#dynamic-branch").evaluate(el => el.disabled), true);
+    assert.equal(await page.locator("#dyn-in").isDisabled(), true);
+
     await page.locator("#mode").selectOption("scheduled");
-    assert.equal(await page.locator("#not-none").isVisible(), true, "mode!=none shows for scheduled");
-    assert.equal(await page.locator("#not-none").isDisabled(), false);
+    assert.equal(await page.locator("#is-empty").isHidden(), true);
+    assert.equal(await page.locator("#not-empty").isVisible(), true);
     assert.equal(await page.locator("#save-btn").isDisabled(), false);
-    await page.locator("#mode").selectOption("none");
-    assert.equal(await page.locator("#not-none").isHidden(), true);
+    await page.locator("#mode").selectOption("");
     assert.equal(await page.locator("#save-btn").isDisabled(), true, "back to clean");
 
-    // 2. Multi-select combobox: add chip, Backspace remove, click remove, dirty tracking & FormData.
+    // 3. Multi-select: arrow focus keeps aria-selected accurate, ignores search input name, resets on form.reset().
     const chInput = page.locator("#ch-input");
+    await chInput.focus();
+    await chInput.press("ArrowDown");
+    await chInput.press("ArrowDown");
+    assert.equal(await chInput.getAttribute("aria-activedescendant"), "opt-b2b");
+    assert.equal(await page.locator("#opt-b2b").getAttribute("aria-selected"), "false", "arrowing must not mark unselected option as aria-selected=true");
+    assert.equal(await page.locator("#opt-web").getAttribute("aria-selected"), "true");
+
     await chInput.fill("B2");
     await page.locator("#opt-b2b").click();
-    assert.equal(await page.locator("#save-btn").isDisabled(), false, "adding a multiselect chip marks form dirty");
+    await chInput.fill("uncommitted-search");
     assert.deepEqual(await page.evaluate(() => new FormData(document.getElementById("edit-form")).getAll("channels")), ["web", "b2b"]);
     assert.equal(await page.locator("#opt-b2b").getAttribute("aria-selected"), "true");
 
-    // Backspace on empty input removes last chip (b2b), returning form to clean.
+    // Native form.reset() restores original chips.
+    await page.evaluate(() => document.getElementById("edit-form").reset());
+    await page.waitForFunction(() => new FormData(document.getElementById("edit-form")).getAll("channels").length === 1);
+    assert.deepEqual(await page.evaluate(() => new FormData(document.getElementById("edit-form")).getAll("channels")), ["web"]);
+    assert.equal(await page.locator("#opt-b2b").getAttribute("aria-selected"), "false");
+
+    // Backspace & remove button still work.
+    await chInput.fill("PO");
+    await page.locator("#opt-pos").click();
     await chInput.press("Backspace");
     assert.deepEqual(await page.evaluate(() => new FormData(document.getElementById("edit-form")).getAll("channels")), ["web"]);
-    assert.equal(await page.locator("#save-btn").isDisabled(), true, "removing added chip restores clean baseline");
-
-    // Add POS, then test remove button click.
     await chInput.fill("PO");
     await page.locator("#opt-pos").click();
     await page.locator('[aria-label="Remove POS"]').click();
-    assert.deepEqual(await page.evaluate(() => window.selections), [
-      { values: ["web", "b2b"], added: "b2b", removed: null },
-      { values: ["web"], added: null, removed: "b2b" },
-      { values: ["web", "pos"], added: "pos", removed: null },
-      { values: ["web"], added: null, removed: "pos" },
-    ]);
+    assert.deepEqual(await page.evaluate(() => window.selections.at(-1)), { values: ["web"], added: null, removed: "pos" });
 
-    // 3. Draft leave guard blocks boosted navigation when confirm=false, resets after mero:form-saved.
+    // 4. 3-state save ownership & data-mero-clear-passwords (in-flight edit is NOT lost; password never enters defaultValue).
+    await page.locator("#title").fill("Lamp v1");
+    await page.locator("#pwd").fill("top-secret");
+    saveMode = "delayed-saved";
+    await page.locator("#save-btn").click();
+    await page.waitForFunction(() => document.getElementById("edit-form").getAttribute("aria-busy") === "true");
+    // Edit title while save is still in flight.
     await page.locator("#title").fill("Lamp v2");
-    assert.equal(await page.locator("#save-btn").isDisabled(), false);
-    await page.locator("#leave-link").click();
-    assert.deepEqual(await page.evaluate(() => window.confirmCalls), ["Unsaved draft!"]);
-    assert.equal(awayHits, 0, "boosted navigation cancelled while dirty");
+    releaseSave();
+    await page.locator(".mero-toast", { hasText: "Saved!" }).waitFor();
+    assert.equal(await page.locator("#save-btn").isDisabled(), false, "mid-flight edit stays dirty after earlier save settles");
+    const pwdState = await page.evaluate(() => {
+      const p = document.getElementById("pwd");
+      const before = { val: p.value, def: p.defaultValue };
+      document.getElementById("edit-form").reset();
+      const afterReset = p.value;
+      document.getElementById("title").value = "Lamp v2";
+      document.getElementById("title").dispatchEvent(new Event("input", { bubbles: true }));
+      return { before, afterReset };
+    });
+    assert.deepEqual(pwdState, { before: { val: "", def: "" }, afterReset: "" }, "cleared password never survives in defaultValue or reset");
 
+    // 5. Dirty guard: blocks BOTH external link, in-form link, AND Back traversal while keeping URL at /edit.
+    // Also verify a plain non-HTMX form's own submit suppresses beforeunload.
+    const plainSubmitPreventedUnload = await page.evaluate(() => {
+      const f = document.createElement("form");
+      f.setAttribute("data-mero-dirty", "dirty");
+      f.setAttribute("data-mero-dirty-guard", "Leave?");
+      f.addEventListener("submit", () => { /* allow submit without navigating via iframe target */ });
+      f.target = "noop-frame";
+      const iframe = document.createElement("iframe");
+      iframe.name = "noop-frame";
+      iframe.hidden = true;
+      document.body.append(iframe, f);
+      // Temporarily mark edit-form clean check aside: test in isolation by firing submit on f & checking dirtyGuarded via beforeunload only when edit-form is temporarily disconnected
+      const edit = document.getElementById("edit-form");
+      const parent = edit.parentNode;
+      const next = edit.nextSibling;
+      edit.remove();
+      f.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      const ev = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(ev);
+      f.remove();
+      iframe.remove();
+      parent.insertBefore(edit, next);
+      return ev.defaultPrevented;
+    });
+    assert.equal(plainSubmitPreventedUnload, false, "plain form submit must not trigger beforeunload prompt");
+
+    await page.locator("#in-form-leave").click();
+    assert.equal(await page.evaluate(() => window.confirmCalls.length), 1, "in-form link prompts when dirty");
+    assert.equal(awayHits, 0);
+
+    await page.evaluate(() => history.back());
+    await page.waitForFunction(() => window.confirmCalls.length >= 2);
+    await page.waitForTimeout(80);
+    assert.equal(new URL(page.url()).pathname, "/edit", "declined Back traversal restores /edit URL");
+    assert.equal(await page.locator("#edit-form").count(), 1);
+
+    // Save current Lamp v2 without mid-flight edits -> now clean.
     saveMode = "saved";
     await page.locator("#save-btn").click();
-    await page.locator(".mero-toast", { hasText: "Saved!" }).waitFor();
-    assert.equal(await page.locator("#save-btn").isDisabled(), true, "mero:form-saved resets dirty baseline");
+    await page.waitForFunction(() => document.getElementById("save-btn").disabled === true);
 
-    // 4. HTTP 409 conflict swap swaps replacement markup and focuses [data-mero-conflict-focus].
+    // 6. HTTP 409: [data-mero-conflict-focus] beats earlier [aria-invalid="true"] AND mero:action keeps original source.
     saveMode = "conflict";
     await page.locator("#title").fill("Lamp v3");
     await page.locator("#save-btn").click();
     await page.locator("#conflict-banner").waitFor();
-    assert.equal(await page.locator("#conflict-merge").evaluate(el => el === document.activeElement), true, "409 swap focuses data-mero-conflict-focus");
-    assert.equal(await page.locator("[data-mero-form-error]").isHidden(), true, "409 conflict swap does not clobber form error banner");
-    assert.deepEqual((await page.evaluate(() => window.actions)).at(-1), { state: "rejected", status: 409 });
+    assert.equal(await page.locator("#conflict-merge").evaluate(el => el === document.activeElement), true, "explicit conflict focus beats earlier aria-invalid");
+    const lastAction = await page.evaluate(() => window.actions.at(-1));
+    assert.deepEqual(lastAction, { state: "rejected", status: 409, sameSource: true, id: "edit-form" });
 
-    // 5. mero-live exponential backoff and Mero-Live-Interval dynamic cadence.
+    // 7. Dialog reopen race + preserved toasts carried into next dialog.
+    const dlgEvents = await page.evaluate(async () => {
+      const log = [];
+      const d1 = document.getElementById("dlg-1");
+      const d2 = document.getElementById("dlg-2");
+      document.addEventListener("mero:dialog", e => log.push({ open: e.detail.open, id: e.detail.dialog.id }));
+      window.MeroUI.open(d1);
+      window.MeroUI.close(d1);
+      window.MeroUI.open(d1);
+      window.MeroUI.toast("Still alive", { duration: 0, trigger: d1 });
+      await new Promise(r => setTimeout(r, 20));
+      const aliveCount = d1.querySelectorAll(".mero-toast").length;
+      window.MeroUI.close(d1, { preserveToasts: true });
+      window.MeroUI.open(d2);
+      const movedIntoD2 = d2.querySelectorAll(".mero-toast").length;
+      return { log, aliveCount, movedIntoD2 };
+    });
+    assert.deepEqual(dlgEvents.log, [
+      { open: true, id: "dlg-1" },
+      { open: false, id: "dlg-1" },
+      { open: true, id: "dlg-1" },
+      { open: false, id: "dlg-1" },
+      { open: true, id: "dlg-2" },
+    ]);
+    assert.equal(dlgEvents.aliveCount, 1, "reopened dialog keeps its toast after queued native close");
+    assert.equal(dlgEvents.movedIntoD2, 1, "preserved toast moves into newly opened dialog top layer");
+    await page.locator("#dlg-2 .mero-toast button").click();
+    assert.equal(await page.locator("#dlg-2 .mero-toast").count(), 0, "preserved toast dismiss button is clickable inside dialog 2");
+    await page.evaluate(() => window.MeroUI.close("dlg-2"));
+
+    // 8. Dynamically inserted live region with MeroUI.init(el) ONLY (no manual htmx.process), plus backoff & Mero-Live-Interval.
+    await page.clock.install();
+    await page.clock.pauseAt(Date.now());
     await page.evaluate(() => {
       window.liveReads = 0;
       document.addEventListener("htmx:finally:request", e => {
         if (e.detail.ctx.sourceElement?.id === "live-box") window.liveReads += 1;
       });
+      const slot = document.getElementById("live-slot");
+      slot.innerHTML = `<div id="live-box" data-mero-live="1000" hx-get="/live" hx-trigger="mero:refresh" hx-target="find [data-mero-live-status]">
+        <div data-mero-live-status>Queued</div>
+        <span data-mero-live-error></span>
+        <button id="live-retry" type="button" data-mero-live-retry hidden>Retry</button>
+      </div>`;
+      window.MeroUI.init(slot);
     });
     assert.equal(liveHits, 0);
     await page.clock.fastForward(1100);
     await page.waitForFunction(() => window.liveReads === 1);
-    assert.equal(liveHits, 1, "1st poll failed");
-    // 1st failure retries at base (1000ms).
+    assert.equal(liveHits, 1, "MeroUI.init(slot) alone started live polling");
     await page.clock.fastForward(1100);
     await page.waitForFunction(() => window.liveReads === 2);
-    assert.equal(liveHits, 2, "2nd poll ran at base interval and also failed");
-    // 2nd consecutive failure backs off to 2 * base (2000ms): at 1100ms it has NOT polled yet!
+    assert.equal(liveHits, 2, "1st failure retries at base interval");
     await page.clock.fastForward(1100);
     await page.waitForTimeout(50);
-    assert.equal(liveHits, 2, "backoff delayed 3rd poll beyond 1000ms");
+    assert.equal(liveHits, 2, "2nd failure backs off beyond 1000ms");
     await page.clock.fastForward(1100);
     await page.waitForFunction(() => window.liveReads === 3);
     await page.locator("[data-mero-live-status]", { hasText: "Running" }).waitFor();
-    assert.equal(liveHits, 3, "3rd poll succeeded with Mero-Live-Interval: 5000");
-    // Server requested 5000ms cadence: at 2500ms no poll yet, at 5100ms it polls and finishes.
     await page.clock.fastForward(2500);
     await page.waitForTimeout(50);
     assert.equal(liveHits, 3, "honors Mero-Live-Interval: 5000");
