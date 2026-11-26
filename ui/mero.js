@@ -2,8 +2,10 @@
 (() => {
   "use strict";
 
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set() });
   const dialogOpeners = new WeakMap();
   const dialogFocus = new WeakMap();
+  const dialogClosed = new WeakSet();
   const autoOpened = new WeakSet();
   const menuFocusLast = new WeakSet();
   const tabbedMenus = new WeakSet();
@@ -30,6 +32,7 @@
     const dialog = element(ref);
     if (!(dialog instanceof HTMLDialogElement) || dialog.open || !dialog.isConnected) return;
     dialogOpeners.set(dialog, { trigger, previouslyFocused: document.activeElement });
+    dialogClosed.delete(dialog);
     dialog.showModal();
     const input = dialog.matches("[data-mero-command]") && dialog.querySelector('[role="combobox"]');
     if (input) {
@@ -39,13 +42,31 @@
       setComboOpen(input, false);
       input.dispatchEvent(new CustomEvent("mero:query", { bubbles: true }));
     }
+    dialog.dispatchEvent(new CustomEvent("mero:dialog", { bubbles: true, detail: { open: true, dialog, returnValue: "" } }));
   }
 
-  function close(ref, { focus, value } = {}) {
+  function clearDialogToasts(dialog, preserve = false) {
+    const region = dialog.querySelector(":scope > .mero-toast-region");
+    if (!region) return;
+    if (preserve && region.children.length) toastRegion(document.body).append(...region.children);
+    region.remove();
+  }
+
+  function emitDialogClose(dialog) {
+    dialog.dispatchEvent(new CustomEvent("mero:dialog", {
+      bubbles: true,
+      detail: { open: false, dialog, returnValue: dialog.returnValue },
+    }));
+  }
+
+  function close(ref, { focus, value, preserveToasts } = {}) {
     const dialog = element(ref);
     if (!(dialog instanceof HTMLDialogElement) || !dialog.open) return;
     if (focus) dialogFocus.set(dialog, focus);
+    clearDialogToasts(dialog, Boolean(preserveToasts));
+    dialogClosed.add(dialog);
     dialog.close(value);
+    emitDialogClose(dialog);
   }
 
   function returnFocus(dialog) {
@@ -307,11 +328,14 @@
       return;
     }
     if (!input || !option || disabled(option)) return;
-    input.value = option.dataset.value ?? option.textContent.trim();
+    const value = option.dataset.value ?? option.textContent.trim();
+    const label = option.textContent.trim();
+    input.value = value;
     setComboOpen(input, false);
     markComboChoice(option.closest('[role="listbox"]'), option);
     input.focus();
     input.dispatchEvent(new Event("change", { bubbles: true }));
+    input.dispatchEvent(new CustomEvent("mero:select", { bubbles: true, detail: { value, label, option } }));
   }
 
   function isCurrentQuery(query) {
@@ -344,9 +368,7 @@
     }
   }
 
-  function toast(message, { tone = "accent", duration = 4800, trigger = document.activeElement } = {}) {
-    if (!String(message ?? "").trim()) return;
-    const host = trigger?.closest?.("dialog[open]") ?? document.body;
+  function toastRegion(host) {
     let region = host.querySelector(":scope > .mero-toast-region");
     if (!region) {
       region = document.createElement("div");
@@ -355,6 +377,12 @@
       region.setAttribute("aria-label", "Notifications");
       host.append(region);
     }
+    return region;
+  }
+
+  function toast(message, { tone = "accent", duration = 4800, trigger = document.activeElement } = {}) {
+    if (!String(message ?? "").trim()) return;
+    const region = toastRegion(trigger?.closest?.("dialog[open]") ?? document.body);
     const item = document.createElement("div");
     item.className = "mero-toast";
     item.dataset.tone = tone;
@@ -388,7 +416,7 @@
       clear();
       const focused = item.contains(document.activeElement);
       item.remove();
-      if (focused && previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+      if (focused && previousFocus?.isConnected && !previousFocus.closest?.("dialog:not([open])")) previousFocus.focus({ preventScroll: true });
     });
     item.addEventListener("mouseenter", clear);
     item.addEventListener("mouseleave", () => { if (!item.contains(document.activeElement)) start(); });
@@ -444,9 +472,11 @@
     return panel;
   }
 
-  function showPeek(link) {
+  function showPeek(link, notify = true) {
     const region = peekRegion(link), template = peekTemplate(link);
     if (!region || !template) return false;
+    const nextKey = peekKey(link);
+    const changed = notify && (!peek || peek.key !== nextKey || peek.panel.parentElement !== region);
     const panel = peekPanel(region);
     if (peek && peek.panel !== panel) peek.panel.remove();
     // Keep the header and footer nodes so focus on Close or Open survives an update.
@@ -456,7 +486,13 @@
     body.replaceChildren(template.content.cloneNode(true));
     window.htmx?.process?.(body);
     init(body);
-    peek = { panel, key: peekKey(link) };
+    peek = { panel, key: nextKey };
+    if (changed) {
+      region.dispatchEvent(new CustomEvent("mero:peek", {
+        bubbles: true,
+        detail: { open: true, key: nextKey, href: link.getAttribute("href"), link, panel },
+      }));
+    }
     // The bottom sheet's scroll padding keeps the row above it on phones.
     if (document.activeElement === link) link.scrollIntoView({ block: "nearest" });
     return true;
@@ -464,21 +500,32 @@
 
   function closePeek(focusRow) {
     if (!peek) return;
+    const { panel, key } = peek;
+    const region = panel.parentElement;
     const link = peekLink();
-    const focusLost = peek.panel.contains(document.activeElement);
-    peek.panel.remove();
+    const focusLost = panel.contains(document.activeElement);
+    panel.remove();
     peek = null;
     if (focusRow || focusLost) link?.focus();
+    (region?.isConnected ? region : document).dispatchEvent(new CustomEvent("mero:peek", {
+      bubbles: true,
+      detail: { open: false, key, href: null, link: null, panel: null },
+    }));
   }
 
   // After a swap or morph, show the same row from the new markup, or close when it is gone.
   function refreshPeek() {
     const region = peek.panel.isConnected ? peek.panel.parentElement : null;
     const link = peekLink(region) ?? [...document.querySelectorAll("[data-mero-peek]")].map(peekLink).find(Boolean);
-    if (link && showPeek(link)) return;
+    if (link && showPeek(link, false)) return;
+    const { key } = peek;
     peek.panel.remove();
     peek = null;
     if (document.activeElement === document.body) region?.querySelector(".mero-row-link")?.focus({ preventScroll: true });
+    (region?.isConnected ? region : document).dispatchEvent(new CustomEvent("mero:peek", {
+      bubbles: true,
+      detail: { open: false, key, href: null, link: null, panel: null },
+    }));
   }
 
   // time[data-mero-time]: show the datetime attribute in the reader's locale and time zone.
@@ -522,6 +569,7 @@
   }
 
   function init(root = document, trigger, request) {
+    if (!(root instanceof Element || root instanceof Document)) return;
     scopeIds(root);
     initNativeGroups(root);
     initTabs(root);
@@ -534,6 +582,25 @@
       autoOpened.add(dialog);
       open(dialog, { trigger });
     }
+    for (const fn of lifecycle.init) fn(root);
+  }
+
+  function cleanup(root = document) {
+    if (!(root instanceof Element || root instanceof Document)) return;
+    for (const tooltip of visibleTooltips) {
+      if (root === document || root === tooltip || root.contains(tooltip)) visibleTooltips.delete(tooltip);
+    }
+    if (peek && (root === document || root.contains(peek.panel) || root.contains(peek.panel.parentElement))) {
+      const { panel, key } = peek;
+      const region = panel.parentElement;
+      panel.remove();
+      peek = null;
+      (region?.isConnected ? region : document).dispatchEvent(new CustomEvent("mero:peek", {
+        bubbles: true,
+        detail: { open: false, key, href: null, link: null, panel: null },
+      }));
+    }
+    for (const fn of lifecycle.cleanup) fn(root);
   }
 
   document.addEventListener("pointerdown", event => {
@@ -854,8 +921,9 @@
 
   document.addEventListener("close", event => {
     if (event.target instanceof HTMLDialogElement) {
-      event.target.querySelector(":scope > .mero-toast-region")?.remove();
+      clearDialogToasts(event.target, false);
       returnFocus(event.target);
+      if (!dialogClosed.delete(event.target)) emitDialogClose(event.target);
     }
   }, true);
 
@@ -1076,5 +1144,5 @@
     init();
   }
 
-  window.MeroUI = Object.freeze({ open, close, toast, init });
+  window.MeroUI = Object.freeze({ open, close, toast, init, cleanup });
 })();

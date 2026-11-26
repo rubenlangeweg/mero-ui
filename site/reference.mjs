@@ -11,12 +11,24 @@ const emitted = [
   ["mero:toggle", "/components/toggle-button", "Toggle Button",
     "Fires on a <code>data-mero-toggle</code> button after a click flips its <code>aria-pressed</code>.",
     "{ pressed }", "<code>pressed</code> is the new state, a boolean."],
+  ["mero:select", "/components/autocomplete", "Autocomplete",
+    "Fires on a combobox input after a person selects an option and Mero writes the value and fires <code>change</code>.",
+    "{ value, label, option }", "<code>value</code> is the option’s <code>data-value</code> or trimmed text, <code>label</code> is its trimmed text and <code>option</code> is the chosen element."],
+  ["mero:dialog", "/components/modal", "Modal",
+    "Fires on a <code>&lt;dialog&gt;</code> when Mero opens it and when any <code>&lt;dialog&gt;</code> closes.",
+    "{ open, dialog, returnValue }", "<code>open</code> is a boolean, <code>dialog</code> is the dialog element and <code>returnValue</code> is the dialog’s return value on close (empty string on open)."],
+  ["mero:peek", "/components/sortable-table", "Sortable Table",
+    "Fires on the <code>data-mero-peek</code> region when the row preview opens, moves to another row or closes (or on <code>document</code> if the region was removed). Swaps that keep the same row open do not repeat the event.",
+    "{ open, key, href, link, panel }", "<code>open</code> is a boolean, <code>key</code> is the row’s ID or link <code>href</code>, and <code>href</code>, <code>link</code> and <code>panel</code> are set while open and <code>null</code> on close."],
+  ["mero:dirty", "/components/fieldset", "Fieldset",
+    "Fires on a <code>form[data-mero-dirty]</code> when its dirty state changes between clean and modified. Does not fire at load or from <code>MeroUI.init()</code>. Requires <code>mero-forms.js</code>.",
+    "{ dirty, form }", "<code>dirty</code> is a boolean and <code>form</code> is the form element."],
   ["mero:query", "/components/autocomplete", "Autocomplete",
-    "Fires on a remote combobox input when it needs fresh options, for example an arrow key after a failed request. Add it to <code>hx-trigger</code> next to <code>input</code>. To follow the option a person chooses, listen for the native <code>change</code> event on the input, which bubbles; the value is <code>event.target.value</code>.",
+    "Fires on a remote combobox input when it needs fresh options, for example an arrow key after a failed request. Add it to <code>hx-trigger</code> next to <code>input</code>. To follow the option a person chooses, listen for <code>mero:select</code> or the native <code>change</code> event on the input, both of which bubble.",
     "", ""],
   ["mero:action", "/components/action-button", "Action Button",
     "Fires on a <code>data-mero-action</code> button or a <code>data-mero-form</code> when its request starts and when it ends, or on the document when a swap removed the element. Requires <code>mero-forms.js</code>.",
-    "{ state, status, message }", "<code>state</code> is <code>pending</code>, <code>succeeded</code>, <code>rejected</code> or <code>unknown</code>. <code>status</code> and <code>message</code> are set once the request ends. <code>status</code> is 0 when no response arrived."],
+    "{ state, status, message, source, id }", "<code>state</code> is <code>pending</code>, <code>succeeded</code>, <code>rejected</code> or <code>unknown</code>. <code>source</code> is the originating form or button (even when detached by a swap) and <code>id</code> is its <code>id</code> or <code>null</code>. <code>status</code> and <code>message</code> are set once the request ends; <code>status</code> is 0 when no response arrived."],
   ["mero:refresh", "/components/live-progress", "Live Progress",
     "Fires on a <code>data-mero-live</code> region to read the latest status. Set <code>hx-trigger=\"mero:refresh\"</code> on the region. Requires <code>mero-live.js</code>.",
     "", ""],
@@ -37,9 +49,10 @@ const received = [
 
 const methods = [
   ["MeroUI.open(dialog, { trigger })", "Opens a <code>&lt;dialog&gt;</code> as a modal. Pass the element or its ID. Focus returns to <code>trigger</code> on close, by default the element focused when you call it."],
-  ["MeroUI.close(dialog, { focus, value })", "Closes an open dialog. <code>focus</code> overrides where focus returns. <code>value</code> becomes the dialog’s <code>returnValue</code>."],
+  ["MeroUI.close(dialog, { focus, value, preserveToasts })", "Closes an open dialog. <code>focus</code> overrides where focus returns. <code>value</code> becomes the dialog’s <code>returnValue</code>. Set <code>preserveToasts: true</code> to move live toasts inside the dialog to <code>document.body</code> instead of removing them."],
   ["MeroUI.toast(message, { tone, duration, trigger })", "Shows a notification. <code>tone</code> is <code>accent</code>, <code>success</code>, <code>warning</code> or <code>danger</code>. <code>duration</code> is in milliseconds, 4800 by default. Use 0 to keep it until dismissed. <code>trigger</code> is the element the notification belongs to, by default the focused element. When it is inside an open dialog, the notification shows in that dialog."],
-  ["MeroUI.init(root)", "Sets up tabs, listboxes, comboboxes and auto-opening dialogs inside <code>root</code>. Mero calls it for every htmx swap. Call it yourself for markup you insert another way."],
+  ["MeroUI.init(root)", "Sets up tabs, listboxes, comboboxes, auto-opening dialogs, and—when loaded—<code>mero-forms.js</code> state helpers (<code>data-mero-dirty</code>, <code>data-mero-show-when</code>, <code>data-mero-confirm</code>) and <code>mero-live.js</code> polling inside <code>root</code>. Mero calls it for every htmx swap. Call it yourself for markup you insert another way."],
+  ["MeroUI.cleanup(root)", "Tears down Mero state inside <code>root</code> before removing it outside htmx: stops and aborts <code>data-mero-live</code> polls, clears tracked tooltips and closes any open row preview in <code>root</code>."],
 ];
 
 // [attribute, description]. A leading "*" marks an attribute Mero sets itself.
@@ -239,12 +252,12 @@ const headersIntro = "The <code>Mero-*</code> HTTP headers. Your server sends th
 // test/reference.test.mjs fails when alpineIntro does not name the pinned Alpine and htmx versions.
 const alpine = [
   ["Script order", "With Mero and Alpine both loaded as deferred scripts, either order works."],
-  ["Listen, do not read", "Put <code>x-on:mero:selection</code>, <code>x-on:mero:tab</code> or <code>x-on:mero:toggle</code> on an <code>x-data</code> ancestor of the component. The event arrives after Mero has written the state, so the listener sees the new state. Mero selecting a tab or flipping a toggle inside an <code>x-data</code> root leaves Alpine’s own state alone."],
-  ["mero:action", "For a form that stays in the page, or that a 422 response replaces with another <code>data-mero-form</code>, a listener on an ancestor hears both the pending and the final event. When the swap removes the form and leaves no replacement <code>data-mero-form</code>, the final event fires on the document. An ancestor listener misses it. Use <code>@mero:action.window</code> on an Alpine component or a native listener on <code>document</code>. The detail is <code>{ state }</code> while pending and <code>{ state, status, message }</code> at the end. It does not say which form or button it came from, and a window or document listener hears every action on the page, so it cannot tell which one settled once the element is gone. Tested with <code>data-mero-form</code>."],
-  ["Combobox", "Use <code>x-model.lazy</code> on the combobox input. Choosing an option fires <code>change</code> and no <code>input</code> event."],
-  ["Writing a field value", "A script that sets an input’s value fires no event. Dispatch a bubbling <code>change</code> on the input afterwards, or <code>data-mero-dirty</code> and <code>data-mero-show-when</code> keep their old state."],
-  ["htmx swaps", "After an <code>innerHTML</code> swap into an <code>x-data</code> element, and after an <code>outerMorph</code> swap of one with <code>hx-alpine-compat</code> loaded, the Alpine state survives, Alpine binds the new children and Mero sets up the tabs in the new content."],
-  ["Markup Alpine inserts", "Mero does not set up tabs that <code>x-if</code> inserts. Call <code>MeroUI.init(el)</code> on the inserted element. A second call changes nothing."],
+  ["Listen, do not read", "Put <code>x-on:mero:selection</code>, <code>x-on:mero:tab</code>, <code>x-on:mero:toggle</code>, <code>x-on:mero:select</code>, <code>x-on:mero:dialog</code> or <code>x-on:mero:dirty</code> on an <code>x-data</code> ancestor of the component. Each event arrives after Mero has written the state, so the listener sees the new state. Mero selecting a tab or flipping a toggle inside an <code>x-data</code> root leaves Alpine’s own state alone."],
+  ["mero:action", "For a form or <code>data-mero-action</code> button that stays in the page, or a form that a 422 response replaces with another <code>data-mero-form</code>, a listener on an ancestor hears both the pending and the final event. When the swap removes the element and leaves no replacement, the final event fires on the document; use <code>@mero:action.window</code> on an Alpine component or a native listener on <code>document</code>. The detail is <code>{ state, source, id }</code> while pending and <code>{ state, status, message, source, id }</code> at the end, so a window listener can identify which form or button settled by <code>id</code> or <code>source</code> even after removal. Tested with <code>data-mero-form</code> and <code>data-mero-action</code> across succeeded, rejected and unknown outcomes."],
+  ["Combobox", "Use <code>@mero:select</code> or <code>x-model.lazy</code> on the combobox input. Choosing an option fires <code>change</code> and <code>mero:select</code>, and never fires a synthetic <code>input</code> event (so remote comboboxes do not trigger a redundant server search)."],
+  ["Writing a field value", "A script that sets an input’s value fires no event. Dispatch a bubbling <code>change</code> on the input afterwards, or <code>data-mero-dirty</code>, <code>mero:dirty</code> and <code>data-mero-show-when</code> keep their old state."],
+  ["htmx swaps", "After an <code>innerHTML</code> swap into an <code>x-data</code> element, and after an <code>innerMorph</code> or <code>outerMorph</code> swap of one with <code>hx-alpine-compat</code> loaded, the Alpine state survives, Alpine binds the new children and Mero sets up the tabs in the new content."],
+  ["Markup Alpine inserts or removes", "Mero does not watch <code>x-if</code> or <code>x-teleport</code> insertions automatically. Call <code>MeroUI.init(el)</code> on the inserted element to set up tabs, <code>mero-forms.js</code> state helpers (<code>data-mero-dirty</code>, <code>data-mero-show-when</code>, <code>data-mero-confirm</code>) and <code>mero-live.js</code> polling. A second call changes nothing. Call <code>MeroUI.cleanup(el)</code> before removing a subtree with a <code>data-mero-live</code> region so pending polls stop immediately."],
 ];
 const alpineIntro = "What a browser test proves about Mero next to Alpine. It runs Alpine 3.14.8, the oldest version tested, and Alpine 3.17.5, with htmx 4.0.2 and its <code>hx-alpine-compat</code> extension loaded straight after htmx. Other Alpine versions and setups without the extension are not tested.";
 

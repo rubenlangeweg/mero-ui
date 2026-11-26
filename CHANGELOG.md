@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **Action source identity:** `mero:action` events now include `source` (the originating `data-mero-form` or `data-mero-action` element, even when detached by a swap) and `id` (`source.id || null`) on both `pending` and final events, so `document` and Alpine `@mero:action.window` listeners can tell which action settled after removal.
+- **Dialog toast survival:** `MeroUI.close(dialog, { preserveToasts: true })` moves live notifications inside the closing dialog to `document.body` instead of removing them.
+- **Unified `MeroUI.init()` and `MeroUI.cleanup()`:** `MeroUI.init(root)` now also initializes `mero-forms.js` state helpers (`data-mero-dirty`, `data-mero-show-when`, `data-mero-confirm`) and `mero-live.js` polling when loaded. New `MeroUI.cleanup(root)` stops and aborts `data-mero-live` polls, clears tracked tooltips and closes any open row preview inside `root` before programmatic or Alpine removal.
+- **State events:** added bubbling `mero:select` (`{ value, label, option }` on combobox selection, keeping `change`-only so remote comboboxes never trigger a redundant search), `mero:dialog` (`{ open, dialog, returnValue }`), `mero:peek` (`{ open, key, href, link, panel }`, silent on swaps that keep the same row open) and `mero:dirty` (`{ dirty, form }`, never firing on load or `init`).
+- **Core CSS polish:** fixed `.mero-button-danger:hover` contrast to stay ≥ 4.5:1 WCAG AA in light and dark themes; added `--mero-control-height-sm` and `--mero-control-height-lg` public density tokens; fixed `cursor: progress` precedence on `.mero-button[data-mero-pending][data-mero-request]` and `.mero-button.htmx-request[data-mero-request]`; added `[data-theme="auto"]` following `prefers-color-scheme: dark`.
+- **Alpine coexistence suite:** expanded `test/alpine-coexistence-browser.test.mjs` to cover `data-mero-action` buttons, rejected/unknown outcomes, `mero:select`, `mero:dialog`, `mero:dirty`, `MeroUI.init`/`cleanup` on forms and live polling, `innerMorph`, and `x-teleport`.
+
 ## 0.9.0 · 24 November 2026
 
 - **Stability:** the README now states the versioning policy for 0.x. The public names in `ui/` (`data-mero-*` attributes, `mero:*` events, `window.MeroUI` methods, `Mero-*` headers, `--mero-*` properties and the chart and Markdown exports) are recorded in `test/api-surface.json`, and a test fails when one is removed or renamed. From this release, changelog bullets that start with **Deprecated:** or **Breaking:** are the ones to read before an upgrade.

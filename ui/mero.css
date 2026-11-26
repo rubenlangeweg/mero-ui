@@ -1,6 +1,8 @@
 /*! @rubenlangeweg/mero-ui 0.9.0 | MIT */
 :root {
   --mero-control-height: 2.5rem;
+  --mero-control-height-sm: 2rem;
+  --mero-control-height-lg: 3rem;
   --mero-control-padding-inline: .75rem;
   --mero-control-gap: .5rem;
   --mero-radius: .74rem;
@@ -11,7 +13,7 @@
   --mero-enter: 270ms;
 }
 
-:root, [data-theme="light"] {
+:root, [data-theme="light"], [data-theme="auto"] {
   color-scheme: light;
   --mero-select-indicator: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 6 5 5 5-5' fill='none' stroke='%23575962' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --mero-switch-active: var(--mero-accent);
@@ -55,6 +57,31 @@
   --mero-danger: #ff9db3;
   --mero-info: #9ec9f2;
   --mero-shadow: 0 18px 48px #08080a80, 0 2px 6px #08080a46;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    color-scheme: dark;
+    --mero-select-indicator: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 6 5 5 5-5' fill='none' stroke='%23c3c4cb' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    --mero-switch-active: color-mix(in srgb, var(--mero-accent) 75%, #00132a);
+    --mero-bg: #151516;
+    --mero-surface: #1c1c1e;
+    --mero-raised: #262629;
+    --mero-hover: #303035;
+    --mero-line: #37373b;
+    --mero-control-line: #70727b;
+    --mero-text: #f5f5f6;
+    --mero-muted: #a8a9b0;
+    --mero-primary: #f4f4f5;
+    --mero-primary-ink: #171719;
+    --mero-accent: #86bdff;
+    --mero-accent-ink: #102237;
+    --mero-success: #8ad9b4;
+    --mero-warning: #efcd88;
+    --mero-danger: #ff9db3;
+    --mero-info: #9ec9f2;
+    --mero-shadow: 0 18px 48px #08080a80, 0 2px 6px #08080a46;
+  }
 }
 
 :where([class^="mero-"], [class*=" mero-"]):focus-visible,
@@ -156,9 +183,13 @@
   --_bg: color-mix(in srgb, var(--mero-danger) 17%, var(--mero-surface));
   --_ink: var(--mero-danger);
 }
+:where(.mero-button-danger, .mero-button[data-variant="danger"]):hover:not(:disabled, [aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--mero-danger) 10%, var(--mero-surface));
+  border-color: color-mix(in srgb, var(--mero-danger) 55%, transparent);
+}
 
-:where(.mero-button-sm) { --_height: 2rem; padding: .34rem .68rem; font-size: .8rem; }
-:where(.mero-button-lg) { --_height: 3rem; padding: .64rem 1.16rem; font-size: .96rem; }
+:where(.mero-button-sm) { --_height: var(--mero-control-height-sm, 2rem); padding: .34rem .68rem; font-size: .8rem; }
+:where(.mero-button-lg) { --_height: var(--mero-control-height-lg, 3rem); padding: .64rem 1.16rem; font-size: .96rem; }
 :where(.mero-button-icon, .mero-close-button) { inline-size: var(--_height); block-size: var(--_height); flex: none; padding: 0; }
 :where(.mero-dismiss-mark) { display: inline-grid; inline-size: 1rem; block-size: 1rem; place-items: center; }
 :where(.mero-dismiss-mark)::before, :where(.mero-dismiss-mark)::after { content: ""; grid-area: 1 / 1; inline-size: .875rem; block-size: 2px; border-radius: 1px; background: currentColor; transform: rotate(45deg); }
@@ -983,7 +1014,9 @@
 :where(.htmx-request .mero-indicator, .htmx-request.mero-indicator, [data-mero-pending] .mero-indicator) { display: inline-flex; }
 :where(.htmx-request[data-mero-request], [data-mero-pending][data-mero-request]) { cursor: progress; }
 /* Outranks the aria-disabled cursor on .mero-button. */
-.mero-button[data-mero-action-state=pending] { cursor: progress; }
+.mero-button[data-mero-action-state=pending],
+.mero-button[data-mero-pending][data-mero-request],
+.mero-button.htmx-request[data-mero-request] { cursor: progress; }
 :where(.mero-action-status) { color: var(--mero-muted); font-size: .8rem; }
 :where(.mero-action-status[data-tone=success]) { color: var(--mero-success); }
 :where(.mero-action-status[data-tone=warning]) { color: var(--mero-warning); }

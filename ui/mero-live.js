@@ -3,6 +3,7 @@
 // With data-mero-live-follow, an error response carrying HX-Redirect, HX-Location or HX-Refresh
 // (such as a 401 after the session expired) is handed to htmx instead of retried.
 (() => {
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set() });
   const selector = "[data-mero-live]";
   const states = new WeakMap();
 
@@ -27,11 +28,31 @@
     schedule(region, state);
   }
 
+  function initAll(root = document) {
+    if (!(root instanceof Element || root instanceof Document)) return;
+    if (root.matches?.(selector)) init(root);
+    root.querySelectorAll(selector).forEach(init);
+  }
+
+  function cleanupAll(root = document) {
+    if (!(root instanceof Element || root instanceof Document)) return;
+    const regions = [...(root.matches?.(selector) ? [root] : []), ...root.querySelectorAll(selector)];
+    for (const region of regions) {
+      const state = states.get(region);
+      if (!state) continue;
+      pause(region, state);
+      states.delete(region);
+    }
+  }
+
+  lifecycle.init.add(initAll);
+  lifecycle.cleanup.add(cleanupAll);
+
   document.addEventListener("htmx:after:init", event => {
     if (event.target.matches?.(selector)) init(event.target);
   });
   // The optional script can also load after htmx processed the page.
-  document.querySelectorAll(selector).forEach(init);
+  initAll(document);
 
   function pause(region, state) {
     clearTimeout(state.timer);

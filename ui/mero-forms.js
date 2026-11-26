@@ -11,6 +11,7 @@
  * data-mero-action-expect turns a success without the expected content into unknown.
  */
 (() => {
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set() });
   const formSelector = "form[data-mero-form]";
   const confirmSelector = "form[data-mero-form][data-mero-confirm]";
   const requesting = new WeakMap();
@@ -123,7 +124,7 @@
     const panel = unknownPanel([submitter, form]);
     if (panel) panel.hidden = true;
     (submitter ?? form).dataset.meroActionState = "pending";
-    form.dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state: "pending" } }));
+    form.dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state: "pending", source: form, id: form.id || null } }));
   });
 
   // Decide before htmx applies HX-Trigger: a response that is not a confirmed
@@ -224,7 +225,8 @@
       }
       if (live) showError(live, message);
     }
-    (live ?? document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message } }));
+    const source = live ?? form;
+    (live ?? document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message, source, id: source.id || null } }));
   });
 
   document.addEventListener("mero:form-saved", (event) => {
@@ -275,7 +277,7 @@
     if (output) { output.textContent = ""; delete output.dataset.tone; }
     const panel = unknownPanel([action]);
     if (panel) panel.hidden = true;
-    action.dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state: "pending" } }));
+    action.dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state: "pending", source: action, id: action.id || null } }));
   });
 
   // htmx fires finally:request after load, error, abort and timeout alike.
@@ -312,12 +314,13 @@
     } else {
       window.MeroUI?.toast(message, { tone, trigger: action.isConnected ? action : event.target });
     }
-    (action.isConnected ? action : document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message } }));
+    (action.isConnected ? action : document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message, source: action, id: action.id || null } }));
   });
   // Form state helpers. [data-mero-show-when="field=value other"] shows a branch only while the form's
   // field has one of the values, and disables its controls while hidden so they neither validate nor submit.
   // form[data-mero-dirty] keeps its submit buttons disabled until a control differs from the rendered value.
   const disabledByBranch = new WeakSet();
+  const dirtyStates = new WeakMap();
   function fieldValues(form, name) {
     const values = [];
     for (const control of form.elements) {
@@ -348,15 +351,29 @@
         else if (show && disabledByBranch.delete(control)) control.disabled = false;
       }
     }
-    if (form.matches("[data-mero-dirty]") && !requesting.has(form)) {
-      const clean = !changed(form);
-      for (const button of form.querySelectorAll("button:not([type]), [type=submit], [type=image]")) {
-        if (!button.closest("[data-mero-show-when][hidden]")) button.disabled = clean;
+    if (form.matches("[data-mero-dirty]")) {
+      const dirty = changed(form);
+      if (!requesting.has(form)) {
+        for (const button of form.querySelectorAll("button:not([type]), [type=submit], [type=image]")) {
+          if (!button.closest("[data-mero-show-when][hidden]")) button.disabled = !dirty;
+        }
+      }
+      const previous = dirtyStates.get(form);
+      dirtyStates.set(form, dirty);
+      if (previous !== undefined && previous !== dirty) {
+        form.dispatchEvent(new CustomEvent("mero:dirty", { bubbles: true, detail: { dirty, form } }));
       }
     }
   }
   const stateForms = root => [...(root.matches?.("form") ? [root] : []), ...(root.querySelectorAll?.("form") ?? [])]
     .filter(form => form.matches("[data-mero-dirty]") || form.querySelector("[data-mero-show-when]"));
+  function initForms(root = document) {
+    if (!(root instanceof Element || root instanceof Document)) return;
+    stateForms(root).forEach(updateForm);
+    const confirms = [...(root.matches?.(confirmSelector) ? [root] : []), ...(root.querySelectorAll?.(confirmSelector) ?? [])];
+    confirms.forEach(checkConfirmation);
+  }
+  lifecycle.init.add(initForms);
   for (const type of ["input", "change"]) document.addEventListener(type, event => {
     const form = event.target.form ?? event.target.closest?.("form");
     if (form && stateForms(form).length) updateForm(form);
@@ -370,8 +387,8 @@
     const form = event.detail.ctx.sourceElement?.closest?.("form");
     if (form && stateForms(form).length) queueMicrotask(() => updateForm(form));
   });
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => stateForms(document).forEach(updateForm), { once: true });
-  else stateForms(document).forEach(updateForm);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => initForms(document), { once: true });
+  else initForms(document);
   // data-mero-action-reread="#region": after an unknown outcome, read the current page again with a GET
   // and morph that region, so the person sees what actually happened. Mero never re-sends the action.
   // The answer is dropped when the page moved on, the region is gone or a newer read started.
