@@ -11,6 +11,8 @@
 - **i18n & locale configuration:** added `MeroUI.configure({ messages, locale, dialogBackdrop })` covering all runtime strings across `mero.js`, `mero-forms.js` and `mero-live.js`, plus `data-mero-locale` and automatic `[lang]`-aware formatting for `time[data-mero-time]` and `mero-live.js`.
 - **Safe incremental adoption & `@layer mero`:** wrapped all shipped stylesheets in `ui/*.css` in `@layer mero { ... }` (keeping `:where()` selectors) for clean coexistence with both unlayered CSS and layered systems; added `MeroUI.configure({ dialogBackdrop: "mero-only" })` and `data-mero-dialog` to scope backdrop light-dismiss away from non-Mero dialogs.
 - **TypeScript & minified builds:** added `ui/mero.d.ts`, `ui/insight-charts.d.ts`, `ui/insight-markdown.d.ts`, `npm run build:ui` (`dist/ui/*.min.{js,css}` and `dist/manifest.json` with SHA-384 SRI hashes), and automated gzip size-budget checks.
+- **Package hygiene:** moved the demo image (`studio-lamp.webp`) and Studio demo files (`mero-inventory.css`, `mero-inventory.js`) out of `ui/` into `public/` so `@rubenlangeweg/mero-ui/ui` ships text-only reusable assets; fixed `mero-insights.js` so `data-mero-copy="…"` and `data-mero-copy-target` never collide with empty `data-mero-copy` code-block buttons.
+- **Deprecated:** `data-mero-check-form` (`mero-composition.js`) and `data-mero-ws-command` (`mero-workspace.js`, prefer core `dialog[data-mero-command]`) are deprecated and scheduled for removal in 1.0.
 
 ## 0.9.0 · 24 November 2026
 

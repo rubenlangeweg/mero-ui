@@ -82,9 +82,13 @@ Add `data-mero-peek` around a table wrapper whose rows have a `.mero-row-link`, 
 
 Add `data-mero-restore-focus` to a list container. When someone opens a link in it and then presses Back, `mero.js` focuses that link again. This works after a full page load and after an HTMX history restore. Links are matched by their `href`, so keep row hrefs unique on the page. Mark one control in the container with `data-mero-focus-fallback`. It gets focus when an HTMX swap removes the focused element.
 
-Use the [theme studio](http://127.0.0.1:4173/themes) to try colors, fonts and radii on real components or an app layout. Export the CSS, load it after `mero.css` and set `data-theme="light"` or `data-theme="dark"` on a document or section.
+Use the [theme studio](http://127.0.0.1:4173/themes) to try colors, fonts and radii on real components or an app layout. Export the CSS, load it after `mero.css` and set `data-theme="light"`, `data-theme="dark"` or `data-theme="auto"` on a document or section. All shipped stylesheets wrap their rules in `@layer mero` with `:where()` selectors so host styles and utility layers override them predictably.
 
-Media uses `mero-gallery` assets. Collections use `mero-collections`. Workspace controls use `mero-workspace`. Charts and conversation examples use `mero-insights`. Presentation utilities use `mero-composition`. Each pair comprises a stylesheet and a deferred script. Two optional server helpers render charts and a small Markdown subset. Import them as `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown`.
+### Package tiers
+
+- **Core runtime (`ui/mero.css`, `ui/mero.js`, `ui/mero-forms.js`, `ui/mero-live.js`):** Semver-guarded, i18n-configurable via `MeroUI.configure()`, and tested alongside Alpine.js across Chromium, Firefox and WebKit. Minified copies and SHA-384 SRI hashes ship in `dist/`.
+- **Optional modules:** `mero-gallery`, `mero-layouts.css`, `mero-collections`, `mero-workspace`, `mero-insights`, `mero-composition`, plus `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown` server helpers.
+- **Reference workflows & recipes:** `examples/studio-inventory/` and `examples/premium/` stay outside `ui/` as copy-and-own blueprints.
 
 ## Stability
 

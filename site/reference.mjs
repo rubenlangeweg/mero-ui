@@ -211,7 +211,7 @@ const attributes = [
     ["data-mero-theme-scope", "On a section. Receives the theme chosen in the picker inside it."],
     ["data-mero-theme-picker", "On a select or radio. Its value becomes the scope’s <code>data-theme</code>."],
     ["data-mero-cutoff-hour", "Around a <code>&lt;time&gt;</code>. Counts down to that hour, 0 to 23 in UTC."],
-    ["data-mero-check-form", "On the catalog’s validation demo form. It reports a fixed message and is not meant for your app."],
+    ["data-mero-check-form", "<em>Deprecated.</em> Demo-only validation form hook; will be removed in 1.0."],
   ]],
 ];
 

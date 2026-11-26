@@ -157,7 +157,8 @@ test('copied compositions fit a narrow host using only their distributed styles'
       if (path === '/') return route.fulfill({contentType:'text/html',body:`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/mero.css"><link rel="stylesheet" href="/mero-composition.css"><main>${markup}</main></html>`});
       const asset = path.slice(1);
       if (!['mero.css','mero-composition.css','studio-lamp.webp'].includes(asset)) return route.abort();
-      return route.fulfill({contentType:asset.endsWith('.css') ? 'text/css' : 'image/webp',body:await readFile(new URL('../ui/'+asset,import.meta.url))});
+      const folder = asset === 'studio-lamp.webp' ? '../public/' : '../ui/';
+      return route.fulfill({contentType:asset.endsWith('.css') ? 'text/css' : 'image/webp',body:await readFile(new URL(folder+asset,import.meta.url))});
     });
     await page.goto(origin+'/');
     const spill = await page.locator('[data-example]').evaluateAll(elements => elements.filter(el => el.scrollWidth > el.clientWidth+1).map(el => el.dataset.example));
