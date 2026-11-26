@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>mero-tree-row{padding:4px;padding-inline-start:calc(attr(depth type(<number>),0)*24px + 4px)} [data-moving]{background:#ffd}</style>
+<script src="/node_modules/htmx.org/dist/htmx.min.js"></script>
+<script type="module" src="/dist/all.js"></script>
+</head><body>
+<button id="before">before</button>
+<div id="host" hx-get="/tree-fragment.html" hx-trigger="reload" hx-swap="innerHTML">
+<mero-tree id="cats" aria-label="Categories">
+  <mero-tree-row value="electronics" depth="0">Electronics</mero-tree-row>
+  <mero-tree-row value="phones" depth="1">Phones</mero-tree-row>
+  <mero-tree-row value="laptops" depth="1">Laptops</mero-tree-row>
+  <mero-tree-row value="garden" depth="0">Garden</mero-tree-row>
+  <mero-tree-row value="tools" depth="1">Tools</mero-tree-row>
+</mero-tree>
+</div>
+
+<script>
+  window.events = []
+  document.addEventListener("mero:reorder", e => events.push(e.detail))
+</script>
+</body></html>
