@@ -119,7 +119,7 @@ Release 0.3 renames the `rl-` prefix to `mero-` in classes, `--mero-*` tokens an
 
 Download the [complete preview and source](http://127.0.0.1:4173/downloads/mero-ui.tar.gz), extract into an empty directory, then run `npm start`. For the smaller [standalone inventory example](http://127.0.0.1:4173/downloads/studio-inventory.tar.gz), see the [example instructions](examples/studio-inventory/README.md). The local server creates downloads with `tar`. The hosted site serves archives prepared during the build.
 
-The [coverage map](docs/component-coverage.md) links the catalog to the original reference families. The [edit comparison](examples/edit-comparison/README.md) uses the same edit flow across three implementations.
+The [component overview](docs/component-coverage.md) summarizes the shipped component families and verification coverage.
 
 The inventory form uses `mero-forms.js` for pending state, a replacement form on HTTP 422, and a successful `mero:form-saved` event. `mero-forms.js` also reports the outcome of standalone action buttons marked `data-mero-action`. The `Mero-Action-Outcome` (`succeeded`, `rejected` or `unknown`) and `Mero-Action-Message` response headers override the status-based state and its text. The host supplies validation, persistence and authorization in its own application. A chart table, campus map and chat assistant in the catalog use local sample data. The chat demo gives deterministic replies.
 
