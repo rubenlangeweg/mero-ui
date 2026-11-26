@@ -41,6 +41,7 @@
     "data-mero-count",
     "data-mero-current-topic",
     "data-mero-cutoff-hour",
+    "data-mero-dialog",
     "data-mero-dirty",
     "data-mero-empty-option",
     "data-mero-ephemeral",
@@ -68,6 +69,7 @@
     "data-mero-live-retry",
     "data-mero-live-status",
     "data-mero-load-superseded",
+    "data-mero-locale",
     "data-mero-message-text",
     "data-mero-next",
     "data-mero-open",
@@ -156,6 +158,7 @@
   "api": [
     "cleanup",
     "close",
+    "configure",
     "init",
     "open",
     "toast"

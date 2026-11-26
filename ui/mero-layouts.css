@@ -1,4 +1,5 @@
 /*! @rubenlangeweg/mero-ui 0.9.0 | MIT */
+@layer mero {
 /* Optional layouts built from the core theme tokens. */
 .mero-app {
   display: grid;
@@ -67,4 +68,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mero-app-nav a { transition: none; }
+}
 }

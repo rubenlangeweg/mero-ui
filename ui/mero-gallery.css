@@ -1,4 +1,5 @@
 /*! @rubenlangeweg/mero-ui 0.9.0 | MIT */
+@layer mero {
 /* Optional native gallery and media examples. */
 mero-gallery, mero-image-diff, mero-holo-card { display: block; min-inline-size: 0; }
 .mero-media-card {
@@ -120,3 +121,4 @@ mero-image-diff:not(:defined) .mero-diff-stage { display: flex; aspect-ratio: 2.
 mero-image-diff:not(:defined) .mero-diff-image { position: relative; flex: 1; clip-path: none; overflow: hidden; }
 mero-image-diff:not(:defined) .mero-diff-image[data-mero-before] { order: -1; }
 mero-image-diff:not(:defined) :is(.mero-diff-control, .mero-diff-line) { display: none; }
+}

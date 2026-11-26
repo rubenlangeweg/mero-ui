@@ -2,7 +2,46 @@
 (() => {
   "use strict";
 
-  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set() });
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), config: { locale: null, dialogBackdrop: "all", messages: {} } });
+  const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "all", messages: {} });
+  const defaultMessages = {
+    notificationsLabel: "Notifications",
+    dismissNotification: "Dismiss notification",
+    copied: "Copied",
+    copySelectPrompt: "Press Ctrl+C or ⌘C to copy the selected text.",
+    copyBlocked: "Couldn't copy. Your browser blocked clipboard access.",
+    previewLabel: "Preview",
+    closePreview: "Close preview",
+    openPreview: "Open",
+    previewHint: "Space or Esc closes · ↑ ↓ move",
+    comboLoading: "Loading…",
+    comboEmpty: "No matching options",
+    comboError: "Could not load suggestions. Edit the search to try again.",
+    comboResultOne: "{count} result",
+    comboResultMany: "{count} results",
+    comboSuggestionOne: "{count} suggestion",
+    comboSuggestionMany: "{count} suggestions",
+    shortcutsOn: "Keyboard shortcuts on",
+    shortcutsOff: "Keyboard shortcuts off",
+  };
+  function msg(key, vars) {
+    let text = config.messages[key] ?? defaultMessages[key] ?? "";
+    if (vars) for (const [name, value] of Object.entries(vars)) text = text.replaceAll("{" + name + "}", String(value));
+    return text;
+  }
+  function resolveLocale(node) {
+    const explicit = node.closest("[data-mero-locale]")?.getAttribute("data-mero-locale") || config.locale;
+    if (explicit === "browser") return undefined;
+    if (explicit && explicit !== "document") return explicit;
+    const lang = node.closest("[lang]")?.getAttribute("lang")?.trim();
+    if (!lang) return undefined;
+    if (explicit === "document" || lang.includes("-")) return lang;
+    const reader = (typeof navigator !== "undefined" && navigator.language || "").split("-")[0].toLowerCase();
+    return lang.toLowerCase() !== reader ? lang : undefined;
+  }
+  function handlesDialog(dialog) {
+    return config.dialogBackdrop === "all" || dialog.matches(".mero-dialog, [data-mero-dialog]") || dialogOpeners.has(dialog);
+  }
   const dialogOpeners = new WeakMap();
   const dialogFocus = new WeakMap();
   const dialogClosed = new WeakSet();
@@ -301,8 +340,9 @@
     const count = options.length;
     const empty = list.querySelector('[aria-disabled="true"]:not([hidden])');
     setComboOpen(input, Boolean(count || empty));
-    const unit = input.closest("[data-mero-command]") ? "result" : "suggestion";
-    comboStatus(input, count ? count + " " + unit + (count === 1 ? "" : "s") : empty?.textContent ?? "No matching options");
+    const isCommand = Boolean(input.closest("[data-mero-command]"));
+    const key = isCommand ? (count === 1 ? "comboResultOne" : "comboResultMany") : (count === 1 ? "comboSuggestionOne" : "comboSuggestionMany");
+    comboStatus(input, count ? msg(key, { count }) : empty?.textContent ?? msg("comboEmpty"));
   }
 
   function activateCombo(input, list, option) {
@@ -374,7 +414,7 @@
       region = document.createElement("div");
       region.className = "mero-toast-region";
       region.setAttribute("role", "region");
-      region.setAttribute("aria-label", "Notifications");
+      region.setAttribute("aria-label", msg("notificationsLabel"));
       host.append(region);
     }
     return region;
@@ -395,7 +435,7 @@
     const dismiss = document.createElement("button");
     dismiss.className = "mero-button mero-button-ghost mero-button-icon mero-button-sm";
     dismiss.type = "button";
-    dismiss.setAttribute("aria-label", "Dismiss notification");
+    dismiss.setAttribute("aria-label", msg("dismissNotification"));
     const dismissMark = document.createElement("span");
     dismissMark.className = "mero-dismiss-mark";
     dismissMark.setAttribute("aria-hidden", "true");
@@ -435,12 +475,12 @@
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
-      toast(button.dataset.meroCopyMessage || "Copied", { tone: "success", duration: 2400, trigger: button });
+      toast(button.dataset.meroCopyMessage || msg("copied"), { tone: "success", duration: 2400, trigger: button });
     } catch {
       // Without clipboard access, select the text so the person can copy it themselves.
       if (target?.select) target.select();
       else if (target) getSelection().selectAllChildren(target);
-      toast(target ? "Press Ctrl+C or ⌘C to copy the selected text." : "Couldn't copy. Your browser blocked clipboard access.", { tone: target ? "accent" : "warning", trigger: button });
+      toast(target ? msg("copySelectPrompt") : msg("copyBlocked"), { tone: target ? "accent" : "warning", trigger: button });
     }
   }
 
@@ -461,13 +501,16 @@
     if (existing) return existing;
     const panel = document.createElement("aside");
     panel.className = "mero-peek";
-    panel.setAttribute("aria-label", "Preview");
+    panel.setAttribute("aria-label", msg("previewLabel"));
     panel.setAttribute("aria-live", "polite");
     panel.innerHTML = '<div class="mero-peek-header"><h2 class="mero-peek-title"></h2>' +
-      '<button class="mero-button mero-button-ghost mero-button-sm" type="button" aria-label="Close preview" data-mero-peek-close>' +
+      '<button class="mero-button mero-button-ghost mero-button-sm" type="button" data-mero-peek-close>' +
       '<span class="mero-dismiss-mark" aria-hidden="true"></span></button></div><div class="mero-peek-body"></div>' +
-      '<div class="mero-peek-footer"><a class="mero-button mero-button-primary mero-button-sm">Open</a>' +
-      '<span class="mero-peek-hint">Space or Esc closes · ↑ ↓ move</span></div>';
+      '<div class="mero-peek-footer"><a class="mero-button mero-button-primary mero-button-sm"></a>' +
+      '<span class="mero-peek-hint"></span></div>';
+    panel.querySelector("[data-mero-peek-close]").setAttribute("aria-label", msg("closePreview"));
+    panel.querySelector(".mero-peek-footer a").textContent = msg("openPreview");
+    panel.querySelector(".mero-peek-hint").textContent = msg("previewHint");
     region.append(panel);
     return panel;
   }
@@ -536,14 +579,15 @@
       const date = new Date(node.getAttribute("datetime"));
       if (Number.isNaN(date.getTime())) continue;
       const style = node.dataset.meroTime;
-      const full = date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+      const locale = resolveLocale(node);
+      const full = date.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
       let text = full;
-      if (style === "date") text = date.toLocaleDateString(undefined, { dateStyle: "medium" });
-      else if (style === "time") text = date.toLocaleTimeString(undefined, { timeStyle: "short" });
+      if (style === "date") text = date.toLocaleDateString(locale, { dateStyle: "medium" });
+      else if (style === "time") text = date.toLocaleTimeString(locale, { timeStyle: "short" });
       else if (style === "relative") {
         const delta = date.getTime() - Date.now();
         const [unit, size] = timeUnits.find(([, size]) => Math.abs(delta) >= size) ?? ["second", 1e3];
-        text = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(Math.round(delta / size), unit);
+        text = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(Math.round(delta / size), unit);
         if (node.title !== full) node.title = full;
       }
       if (node.textContent !== text) node.textContent = text;
@@ -605,7 +649,7 @@
 
   document.addEventListener("pointerdown", event => {
     const target = event.target;
-    if (target instanceof HTMLDialogElement) pointerStarts.set(target, outsideDialog(event, target));
+    if (target instanceof HTMLDialogElement && handlesDialog(target)) pointerStarts.set(target, outsideDialog(event, target));
     if (target.closest?.("[data-mero-combo] [role='option']")) event.preventDefault();
   });
 
@@ -667,7 +711,7 @@
       event.preventDefault();
       close(closer.closest("dialog"), { value: closer.dataset.meroClose });
     }
-    if (target instanceof HTMLDialogElement && target.open && !target.matches("[data-mero-static], [role='alertdialog']")) {
+    if (target instanceof HTMLDialogElement && target.open && handlesDialog(target) && !target.matches("[data-mero-static], [role='alertdialog']")) {
       const beganOutside = pointerStarts.get(target);
       pointerStarts.delete(target);
       if (beganOutside && outsideDialog(event, target)) close(target);
@@ -689,7 +733,7 @@
       const on = shortcutToggle.matches("input[type=checkbox]") ? shortcutToggle.checked : !shortcutsOn();
       try { localStorage.setItem(shortcutStore, on ? "on" : "off"); } catch {}
       syncShortcuts();
-      toast(on ? "Keyboard shortcuts on" : "Keyboard shortcuts off", { trigger: shortcutToggle, duration: 2400 });
+      toast(msg(on ? "shortcutsOn" : "shortcutsOff"), { trigger: shortcutToggle, duration: 2400 });
     }
     if (removable && !disabled(removable)) {
       const chip = removable.closest(".mero-chip");
@@ -886,7 +930,7 @@
       }
       input.setAttribute("data-mero-combo-pending", "");
       input.setAttribute("aria-busy", "true");
-      comboStatus(input, "Loading…");
+      comboStatus(input, msg("comboLoading"));
       setComboOpen(input, false);
     } else {
       filterCombo(input);
@@ -960,7 +1004,7 @@
       elt.setAttribute("data-mero-combo-pending", "");
       elt.setAttribute("aria-busy", "true");
       elt.removeAttribute("data-mero-combo-error");
-      comboStatus(elt, "Loading…");
+      comboStatus(elt, msg("comboLoading"));
     }
   });
 
@@ -988,7 +1032,7 @@
     query.input.removeAttribute("aria-busy");
     query.input.setAttribute("data-mero-combo-error", "");
     setComboOpen(query.input, false);
-    comboStatus(query.input, "Could not load suggestions. Edit the search to try again.", true);
+    comboStatus(query.input, msg("comboError"), true);
   });
 
   document.addEventListener("htmx:after:settle", event => {
@@ -1144,5 +1188,19 @@
     init();
   }
 
-  window.MeroUI = Object.freeze({ open, close, toast, init, cleanup });
+  function configure({ messages, locale, dialogBackdrop } = {}) {
+    if (messages && typeof messages === "object") Object.assign(config.messages, messages);
+    if (locale !== undefined) {
+      config.locale = locale ? String(locale) : null;
+      localizeTimes();
+    }
+    if (dialogBackdrop === "all" || dialogBackdrop === "mero-only") config.dialogBackdrop = dialogBackdrop;
+    return Object.freeze({
+      locale: config.locale,
+      dialogBackdrop: config.dialogBackdrop,
+      messages: Object.freeze({ ...defaultMessages, ...config.messages }),
+    });
+  }
+
+  window.MeroUI = Object.freeze({ open, close, toast, init, cleanup, configure });
 })();

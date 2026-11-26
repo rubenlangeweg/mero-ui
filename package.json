@@ -9,7 +9,8 @@
     "dev": "node --watch server.mjs",
     "test": "node --test --test-concurrency=2",
     "audit:catalog": "node scripts/audit-catalog.mjs",
-    "prepack": "node scripts/pack-agent-docs.mjs",
+    "build:ui": "node scripts/build-ui.mjs",
+    "prepack": "node scripts/pack-agent-docs.mjs && node scripts/build-ui.mjs",
     "pack:ui": "npm pack --dry-run",
     "banner": "node scripts/version-banner.mjs",
     "version": "node scripts/version-banner.mjs && git add ui",
@@ -18,13 +19,25 @@
     "lint": "oxlint --deny-warnings"
   },
   "exports": {
-    "./charts": "./ui/insight-charts.mjs",
-    "./markdown": "./ui/insight-markdown.mjs",
+    "./charts": {
+      "types": "./ui/insight-charts.d.ts",
+      "default": "./ui/insight-charts.mjs"
+    },
+    "./markdown": {
+      "types": "./ui/insight-markdown.d.ts",
+      "default": "./ui/insight-markdown.mjs"
+    },
+    "./types": {
+      "types": "./ui/mero.d.ts"
+    },
     "./ui/*": "./ui/*",
+    "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
+  "types": "./ui/mero.d.ts",
   "files": [
     "ui",
+    "dist",
     "agent-docs",
     "README.md",
     "CHANGELOG.md"

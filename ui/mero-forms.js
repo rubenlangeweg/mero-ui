@@ -11,7 +11,23 @@
  * data-mero-action-expect turns a success without the expected content into unknown.
  */
 (() => {
-  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set() });
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), config: { locale: null, dialogBackdrop: "all", messages: {} } });
+  const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "all", messages: {} });
+  const defaultMessages = {
+    confirmTypePhrase: "Type the phrase exactly to enable confirmation.",
+    confirmEnterReason: "Phrase matches. Enter a reason to enable confirmation.",
+    confirmReady: "Ready to confirm.",
+    confirmUnknown: "Outcome unknown. Check the current state before retrying.",
+    confirmRejected: "The server rejected this action.",
+    formUnreachable: "The server could not be reached. Check whether the change was saved before retrying.",
+    formFailed: "The request could not be completed. Check the current state and try again.",
+    actionSucceeded: "Done.",
+    actionRejected: "The server refused this action. Nothing changed.",
+    actionUnknown: "The result is unknown. Check the current state before you try again.",
+    searchError: "Couldn't update the results. The list still shows the previous results.",
+    holdWarning: "Copy what is shown before you leave this page. It cannot be shown again.",
+  };
+  const msg = key => config.messages[key] ?? defaultMessages[key] ?? "";
   const formSelector = "form[data-mero-form]";
   const confirmSelector = "form[data-mero-form][data-mero-confirm]";
   const requesting = new WeakMap();
@@ -74,8 +90,8 @@
       button.disabled = !ready || requesting.has(form);
     }
     const hint = form.querySelector("[data-mero-confirm-hint]");
-    const message = !matches ? "Type the phrase exactly to enable confirmation."
-      : !ready ? "Phrase matches. Enter a reason to enable confirmation." : "Ready to confirm.";
+    const message = !matches ? msg("confirmTypePhrase")
+      : !ready ? msg("confirmEnterReason") : msg("confirmReady");
     if (hint && hint.textContent !== message) hint.textContent = message;
     return ready;
   }
@@ -218,10 +234,10 @@
       if (!message) {
         const signal = ctx.request.signal;
         message = typed
-          ? (state === "unknown" ? "Outcome unknown. Check the current state before retrying." : "The server rejected this action.")
+          ? msg(state === "unknown" ? "confirmUnknown" : "confirmRejected")
           : !ctx.response && (signal?.reason === "timeout" || !signal?.aborted)
-            ? "The server could not be reached. Check whether the change was saved before retrying."
-            : "The request could not be completed. Check the current state and try again.";
+            ? msg("formUnreachable")
+            : msg("formFailed");
       }
       if (live) showError(live, message);
     }
@@ -251,10 +267,10 @@
   });
 
   const actionOf = event => event.target.closest?.("[data-mero-action]");
-  const actionMessages = {
-    succeeded: ["Done.", "success"],
-    rejected: ["The server refused this action. Nothing changed.", "warning"],
-    unknown: ["The result is unknown. Check the current state before you try again.", "danger"],
+  const actionTones = {
+    succeeded: ["actionSucceeded", "success"],
+    rejected: ["actionRejected", "warning"],
+    unknown: ["actionUnknown", "danger"],
   };
   const actionStatus = action => action.parentElement?.querySelector("[data-mero-action-status]");
 
@@ -296,9 +312,9 @@
     }
     const status = ctx.response?.status ?? 0;
     const state = outcomeOf(ctx, [action]);
-    const [fallback, tone] = actionMessages[state];
+    const [fallbackKey, tone] = actionTones[state];
     const headerMessage = state === serverOutcome(ctx) && ctx.response?.headers.get("Mero-Action-Message");
-    const message = headerMessage || (state === "unknown" && unknownText([action])) || fallback;
+    const message = headerMessage || (state === "unknown" && unknownText([action])) || msg(fallbackKey);
     if (state === "unknown") {
       const panel = unknownPanel([action]);
       if (panel) panel.hidden = false;
@@ -506,7 +522,7 @@
     if (failed && error) {
       error.textContent = "";
       error.textContent = error.getAttribute("data-mero-search-error") || ctx.response?.headers.get("Mero-Form-Error") ||
-        "Couldn't update the results. The list still shows the previous results.";
+        msg("searchError");
       error.hidden = false;
     }
     if (pending.size) return;
@@ -525,16 +541,16 @@
   const pendingHolds = new Map();
   let steady = { url: location.href, key: window.navigation?.currentEntry?.key };
   const remember = () => { steady = { url: location.href, key: window.navigation?.currentEntry?.key }; };
-  const holdFallback = "Copy what is shown before you leave this page. It cannot be shown again.";
+  const holdFallback = () => msg("holdWarning");
   const shown = node => node.isConnected && (node.childElementCount > 0 || node.textContent.trim() !== "");
   const heldEphemeral = () => [...document.querySelectorAll("[data-mero-ephemeral][data-mero-hold]")].filter(shown);
 
   function hold() {
     for (const [ctx, owner] of pendingHolds) {
-      return { elements: [owner, ...heldEphemeral()], message: owner.getAttribute("data-mero-hold") || holdFallback, ctx };
+      return { elements: [owner, ...heldEphemeral()], message: owner.getAttribute("data-mero-hold") || holdFallback(), ctx };
     }
     const elements = heldEphemeral();
-    return elements.length ? { elements, message: elements[0].getAttribute("data-mero-hold") || holdFallback } : null;
+    return elements.length ? { elements, message: elements[0].getAttribute("data-mero-hold") || holdFallback() } : null;
   }
 
   function warnHeld(message) {

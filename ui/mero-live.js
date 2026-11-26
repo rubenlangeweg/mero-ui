@@ -3,7 +3,20 @@
 // With data-mero-live-follow, an error response carrying HX-Redirect, HX-Location or HX-Refresh
 // (such as a 401 after the session expired) is handed to htmx instead of retried.
 (() => {
-  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set() });
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), config: { locale: null, dialogBackdrop: "all", messages: {} } });
+  const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "all", messages: {} });
+  const defaultMessages = { liveError: "Couldn't refresh. Retrying…" };
+  const msg = key => config.messages[key] ?? defaultMessages[key] ?? "";
+  function resolveLocale(node) {
+    const explicit = node.closest("[data-mero-locale]")?.getAttribute("data-mero-locale") || config.locale;
+    if (explicit === "browser") return undefined;
+    if (explicit && explicit !== "document") return explicit;
+    const lang = node.closest("[lang]")?.getAttribute("lang")?.trim();
+    if (!lang) return undefined;
+    if (explicit === "document" || lang.includes("-")) return lang;
+    const reader = (typeof navigator !== "undefined" && navigator.language || "").split("-")[0].toLowerCase();
+    return lang.toLowerCase() !== reader ? lang : undefined;
+  }
   const selector = "[data-mero-live]";
   const states = new WeakMap();
 
@@ -144,8 +157,8 @@
       if (!failed) state.goodAt = Date.now();
       // The author's text may name the last good read: "Couldn't refresh. Showing the status from {time}."
       const template = error?.getAttribute("data-mero-live-error");
-      const time = new Date(state.goodAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      const message = !failed ? "" : template ? template.replaceAll("{time}", time) : "Couldn't refresh. Retrying…";
+      const time = new Date(state.goodAt).toLocaleTimeString(resolveLocale(region), { hour: "2-digit", minute: "2-digit" });
+      const message = !failed ? "" : template ? template.replaceAll("{time}", time) : msg("liveError");
       if (error && error.textContent !== message) error.textContent = message;
       const retry = region.querySelector("[data-mero-live-retry]");
       if (retry) {

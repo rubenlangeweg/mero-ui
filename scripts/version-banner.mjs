@@ -8,7 +8,7 @@ const banner = `/*! ${name} ${version} | ${license} */\n`;
 const check = process.argv.includes("--check");
 const stale = [];
 
-for (const file of (await readdir(new URL("ui/", root))).filter(file => /\.(m?js|css)$/.test(file)).sort()) {
+for (const file of (await readdir(new URL("ui/", root))).filter(file => /\.(?:m?js|css|d\.ts)$/.test(file)).sort()) {
   const path = new URL("ui/" + file, root);
   const source = await readFile(path, "utf8");
   if (source.startsWith(banner)) continue;
