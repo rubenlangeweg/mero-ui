@@ -88,13 +88,21 @@ Add `data-mero-peek` around a table wrapper whose rows have a `.mero-row-link`, 
 
 Add `data-mero-restore-focus` to a list container. When someone opens a link in it and then presses Back, `mero.js` focuses that link again. This works after a full page load and after an HTMX history restore. Links are matched by their `href`, so keep row hrefs unique on the page. Mark one control in the container with `data-mero-focus-fallback`. It gets focus when an HTMX swap removes the focused element.
 
-Use the [theme studio](http://127.0.0.1:4173/themes) to try colors, fonts and radii on real components or an app layout. Export the CSS, load it after `mero.css` and set `data-theme="light"`, `data-theme="dark"` or `data-theme="auto"` on a document or section. All shipped stylesheets wrap their rules in `@layer mero` with `:where()` selectors so host styles and utility layers override them predictably.
+Use the [theme studio](http://127.0.0.1:4173/themes) to customize tokens, or load the optional `ui/mero-themes.css` (`npx mero-ui init public/mero --with themes`) for composable drop-in palettes (`cobalt`, `fern`, `clay`, `editorial`) and structural modifiers (`compact`, `flat`, `crisp`) alongside `light`, `dark` or `auto` — e.g. `data-theme="cobalt dark compact"`. Adjust borders and elevation globally with `--mero-border-width` and `--mero-depth`.
+
+All shipped stylesheets wrap their rules in `@layer mero` with `:where()` selectors so host styles and utility layers override them predictably. Mero requires no Tailwind or CSS build step; when using Tailwind CSS v4 alongside Mero, declare `mero` before `utilities`:
+
+```css
+@layer theme, base, mero, components, utilities;
+@import "tailwindcss";
+@import "@rubenlangeweg/mero-ui/ui/mero.css";
+```
 
 ### Package tiers
 
-- **Core runtime (`ui/mero.css`, `ui/mero.js`, `ui/mero-forms.js`, `ui/mero-live.js`):** Semver-guarded, i18n-configurable via `MeroUI.configure()`, and tested alongside Alpine.js across Chromium, Firefox and WebKit. Minified copies and SHA-384 SRI hashes ship in `dist/`.
-- **Optional modules:** `mero-gallery`, `mero-layouts.css`, `mero-collections`, `mero-workspace`, `mero-insights`, `mero-composition`, plus `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown` server helpers.
-- **Reference workflows & recipes:** `examples/studio-inventory/` and `examples/premium/` stay outside `ui/` as copy-and-own blueprints.
+- **Core runtime (`ui/mero.css`, `ui/mero.js`, `ui/mero-forms.js`, `ui/mero-live.js`):** Semver-guarded, i18n-configurable via `MeroUI.configure()`, zero-JS `.mero-validator` / `.mero-validator-hint` styling, and tested alongside Alpine.js across Chromium, Firefox and WebKit. Minified copies and SHA-384 SRI hashes ship in `dist/`.
+- **Optional modules:** `mero-themes.css`, `mero-gallery`, `mero-layouts.css`, `mero-collections`, `mero-workspace`, `mero-insights`, `mero-composition`, plus `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown` server helpers.
+- **Reference workflows & recipes:** `examples/backends/` (Go, Rust, Node full-flow), `examples/studio-inventory/` and `examples/premium/` stay outside `ui/` as copy-and-own blueprints.
 
 ## Stability
 

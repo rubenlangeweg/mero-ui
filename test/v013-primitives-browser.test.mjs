@@ -86,6 +86,7 @@ test("v0.13 primitives & peer-review regressions: multiselect, 3-state dirty/gua
     </body></html>`;
 
     let saveMode = "saved";
+    let saveArrived = null;
     let releaseSave = null;
     let awayHits = 0;
     const liveResponses = [
@@ -110,6 +111,7 @@ test("v0.13 primitives & peer-review regressions: multiselect, 3-state dirty/gua
       }
       if (pathname === "/save") {
         if (saveMode === "delayed-saved") {
+          saveArrived?.();
           await new Promise(resolve => { releaseSave = resolve; });
         }
         if (saveMode === "conflict") {
@@ -200,6 +202,16 @@ test("v0.13 primitives & peer-review regressions: multiselect, 3-state dirty/gua
     assert.deepEqual(await page.evaluate(() => new FormData(document.getElementById("edit-form")).getAll("channels")), ["web", "b2b"]);
     assert.equal(await page.locator("#opt-b2b").getAttribute("aria-selected"), "true");
 
+    // Canceled form reset must NOT wipe multiselect chips.
+    await page.evaluate(() => {
+      const form = document.getElementById("edit-form");
+      const cancel = e => e.preventDefault();
+      form.addEventListener("reset", cancel, { once: true });
+      form.reset();
+    });
+    await page.waitForTimeout(10);
+    assert.deepEqual(await page.evaluate(() => new FormData(document.getElementById("edit-form")).getAll("channels")), ["web", "b2b"], "canceled reset keeps chips");
+
     // Native form.reset() restores original chips.
     await page.evaluate(() => document.getElementById("edit-form").reset());
     await page.waitForFunction(() => new FormData(document.getElementById("edit-form")).getAll("channels").length === 1);
@@ -220,8 +232,9 @@ test("v0.13 primitives & peer-review regressions: multiselect, 3-state dirty/gua
     await page.locator("#title").fill("Lamp v1");
     await page.locator("#pwd").fill("top-secret");
     saveMode = "delayed-saved";
+    const arrived = new Promise(resolve => { saveArrived = resolve; });
     await page.locator("#save-btn").click();
-    await page.waitForFunction(() => document.getElementById("edit-form").getAttribute("aria-busy") === "true");
+    await arrived;
     // Edit title while save is still in flight.
     await page.locator("#title").fill("Lamp v2");
     releaseSave();
@@ -231,39 +244,49 @@ test("v0.13 primitives & peer-review regressions: multiselect, 3-state dirty/gua
       const p = document.getElementById("pwd");
       const before = { val: p.value, def: p.defaultValue };
       document.getElementById("edit-form").reset();
-      const afterReset = p.value;
+      const afterReset = { pwd: p.value, title: document.getElementById("title").value };
       document.getElementById("title").value = "Lamp v2";
       document.getElementById("title").dispatchEvent(new Event("input", { bubbles: true }));
       return { before, afterReset };
     });
-    assert.deepEqual(pwdState, { before: { val: "", def: "" }, afterReset: "" }, "cleared password never survives in defaultValue or reset");
+    assert.deepEqual(pwdState, { before: { val: "", def: "" }, afterReset: { pwd: "", title: "Lamp v1" } }, "cleared password never survives and reset restores last saved value");
 
-    // 5. Dirty guard: blocks BOTH external link, in-form link, AND Back traversal while keeping URL at /edit.
-    // Also verify a plain non-HTMX form's own submit suppresses beforeunload.
-    const plainSubmitPreventedUnload = await page.evaluate(() => {
-      const f = document.createElement("form");
-      f.setAttribute("data-mero-dirty", "dirty");
-      f.setAttribute("data-mero-dirty-guard", "Leave?");
-      f.addEventListener("submit", () => { /* allow submit without navigating via iframe target */ });
-      f.target = "noop-frame";
-      const iframe = document.createElement("iframe");
-      iframe.name = "noop-frame";
-      iframe.hidden = true;
-      document.body.append(iframe, f);
-      // Temporarily mark edit-form clean check aside: test in isolation by firing submit on f & checking dirtyGuarded via beforeunload only when edit-form is temporarily disconnected
+    // 5. Dirty guard: iframe-targeted submit keeps beforeunload armed; same-document submit suppresses beforeunload.
+    const submitGuardChecks = await page.evaluate(() => {
       const edit = document.getElementById("edit-form");
-      const parent = edit.parentNode;
-      const next = edit.nextSibling;
-      edit.remove();
-      f.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-      const ev = new Event("beforeunload", { cancelable: true });
-      window.dispatchEvent(ev);
-      f.remove();
-      iframe.remove();
-      parent.insertBefore(edit, next);
-      return ev.defaultPrevented;
+      const savedGuard = edit.getAttribute("data-mero-dirty-guard");
+      edit.removeAttribute("data-mero-dirty-guard");
+      // Cancel default navigation at window (after document's mero-forms.js submit listener runs) so Firefox
+      // does not perform a real document reload on untrusted synthetic submit events.
+      const stopNav = e => e.preventDefault();
+      window.addEventListener("submit", stopNav);
+      try {
+        const iframeForm = document.createElement("form");
+        iframeForm.setAttribute("data-mero-dirty", "dirty");
+        iframeForm.setAttribute("data-mero-dirty-guard", "Leave?");
+        iframeForm.target = "noop-frame";
+        document.body.append(iframeForm);
+        iframeForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        const evIframe = new Event("beforeunload", { cancelable: true });
+        window.dispatchEvent(evIframe);
+        iframeForm.remove();
+
+        const selfForm = document.createElement("form");
+        selfForm.setAttribute("data-mero-dirty", "dirty");
+        selfForm.setAttribute("data-mero-dirty-guard", "Leave?");
+        document.body.append(selfForm);
+        selfForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        const evSelf = new Event("beforeunload", { cancelable: true });
+        window.dispatchEvent(evSelf);
+        selfForm.remove();
+
+        return { iframeBlocked: evIframe.defaultPrevented, selfBlocked: evSelf.defaultPrevented };
+      } finally {
+        window.removeEventListener("submit", stopNav);
+        edit.setAttribute("data-mero-dirty-guard", savedGuard);
+      }
     });
-    assert.equal(plainSubmitPreventedUnload, false, "plain form submit must not trigger beforeunload prompt");
+    assert.deepEqual(submitGuardChecks, { iframeBlocked: true, selfBlocked: false }, "iframe submit keeps guard armed; same-document submit skips prompt");
 
     await page.locator("#in-form-leave").click();
     assert.equal(await page.evaluate(() => window.confirmCalls.length), 1, "in-form link prompts when dirty");
@@ -275,10 +298,12 @@ test("v0.13 primitives & peer-review regressions: multiselect, 3-state dirty/gua
     assert.equal(new URL(page.url()).pathname, "/edit", "declined Back traversal restores /edit URL");
     assert.equal(await page.locator("#edit-form").count(), 1);
 
-    // Save current Lamp v2 without mid-flight edits -> now clean.
+    // Save current Lamp v2 without mid-flight edits -> wait for action settlement, then verify Save is disabled.
     saveMode = "saved";
+    const beforeActions = await page.evaluate(() => window.actions.length);
     await page.locator("#save-btn").click();
-    await page.waitForFunction(() => document.getElementById("save-btn").disabled === true);
+    await page.waitForFunction(n => window.actions.length >= n + 2 && window.actions.at(-1).state === "succeeded", beforeActions);
+    assert.equal(await page.locator("#save-btn").isDisabled(), true, "Save stays disabled after clean save settles");
 
     // 6. HTTP 409: [data-mero-conflict-focus] beats earlier [aria-invalid="true"] AND mero:action keeps original source.
     saveMode = "conflict";
@@ -320,8 +345,9 @@ test("v0.13 primitives & peer-review regressions: multiselect, 3-state dirty/gua
     await page.evaluate(() => window.MeroUI.close("dlg-2"));
 
     // 8. Dynamically inserted live region with MeroUI.init(el) ONLY (no manual htmx.process), plus backoff & Mero-Live-Interval.
-    await page.clock.install();
-    await page.clock.pauseAt(Date.now());
+    const pauseTarget = Date.now() + 5000;
+    await page.clock.install({ time: pauseTarget - 2000 });
+    await page.clock.pauseAt(pauseTarget);
     await page.evaluate(() => {
       window.liveReads = 0;
       document.addEventListener("htmx:finally:request", e => {

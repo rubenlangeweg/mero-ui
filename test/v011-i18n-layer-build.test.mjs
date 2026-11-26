@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { gzipSync } from "node:zlib";
 
@@ -44,7 +45,7 @@ test("TypeScript declarations cover window.MeroUI methods and core mero:* events
 });
 
 test("build:ui emits minified assets with version banners and SHA-384 integrity manifest", async () => {
-  await promisify(execFile)(process.execPath, [new URL("scripts/build-ui.mjs", root).pathname]);
+  await promisify(execFile)(process.execPath, [fileURLToPath(new URL("scripts/build-ui.mjs", root))]);
   const manifest = JSON.parse(await readFile(new URL("dist/manifest.json", root), "utf8"));
   assert.equal(manifest.name, "@rubenlangeweg/mero-ui");
   for (const name of ["mero.css", "mero.js", "mero-forms.js", "mero-live.js"]) {
@@ -217,7 +218,7 @@ test("malformed lang attributes (en_US, x-private) never break MeroUI initializa
     const context = await browser.newContext({ locale: "en-US", reducedMotion: "reduce" });
     const page = await context.newPage();
     page.setDefaultTimeout(5000);
-    await page.clock.install({ time: new Date("2026-11-23T09:46:00Z") });
+    await page.clock.install({ time: new Date("2026-11-23T09:45:55Z") });
     await page.clock.pauseAt(new Date("2026-11-23T09:46:00Z"));
     const errors = [];
     page.on("pageerror", err => errors.push(err.message));

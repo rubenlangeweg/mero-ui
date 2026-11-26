@@ -456,10 +456,11 @@
       removed = removeValue;
     }
     syncMultiselect(multi);
+    const values = multiselectValues(multi);
     input.dispatchEvent(new Event("change", { bubbles: true }));
     multi.dispatchEvent(new CustomEvent("mero:selection", {
       bubbles: true,
-      detail: { values: multiselectValues(multi), added, removed, option: option ?? null },
+      detail: { values, added, removed, option: option ?? null },
     }));
   }
 
@@ -1097,15 +1098,19 @@
   });
 
   document.addEventListener("reset", event => {
-    if (!(event.target instanceof HTMLFormElement)) return;
-    for (const multi of event.target.querySelectorAll("[data-mero-multiselect]")) {
-      const initial = initialMultiChips.get(multi);
-      const chips = multi.querySelector("[data-mero-multiselect-chips]");
-      if (!initial || !chips) continue;
-      const fieldName = multi.getAttribute("data-mero-multiselect-name") || "";
-      chips.replaceChildren(...initial.map(({ value, label }) => createMultiChip(value, label, fieldName)));
-      syncMultiselect(multi);
-    }
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    queueMicrotask(() => {
+      if (event.defaultPrevented || !form.isConnected) return;
+      for (const multi of form.querySelectorAll("[data-mero-multiselect]")) {
+        const initial = initialMultiChips.get(multi);
+        const chips = multi.querySelector("[data-mero-multiselect-chips]");
+        if (!initial || !chips) continue;
+        const fieldName = multi.getAttribute("data-mero-multiselect-name") || "";
+        chips.replaceChildren(...initial.map(({ value, label }) => createMultiChip(value, label, fieldName)));
+        syncMultiselect(multi);
+      }
+    });
   });
 
   document.addEventListener("close", event => {
@@ -1116,7 +1121,12 @@
       if (pending === 1) dialogPendingClose.delete(dialog);
       else dialogPendingClose.set(dialog, pending - 1);
     }
-    if (dialog.open) return;
+    if (dialog.open) {
+      // Preserve a native dialog.close() notification when immediately followed by MeroUI.open(dialog),
+      // without disturbing the reopened dialog's toasts or focus.
+      if (pending === 0) emitDialogClose(dialog);
+      return;
+    }
     clearDialogToasts(dialog, false);
     returnFocus(dialog);
     if (pending === 0) emitDialogClose(dialog);

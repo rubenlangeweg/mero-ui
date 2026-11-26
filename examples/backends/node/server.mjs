@@ -62,14 +62,25 @@ function safeEqual(a, b) {
 }
 
 async function readForm(request) {
-  const chunks = [];
-  let size = 0;
-  for await (const chunk of request) {
-    size += chunk.length;
-    if (size > 32768) throw new HttpError(413, "Payload too large.");
-    chunks.push(chunk);
-  }
-  return new URLSearchParams(Buffer.concat(chunks).toString("utf8"));
+  return new Promise((resolvePromise, reject) => {
+    const chunks = [];
+    let size = 0;
+    let exceeded = false;
+    request.on("data", chunk => {
+      size += chunk.length;
+      if (size > 32768) {
+        exceeded = true;
+        chunks.length = 0;
+        return;
+      }
+      if (!exceeded) chunks.push(chunk);
+    });
+    request.on("end", () => {
+      if (exceeded) return reject(new HttpError(413, "Payload too large."));
+      resolvePromise(new URLSearchParams(Buffer.concat(chunks).toString("utf8")));
+    });
+    request.on("error", reject);
+  });
 }
 
 function send(response, body, { status = 200, type = "text/html; charset=utf-8", headers = {} } = {}) {
@@ -82,7 +93,7 @@ function send(response, body, { status = 200, type = "text/html; charset=utf-8",
   response.end(body);
 }
 
-function renderMultiselect(selected) {
+function renderMultiselect(selected, { invalid = false } = {}) {
   const set = new Set(selected);
   const chips = CHANNELS.filter(ch => set.has(ch.value)).map(ch =>
     `<li class="mero-chip" data-value="${esc(ch.value)}">${esc(ch.label)}` +
@@ -96,7 +107,7 @@ function renderMultiselect(selected) {
     <div class="mero-multiselect-control">
       <ul class="mero-tag-group mero-multiselect-chips" data-mero-multiselect-chips>${chips}</ul>
       <input id="channels-input" class="mero-multiselect-input" type="text" role="combobox" aria-label="Sales channels"
-             placeholder="Add channel…" aria-expanded="false" aria-controls="channels-listbox" aria-autocomplete="list" autocomplete="off">
+             placeholder="Add channel…" aria-expanded="false" aria-controls="channels-listbox" aria-autocomplete="list" autocomplete="off"${invalid ? ' aria-invalid="true" aria-describedby="err-channels"' : ""}>
     </div>
     <ul id="channels-listbox" class="mero-listbox mero-combo-list" role="listbox" aria-multiselectable="true" hidden>${options}</ul>
     <span data-mero-combo-status role="status" class="mero-sr-only"></span>
@@ -172,7 +183,7 @@ function renderEditForm(draft, { csrfToken, errors = {}, conflict = null, notice
     </fieldset>
     <div class="mero-field">
       <label for="channels-input">Sales channels</label>
-      ${renderMultiselect(draft.channels)}
+      ${renderMultiselect(draft.channels, { invalid: Boolean(errors.channels) })}
       ${errFor("channels")}
     </div>
     <div class="mero-inline-actions">
@@ -187,7 +198,7 @@ function renderDeleteForm(product, { csrfToken, errors = {}, phrase = "", reason
   return `<form id="delete-form" class="mero-stack" data-mero-form data-mero-confirm
         hx-post="/products/${product.id}/delete" hx-target="this" hx-swap="outerHTML">
     <input type="hidden" name="csrf" value="${esc(csrfToken)}">
-    <h2>Delete ${esc(product.name)}</h2>
+    <h2 id="delete-dialog-title">Delete ${esc(product.name)}</h2>
     <p>Type <code class="mero-confirm-phrase" data-mero-confirm-phrase>${esc(expected)}</code> and give a reason (8+ characters) to permanently delete this product.</p>
     <p data-mero-form-error class="mero-field-error" hidden></p>
     <div class="mero-field">
@@ -211,7 +222,7 @@ function renderDeleteForm(product, { csrfToken, errors = {}, phrase = "", reason
 }
 
 function renderDeleteDialog(product, options = {}) {
-  return `<dialog id="delete-dialog" class="mero-dialog" role="alertdialog" data-mero-dialog data-mero-static data-mero-autoopen>
+  return `<dialog id="delete-dialog" class="mero-dialog" role="alertdialog" aria-labelledby="delete-dialog-title" data-mero-dialog data-mero-static data-mero-autoopen>
     <div class="mero-dialog-body">${renderDeleteForm(product, options)}</div>
   </dialog>`;
 }

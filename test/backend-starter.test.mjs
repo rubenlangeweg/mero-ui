@@ -107,6 +107,7 @@ test("full-flow Node starter enforces per-session CSRF cookie, Unicode headers, 
   });
   assert.equal(invalid.status, 422);
   assert.match(invalid.body, /aria-invalid="true"/);
+  assert.match(invalid.body, /id="channels-input"[^>]*aria-invalid="true" aria-describedby="err-channels"/);
   assert.match(invalid.body, /data-mero-dirty="dirty"/);
   assert.match(invalid.body, /data-mero-dirty-guard=/);
 
@@ -153,6 +154,8 @@ test("full-flow Node starter enforces per-session CSRF cookie, Unicode headers, 
   // 6. Typed confirmation delete: auto-open dialog, 422 form-only swap, 200 OOB table + HX-Reswap: none
   const delDialog = await callHandler(handler, { url: "/products/2/delete", headers: { Cookie: cookie } });
   assert.equal(delDialog.status, 200);
+  assert.match(delDialog.body, /aria-labelledby="delete-dialog-title"/);
+  assert.match(delDialog.body, /id="delete-dialog-title"/);
   assert.match(delDialog.body, /data-mero-autoopen/);
   assert.match(delDialog.body, /hx-target="this"/);
 

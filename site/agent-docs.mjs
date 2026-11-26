@@ -32,8 +32,8 @@ function patterns() {
     "## Connect an HTML endpoint",
     "Replace demonstration URLs with your routes and render user data with your template engine’s HTML escaping. Return the fragment expected by hx-target and hx-swap. Preserve explicit wrapper inheritance such as hx-target:inherited. Keep validation, permissions and persistence in your handler.",
     "For a validating data-mero-form, return the filled form with HTTP 422 and mark the invalid field. For Typed Confirmation, keep the original form on a successful save using the response headers under mero:form-saved below.",
-    "## Apply a theme",
-    "Load your --mero-* token overrides after mero.css. Set data-theme=\"light\" or data-theme=\"dark\" on the document or section. Check both themes and keyboard focus after the fragment changes.",
+    "## Apply a theme and coexist with Tailwind CSS v4",
+    "Load optional ui/mero-themes.css after mero.css for composable presets (cobalt, fern, clay, editorial) and structural modifiers (compact, flat, crisp) alongside light, dark or auto on data-theme (e.g. data-theme=\"cobalt dark compact\"), or override --mero-* tokens including --mero-border-width and --mero-depth. For zero-JS constraint validation hints, add .mero-validator on an input/select/textarea with a sibling .mero-validator-hint. When using Tailwind CSS v4 alongside Mero, declare `@layer theme, base, mero, components, utilities;` before importing Tailwind and mero.css.",
     referenceMarkdown(),
   ].join("\n\n") + "\n";
 }

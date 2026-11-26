@@ -1,6 +1,6 @@
 // Builds minified UI assets (dist/ui/*.min.{js,css}) and an SRI/size manifest (dist/manifest.json).
 import { createHash } from "node:crypto";
-import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 import { transform as transformCss } from "lightningcss";
 import { minifySync } from "rolldown/experimental";
@@ -20,7 +20,12 @@ const measure = buffer => ({
   integrity: sri(buffer),
 });
 
-await rm(distDir, { recursive: true, force: true });
+async function writeAtomic(url, data) {
+  const tmp = new URL(url.href + `.tmp.${process.pid}.${Math.random().toString(36).slice(2)}`);
+  await writeFile(tmp, data);
+  await rename(tmp, url);
+}
+
 await mkdir(distUiDir, { recursive: true });
 
 const files = (await readdir(uiDir)).sort();
@@ -45,7 +50,7 @@ for (const file of files) {
     });
     const out = Buffer.from((banner ? banner + "\n" : "") + Buffer.from(code).toString("utf8"));
     const minName = file.replace(/\.css$/, ".min.css");
-    await writeFile(new URL(minName, distUiDir), out);
+    await writeAtomic(new URL(minName, distUiDir), out);
     manifest.minified["dist/ui/" + minName] = measure(out);
   } else if (file.endsWith(".js")) {
     const text = source.toString("utf8");
@@ -54,9 +59,9 @@ for (const file of files) {
     if (errors?.length) throw new Error(`Minify failed for ${file}: ${errors.map(e => e.message).join("; ")}`);
     const out = Buffer.from((banner ? banner + "\n" : "") + code);
     const minName = file.replace(/\.js$/, ".min.js");
-    await writeFile(new URL(minName, distUiDir), out);
+    await writeAtomic(new URL(minName, distUiDir), out);
     manifest.minified["dist/ui/" + minName] = measure(out);
   }
 }
 
-await writeFile(new URL("manifest.json", distDir), JSON.stringify(manifest, null, 2) + "\n");
+await writeAtomic(new URL("manifest.json", distDir), JSON.stringify(manifest, null, 2) + "\n");

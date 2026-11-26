@@ -271,9 +271,10 @@
     }
     if (form.isConnected && form.matches("[data-mero-dirty]")) {
       if (form.getAttribute("data-mero-dirty") === "dirty") form.setAttribute("data-mero-dirty", "");
-      const submitted = submittedSnapshots.get(form);
+      const submitted = submittedSnapshots.get(form) ?? snapshotForm(form);
       submittedSnapshots.delete(form);
-      formBaselines.set(form, submitted ?? snapshotForm(form));
+      formBaselines.set(form, submitted);
+      syncSavedDefaults(form, submitted);
       updateForm(form);
     }
     focus?.focus({ preventScroll: true });
@@ -355,8 +356,28 @@
   const submittedSnapshots = new WeakMap();
   const submittingNative = new WeakSet();
   const multiSnapshot = multi => [...multi.querySelectorAll('[data-mero-multiselect-chips] input[type="hidden"]')].map(i => i.value).join("\0");
-  const selectSnapshot = select => [...select.options].map(option => (option.selected ? "1" : "0")).join("");
+  const selectSnapshot = select => [...select.selectedOptions].map(option => option.value).join("\0");
   const isTrackableField = control => control.matches("input, select, textarea") && !control.matches("[type=submit], [type=button], [type=reset], [type=image]");
+
+  function syncSavedDefaults(form, snapshot) {
+    const clearPwd = form.hasAttribute("data-mero-clear-passwords");
+    for (const [control, saved] of snapshot.fields) {
+      if (!form.contains(control)) continue;
+      if (clearPwd && control.matches("input[type=password]")) continue;
+      if (control.matches("input[type=checkbox], input[type=radio]")) {
+        control.defaultChecked = Boolean(saved);
+      } else if (control.matches("select")) {
+        const remaining = saved === "" ? [] : String(saved).split("\0");
+        for (const option of control.options) {
+          const idx = remaining.indexOf(option.value);
+          option.defaultSelected = idx !== -1;
+          if (idx !== -1) remaining.splice(idx, 1);
+        }
+      } else if (control.matches("input, textarea")) {
+        control.defaultValue = String(saved);
+      }
+    }
+  }
 
   function snapshotForm(form) {
     const clearPwd = form.hasAttribute("data-mero-clear-passwords");
@@ -444,10 +465,11 @@
     }
   }
 
-  function dirtyGuarded() {
+  function dirtyGuardedForms() {
     return [...document.querySelectorAll("form[data-mero-dirty][data-mero-dirty-guard]")]
-      .find(form => form.isConnected && !requesting.has(form) && !submittingNative.has(form) && changed(form)) ?? null;
+      .filter(form => form.isConnected && !requesting.has(form) && !submittingNative.has(form) && changed(form));
   }
+  const dirtyGuarded = () => dirtyGuardedForms()[0] ?? null;
 
   let dirtyHistoryDecision = null;
   function setDirtyHistoryDecision(value) {
@@ -460,6 +482,9 @@
 
   document.addEventListener("submit", event => {
     if (event.defaultPrevented || !(event.target instanceof HTMLFormElement)) return;
+    const target = (event.submitter?.getAttribute("formtarget") || event.target.getAttribute("target") || "").trim().toLowerCase();
+    // Only exempt submissions that navigate this document (not iframe or _blank targets).
+    if (target && target !== "_self" && target !== "_top" && target !== "_parent") return;
     submittingNative.add(event.target);
     setTimeout(() => submittingNative.delete(event.target), 2000);
   });
@@ -470,12 +495,13 @@
   document.addEventListener("htmx:config:request", event => {
     const { ctx } = event.detail;
     if (event.defaultPrevented || ctx.request.method.toUpperCase() !== "GET") return;
-    const guarded = dirtyGuarded();
-    if (!guarded) return;
+    const candidates = dirtyGuardedForms();
+    if (!candidates.length) return;
     const target = typeof ctx.target === "string" ? document.querySelector(ctx.target) : ctx.target;
     const isHistory = Boolean(ctx.request.headers["HX-History-Restore-Request"]);
-    const leaves = ctx.request.headers["HX-Boosted"] || isHistory || target === document.body || target === document.documentElement || target?.contains(guarded);
-    if (!leaves) return;
+    const fullLeave = Boolean(ctx.request.headers["HX-Boosted"] || isHistory || target === document.body || target === document.documentElement);
+    const guarded = fullLeave ? candidates[0] : candidates.find(form => target?.contains(form));
+    if (!guarded) return;
     if (isHistory && dirtyHistoryDecision === "allow") return;
     if (isHistory && dirtyHistoryDecision === "block") { event.preventDefault(); return; }
     if (!confirmLeaveDirty(guarded)) {

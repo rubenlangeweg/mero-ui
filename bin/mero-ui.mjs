@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
 import { realpathSync } from "node:fs";
-import { copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, lstat, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -9,6 +9,7 @@ const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 export const FAMILIES = {
   core: ["mero.css", "mero.js", "mero-forms.js", "mero-live.js"],
+  themes: ["mero-themes.css"],
   gallery: ["mero-gallery.css", "mero-gallery.js"],
   layouts: ["mero-layouts.css"],
   collections: ["mero-collections.css", "mero-collections.js"],
@@ -20,7 +21,7 @@ export const FAMILIES = {
   types: ["mero.d.ts", "insight-charts.d.ts", "insight-markdown.d.ts"],
 };
 
-const BROWSER_OPTIONAL = ["gallery", "layouts", "collections", "workspace", "insights", "composition"];
+const BROWSER_OPTIONAL = ["themes", "gallery", "layouts", "collections", "workspace", "insights", "composition"];
 
 const USAGE = `Usage:
   mero-ui init <dir> [--with <families>] [--minified] [--base-url <path>]
@@ -225,6 +226,15 @@ async function readPkg() {
   return JSON.parse(await readFile(join(pkgRoot, "package.json"), "utf8"));
 }
 
+async function rejectSymlink(path, label) {
+  try {
+    const info = await lstat(path);
+    if (info.isSymbolicLink()) throw new Error(`Refusing to write through symlink destination: ${label}`);
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+}
+
 async function writeBundle(targetDir, pkg, families, minified) {
   const plan = expectedBundlePlan(families, minified);
   for (const item of plan) {
@@ -238,10 +248,13 @@ async function writeBundle(targetDir, pkg, families, minified) {
   }
 
   await mkdir(targetDir, { recursive: true });
+  const manifestPath = join(targetDir, "MERO.json");
+  await rejectSymlink(manifestPath, "MERO.json");
   const filesManifest = {};
   for (const item of plan) {
     const destAbs = safeTargetPath(targetDir, item.destName);
     if (!destAbs) throw new Error(`Refusing to write unsafe destination filename: ${item.destName}`);
+    await rejectSymlink(destAbs, item.destName);
     await copyFile(item.srcAbs, destAbs);
     const bytes = await readFile(destAbs);
     filesManifest[item.destName] = {
@@ -260,7 +273,7 @@ async function writeBundle(targetDir, pkg, families, minified) {
     families,
     files: sortedFiles,
   };
-  await writeFile(join(targetDir, "MERO.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
+  await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + "\n", "utf8");
   return { manifest, orderedAssets: plan.map(item => item.destName).filter(name => name !== "LICENSE.txt") };
 }
 

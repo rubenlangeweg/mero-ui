@@ -43,12 +43,12 @@
 
   function init(region) {
     if (states.has(region)) return;
+    // Register state before calling htmx.process() so its synchronous htmx:after:init does not double-schedule.
+    const state = { timer: null, request: null, goodAt: Date.now(), followed: false, failures: 0, interval: null };
+    states.set(region, state);
     if (window.htmx?.process && !region.hasAttribute("data-htmx-powered")) {
       try { window.htmx.process(region); } catch {}
     }
-    // The server rendered the region, so the page load counts as the first good read.
-    const state = { timer: null, request: null, goodAt: Date.now(), followed: false, failures: 0, interval: null };
-    states.set(region, state);
     schedule(region, state);
   }
 

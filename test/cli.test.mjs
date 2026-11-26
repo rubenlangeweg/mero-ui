@@ -139,22 +139,34 @@ test("mero-ui init supports --with optional families, --minified and --base-url"
   t.after(() => rm(dir, { recursive: true, force: true }));
   const target = join(dir, "assets");
 
-  const init = await runMeroCli(["init", target, "--with", "gallery,layouts", "--minified", "--base-url", "/static/ui"]);
+  const init = await runMeroCli(["init", target, "--with", "themes,gallery,layouts", "--minified", "--base-url", "/static/ui"]);
   assert.equal(init.code, 0, init.stderr);
   assert.match(init.stdout, /href="\/static\/ui\/mero\.min\.css"/);
+  assert.match(init.stdout, /href="\/static\/ui\/mero-themes\.min\.css"/);
   assert.match(init.stdout, /href="\/static\/ui\/mero-gallery\.min\.css"/);
   assert.match(init.stdout, /href="\/static\/ui\/mero-layouts\.min\.css"/);
   assert.match(init.stdout, /src="\/static\/ui\/mero-gallery\.min\.js"/);
 
   const manifest = JSON.parse(await readFile(join(target, "MERO.json"), "utf8"));
   assert.equal(manifest.minified, true);
-  assert.deepEqual(manifest.families, ["core", "gallery", "layouts"]);
+  assert.deepEqual(manifest.families, ["core", "themes", "gallery", "layouts"]);
   assert.ok(manifest.files["mero.min.css"]);
+  assert.ok(manifest.files["mero-themes.min.css"]);
   assert.ok(manifest.files["mero-gallery.min.js"]);
   assert.ok(manifest.files["mero-layouts.min.css"]);
 
   const verify = await runMeroCli(["verify", target]);
   assert.equal(verify.code, 0, verify.stderr);
+
+  // Destination symlink must be rejected (CWE-59 protection: never overwrite outside targetDir)
+  const victim = join(dir, "outside.css");
+  await writeFile(victim, "/* victim */\n");
+  await rm(join(target, "mero.min.css"));
+  await symlink(victim, join(target, "mero.min.css"));
+  const symlinkUpgrade = await runMeroCli(["upgrade", target]);
+  assert.notEqual(symlinkUpgrade.code, 0);
+  assert.match(symlinkUpgrade.stderr, /symlink destination/i);
+  assert.equal(await readFile(victim, "utf8"), "/* victim */\n");
 });
 
 test("mero-ui upgrade refreshes drifted files, rejects path traversal, prints Breaking/Deprecated notes and preserves user files", async t => {

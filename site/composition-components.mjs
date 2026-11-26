@@ -36,13 +36,20 @@ export const groups = [
         "Set a theme inside one section of a page.",
         `<section class="mero-theme-sample" data-mero-theme-scope data-theme="light"><label>Appearance <select class="mero-select" data-mero-theme-picker><option value="light">Daylight</option><option value="dark">After hours</option></select></label><article class="mero-card"><h2 class="mero-card-title">Studio workspace</h2><p class="mero-card-description">The appearance applies to this workspace.</p></article></section>`,
       ),
-      example(
-        "validator",
-        "Validator",
-        "Show a native field constraint and its correction.",
-        `<form class="mero-validation-example" data-mero-check-form><label class="mero-label">Catalog SKU<input class="mero-input" name="sku" required pattern="[A-Z]{2}-[0-9]{4}" placeholder="RL-2040"></label><small>Use two uppercase letters, a hyphen and four digits.</small><button class="mero-button" type="submit">Check SKU</button><output role="status"></output></form>`,
-        "This checks the format locally. Use the inventory form to enforce a unique SKU on the server.",
-      ),
+      {
+        ...example(
+          "validator",
+          "Validator",
+          "Show a native field constraint and its correction.",
+          `<form class="mero-validation-example" data-mero-check-form><label class="mero-label">Catalog SKU<input class="mero-input" name="sku" required pattern="[A-Z]{2}-[0-9]{4}" placeholder="RL-2040"></label><small>Use two uppercase letters, a hyphen and four digits.</small><button class="mero-button" type="submit">Check SKU</button><output role="status"></output></form>`,
+          "This checks the format locally. Use the Zero-JS hint variant for pure CSS :user-invalid styling, and the inventory form to enforce uniqueness on the server.",
+        ),
+        variants: [{
+          name: "Zero-JS hint",
+          description: "Pure CSS :user-invalid and :user-valid styling with an inline .mero-validator-hint that stays hidden until user interaction or a server HTTP 422 aria-invalid response.",
+          demo: `<form class="mero-stack"><div class="mero-field"><label class="mero-label" for="val-sku">Catalog SKU</label><input id="val-sku" class="mero-input mero-validator" name="sku" required pattern="[A-Z]{2}-[0-9]{4}" placeholder="RL-2040" aria-describedby="val-sku-hint"><p id="val-sku-hint" class="mero-validator-hint">Use two uppercase letters, a hyphen and four digits (e.g. RL-2040).</p></div><button class="mero-button mero-button-primary" type="submit">Save SKU</button></form>`,
+        }],
+      },
     ],
   },
   {
