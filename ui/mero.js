@@ -394,6 +394,8 @@
       return { value, label: clone.textContent.trim() || value };
     });
   }
+  lifecycle.captureMultiChips = captureMultiChips;
+  lifecycle.setMultiBaseline = (multi, chips) => { if (chips) initialMultiChips.set(multi, chips); };
 
   function createMultiChip(value, label, fieldName) {
     const li = document.createElement("li");

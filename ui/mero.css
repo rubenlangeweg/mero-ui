@@ -310,7 +310,7 @@
   border-color: var(--mero-danger);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--mero-danger), transparent 82%);
 }
-:where(.mero-validator):user-valid { border-color: var(--mero-success); }
+:where(.mero-validator):user-valid:not([aria-invalid="true"]) { border-color: var(--mero-success); }
 :where(.mero-validator-hint) {
   display: none;
   margin: 0;

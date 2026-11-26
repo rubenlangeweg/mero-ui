@@ -374,8 +374,13 @@
           if (idx !== -1) remaining.splice(idx, 1);
         }
       } else if (control.matches("input, textarea")) {
+        // Hidden inputs share value and defaultValue; skip if a mid-flight edit changed value.
+        if (control.type === "hidden" && control.value !== String(saved)) continue;
         control.defaultValue = String(saved);
       }
+    }
+    for (const [multi, chips] of snapshot.multiChips ?? []) {
+      if (form.contains(multi)) lifecycle.setMultiBaseline?.(multi, chips);
     }
   }
 
@@ -390,8 +395,13 @@
       else fields.set(control, control.value);
     }
     const multis = new Map();
-    for (const multi of form.querySelectorAll("[data-mero-multiselect]")) multis.set(multi, multiSnapshot(multi));
-    return { fields, multis };
+    const multiChips = new Map();
+    for (const multi of form.querySelectorAll("[data-mero-multiselect]")) {
+      multis.set(multi, multiSnapshot(multi));
+      const chips = lifecycle.captureMultiChips?.(multi);
+      if (chips) multiChips.set(multi, chips);
+    }
+    return { fields, multis, multiChips };
   }
 
   function fieldValues(form, name) {

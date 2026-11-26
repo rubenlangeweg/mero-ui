@@ -31,6 +31,7 @@ test("v0.13 primitives & peer-review regressions: multiselect, 3-state dirty/gua
       <form id="edit-form" data-mero-form data-mero-dirty data-mero-dirty-guard="Unsaved draft!" data-mero-clear-passwords data-mero-conflict-swap
             hx-post="/save" hx-target="this" hx-swap="outerHTML">
         <input id="title" name="title" value="Lamp" aria-label="Title">
+        <input id="hidden-rev" type="hidden" name="rev" value="1">
         <input id="pwd" type="password" name="secret" value="" aria-label="Password">
         <select id="implicit-select" name="tier" aria-label="Tier">
           <option value="std">Standard</option>
@@ -228,28 +229,57 @@ test("v0.13 primitives & peer-review regressions: multiselect, 3-state dirty/gua
     await page.locator('[aria-label="Remove POS"]').click();
     assert.deepEqual(await page.evaluate(() => window.selections.at(-1)), { values: ["web"], added: null, removed: "pos" });
 
-    // 4. 3-state save ownership & data-mero-clear-passwords (in-flight edit is NOT lost; password never enters defaultValue).
+    // 4. 3-state save ownership, hidden inputs, multiselect saved baseline & data-mero-clear-passwords.
     await page.locator("#title").fill("Lamp v1");
     await page.locator("#pwd").fill("top-secret");
+    await page.evaluate(() => { document.getElementById("hidden-rev").value = "2"; });
+    await chInput.fill("B2");
+    await page.locator("#opt-b2b").click();
+    await chInput.press("Escape");
     saveMode = "delayed-saved";
     const arrived = new Promise(resolve => { saveArrived = resolve; });
     await page.locator("#save-btn").click();
     await arrived;
-    // Edit title while save is still in flight.
+    // Edit title, hidden input and multiselect chips while save is still in flight.
     await page.locator("#title").fill("Lamp v2");
+    await page.evaluate(() => { document.getElementById("hidden-rev").value = "3"; });
+    await chInput.fill("PO");
+    await page.locator("#opt-pos").click();
+    await chInput.press("Escape");
     releaseSave();
     await page.locator(".mero-toast", { hasText: "Saved!" }).waitFor();
     assert.equal(await page.locator("#save-btn").isDisabled(), false, "mid-flight edit stays dirty after earlier save settles");
-    const pwdState = await page.evaluate(() => {
+    const postSaveState = await page.evaluate(async () => {
+      const form = document.getElementById("edit-form");
       const p = document.getElementById("pwd");
-      const before = { val: p.value, def: p.defaultValue };
-      document.getElementById("edit-form").reset();
-      const afterReset = { pwd: p.value, title: document.getElementById("title").value };
+      const hidden = document.getElementById("hidden-rev");
+      const before = { val: p.value, def: p.defaultValue, hiddenVal: hidden.value };
+      form.reset();
+      await new Promise(r => setTimeout(r, 15));
+      const afterReset = {
+        pwd: p.value,
+        title: document.getElementById("title").value,
+        hiddenVal: hidden.value,
+        channels: new FormData(form).getAll("channels"),
+      };
+      // Align hidden input with saved rev "2" -> reset form must now be clean (saved chips + saved title match baseline).
+      hidden.value = "2";
+      hidden.dispatchEvent(new Event("input", { bubbles: true }));
+      const cleanAfterReset = document.getElementById("save-btn").disabled;
+      // Re-dirty for step 5.
       document.getElementById("title").value = "Lamp v2";
       document.getElementById("title").dispatchEvent(new Event("input", { bubbles: true }));
-      return { before, afterReset };
+      return { before, afterReset, cleanAfterReset };
     });
-    assert.deepEqual(pwdState, { before: { val: "", def: "" }, afterReset: { pwd: "", title: "Lamp v1" } }, "cleared password never survives and reset restores last saved value");
+    assert.deepEqual(
+      postSaveState,
+      {
+        before: { val: "", def: "", hiddenVal: "3" },
+        afterReset: { pwd: "", title: "Lamp v1", hiddenVal: "3", channels: ["web", "b2b"] },
+        cleanAfterReset: true,
+      },
+      "mid-flight hidden value survives save, cleared password never survives, and reset restores last saved title + multiselect chips",
+    );
 
     // 5. Dirty guard: iframe-targeted submit keeps beforeunload armed; same-document submit suppresses beforeunload.
     const submitGuardChecks = await page.evaluate(() => {

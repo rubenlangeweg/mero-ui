@@ -102,6 +102,7 @@
   --mero-radius: .25rem;
   --mero-radius-panel: .35rem;
   --mero-depth: 0;
+  --mero-shadow: none;
   --mero-bg: #f8f5ef;
   --mero-surface: #fffdf9;
   --mero-raised: #f1ece2;
@@ -175,6 +176,7 @@
 }
 [data-theme~="flat"] {
   --mero-depth: 0;
+  --mero-shadow: none;
 }
 [data-theme~="crisp"] {
   --mero-border-width: 2px;

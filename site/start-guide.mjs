@@ -6,9 +6,9 @@ function docs(title, description, content) {
 }
 
 export function startGuide() {
-  const install = `<link rel="stylesheet" href="/mero.css">
-<script defer src="/vendor/htmx.min.js"></script>
-<script defer src="/mero.js"></script>`;
+  const install = `<link rel="stylesheet" href="/mero/mero.css">
+<script defer src="/mero/htmx.min.js"></script>
+<script defer src="/mero/mero.js"></script>`;
   const markup = `<button type="button" class="mero-button mero-button-primary"
         hx-get="/demo/stock-summary" hx-target="next output"
         hx-disable="this">
@@ -19,7 +19,7 @@ export function startGuide() {
     <p>Run the inventory example with <a href="#go">Go and html/template</a> or <a href="#rust">Rust and Axum</a>. Both run without Node.js or npm.</p>
     <h2>Use Mero in an existing app</h2>
     <p>Copy a component’s HTML from the <a href="/components">catalog</a> into your template. Vendor the pinned browser files with the zero-dependency CLI (writes a SHA-256 <code>MERO.json</code> manifest and <code>LICENSE.txt</code>), or download them directly below.</p>
-    ${example("npm install @rubenlangeweg/mero-ui htmx.org@4.0.2\nnpx mero-ui init public/mero --with themes,layouts\nnpx mero-ui verify public/mero", null, "Shell")}
+    ${example("npm install @rubenlangeweg/mero-ui htmx.org@4.0.2\nnpx mero-ui init public/mero --with themes,layouts --base-url /mero\ncp node_modules/htmx.org/dist/htmx.min.js public/mero/htmx.min.js\nnpx mero-ui verify public/mero", null, "Shell")}
     <div class="start-assets" aria-label="Download individual assets">
       <a href="/mero.css" download>mero.css ↓</a>
       <a href="/mero.js" download>mero.js ↓</a>
@@ -28,7 +28,7 @@ export function startGuide() {
       <a href="/mero-themes.css" download>mero-themes.css ↓</a>
       <a href="/vendor/htmx.min.js" download>HTMX ↓</a>
     </div>
-    <p>For interactive components, load HTMX 4 once, before mero.js.</p>
+    <p>Serve <code>public/</code> at <code>/</code> (so <code>public/mero</code> maps to <code>/mero</code>, or pass <code>--base-url</code> to match your static mount). For interactive components, load HTMX 4 once before <code>mero.js</code>.</p>
     ${example(install)}
     <h2 id="tailwind">Use alongside Tailwind CSS v4 (optional)</h2>
     <p>Mero requires no Tailwind or CSS build step. When you already use Tailwind CSS v4 for layout utilities, declare <code>mero</code> before <code>utilities</code> so utility classes override Mero defaults cleanly while <code>[hidden]</code> panels stay protected.</p>
@@ -60,7 +60,7 @@ export function startGuide() {
     ${example("node examples/backends/node/server.mjs", null, "Shell")}
     <h3 id="python">Python (FastAPI / Django)</h3>
     <p>Return an HTML-escaped fragment with HTTP 422 on validation errors, or HTTP 200 with <code>HX-Trigger</code> on save.</p>
-    ${example('from fastapi.responses import HTMLResponse\nimport json\n\n@app.post("/products/{id}", response_class=HTMLResponse)\ndef save_product(id: int, name: str = Form(...)):\n    if not name.strip():\n        return HTMLResponse(render_form(error="Name is required."), status_code=422)\n    headers = {"HX-Trigger": json.dumps({"mero:form-saved": {"message": "Saved"}})}\n    return HTMLResponse(render_form(saved=True), headers=headers)', null, "Python · FastAPI")}
+    ${example('from fastapi import Form\nfrom fastapi.responses import HTMLResponse\nimport json\n\n@app.post("/products/{id}", response_class=HTMLResponse)\ndef save_product(id: int, name: str = Form(...)):\n    if not name.strip():\n        return HTMLResponse(render_form(error="Name is required."), status_code=422)\n    headers = {"HX-Trigger": json.dumps({"mero:form-saved": {"message": "Saved"}})}\n    return HTMLResponse(render_form(saved=True), headers=headers)', null, "Python · FastAPI")}
     <h3 id="rails">Ruby on Rails</h3>
     <p>Render a partial directly from your controller action; Mero focuses the first <code>aria-invalid="true"</code> field on 422 and announces the toast on save.</p>
     ${example('def update\n  if @product.update(product_params)\n    response.set_header("HX-Trigger", { "mero:form-saved" => { message: "Saved" } }.to_json)\n    render partial: "form", locals: { product: @product }\n  else\n    render partial: "form", locals: { product: @product }, status: :unprocessable_entity\n  end\nend', null, "Ruby · Rails")}

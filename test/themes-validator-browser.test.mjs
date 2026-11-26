@@ -38,15 +38,18 @@ test("zero-JS progressive enhancement: .mero-validator hints, composable theme p
       <section id="theme-default" data-theme="light">
         <button id="btn-default" class="mero-button mero-button-primary" type="button">Default</button>
         <div id="card-default" class="mero-card">Default card</div>
+        <dialog id="dlg-default" open class="mero-dialog">Default dialog</dialog>
       </section>
 
       <section id="theme-composed" data-theme="cobalt dark compact crisp flat">
         <button id="btn-composed" class="mero-button mero-button-primary" type="button">Composed</button>
         <div id="card-composed" class="mero-card">Composed card</div>
+        <dialog id="dlg-flat" open class="mero-dialog">Flat dialog</dialog>
       </section>
 
       <section id="theme-editorial" data-theme="editorial">
         <div id="card-editorial" class="mero-card">Editorial card</div>
+        <dialog id="dlg-editorial" open class="mero-dialog">Editorial dialog</dialog>
       </section>
 
       <section id="tailwind-check">
@@ -112,8 +115,16 @@ test("zero-JS progressive enhancement: .mero-validator hints, composable theme p
     assert.equal(composedMetrics.scheme, "dark", "cobalt dark activates dark color-scheme");
     assert.notEqual(composedMetrics.bg, defaultMetrics.bg, "cobalt dark primary differs from default graphite light");
 
-    const editorialFont = await page.locator("#card-editorial").evaluate(el => getComputedStyle(el).getPropertyValue("--mero-font"));
-    assert.match(editorialFont, /Georgia|serif/i);
+    const editorialMetrics = await page.locator("#card-editorial").evaluate(el => ({
+      font: getComputedStyle(el).getPropertyValue("--mero-font"),
+      defaultShadow: getComputedStyle(document.getElementById("dlg-default")).boxShadow,
+      flatShadow: getComputedStyle(document.getElementById("dlg-flat")).boxShadow,
+      editorialShadow: getComputedStyle(document.getElementById("dlg-editorial")).boxShadow,
+    }));
+    assert.match(editorialMetrics.font, /Georgia|serif/i);
+    assert.notEqual(editorialMetrics.defaultShadow, "none", "default depth=1 keeps dialog shadow");
+    assert.equal(editorialMetrics.flatShadow, "none", "nested flat scope removes dialog shadow");
+    assert.equal(editorialMetrics.editorialShadow, "none", "nested editorial scope removes dialog shadow");
 
     // 2. Tailwind v4 @layer theme, base, mero, components, utilities; coexistence.
     assert.equal(await page.locator("#btn-tw").evaluate(el => getComputedStyle(el).paddingTop), "8px", "@layer utilities overrides @layer mero");
@@ -125,9 +136,16 @@ test("zero-JS progressive enhancement: .mero-validator hints, composable theme p
     await page.locator("#sku-live").fill("bad");
     await page.locator("#sku-live").blur();
     assert.equal(await page.locator("#sku-live-hint").isVisible(), true, ":user-invalid reveals hint with zero JS");
+    const invalidBorder = await page.locator("#sku-live").evaluate(el => getComputedStyle(el).borderTopColor);
     await page.locator("#sku-live").fill("RL-2040");
     await page.locator("#sku-live").blur();
     assert.equal(await page.locator("#sku-live-hint").isHidden(), true, ":user-valid hides hint again with zero JS");
+    const validBorder = await page.locator("#sku-live").evaluate(el => getComputedStyle(el).borderTopColor);
+    assert.notEqual(validBorder, invalidBorder, ":user-valid switches border color from danger to success");
+    // A natively valid control that still carries server aria-invalid="true" must keep its danger border.
+    await page.locator("#sku-server").fill("RL-2040");
+    await page.locator("#sku-server").blur();
+    assert.equal(await page.locator("#sku-server").evaluate(el => getComputedStyle(el).borderTopColor), invalidBorder, "aria-invalid=true beats :user-valid success border");
 
     // 4. CSS-first native <details> & Popover API work with zero JS.
     assert.equal(await page.locator("#disclosure-body").isHidden(), true);
