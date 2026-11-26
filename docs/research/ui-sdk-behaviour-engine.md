@@ -5,6 +5,19 @@
 - **Spike:** [`research/ui-sdk-spike/`](../../research/ui-sdk-spike/README.md). Three components, Playwright runners, size script. Every number below comes from it.
 - **Sources:** the npm packages and the Markdown docs they ship (`docs/core.md`, `docs/agents.md`, `@ui-sdk/web/docs/*`). `ui-sdk.dev` was unreachable from the build environment. Secondary coverage was used only for context.
 
+## Outcome (2026-11-26)
+
+**Not adopted, for Mero or for Origo. Origo stays on Mero, htmx and Alpine.**
+
+- Origo will not revive its in-app assistant. Agents integrate through the API and MCP. That removes the use case for UI SDK's agent bridge, which is its main distinguishing feature. Without the bridge, UI SDK is a good behaviour library, and that does not justify a React rewrite or a beta dependency.
+- Two alternatives were considered and rejected:
+  - Moving Origo from htmx to React with UI SDK: about 180 tenant views to rewrite, with no copilot to justify it.
+  - Using UI SDK as an engine inside Mero: the costs in this document.
+- The real gap is keyboard and screen-reader support for reordering. Mero builds it natively, with UI SDK's interaction model as the reference: [Tree and sortable lists spec](../specs/tree-and-sortable.md).
+- Revisit UI SDK if an in-app copilot comes back on the roadmap, or if one Alpine screen, such as the variant matrix, becomes clearly too costly to maintain. In that case, pilot that one screen.
+
+The rest of this document is the original investigation.
+
 ## Recommendation
 
 **Do not adopt UI SDK as Mero's behaviour engine now. Re-evaluate when its tree, grid and transfer behaviours lose `@experimental`, or at 1.0.**
