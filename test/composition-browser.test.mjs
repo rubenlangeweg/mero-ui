@@ -85,14 +85,16 @@ test("copied compositions align in both writing directions and retain their keyb
   await select.selectOption("dark");
   assert.equal(await page.locator("[data-mero-theme-scope]").getAttribute("data-theme"), "dark");
   const sku = page.getByRole("textbox", { name: "Catalog SKU" });
+  const skuHint = page.locator("#val-sku-hint");
+  assert.equal(await skuHint.isVisible(), false, "validator hint stays hidden before interaction");
   await sku.fill("invalid");
-  await sku.press("Enter");
+  await sku.blur();
   assert.equal(await sku.evaluate(el => el.validity.patternMismatch), true);
+  assert.equal(await skuHint.isVisible(), true, "validator hint reveals on :user-invalid without JS");
   await sku.fill("RL-1234");
-  await sku.press("Enter");
-  assert.equal(await page.getByRole("status").textContent(), "SKU format accepted.");
-  await sku.fill("RL-1235");
-  assert.equal(await page.getByRole("status").textContent(), "");
+  await sku.blur();
+  assert.equal(await sku.evaluate(el => el.validity.valid), true);
+  assert.equal(await skuHint.isVisible(), false, "validator hint hides again once valid");
 
   const next = page.getByRole("button", { name: "Next finish" });
   await next.focus();

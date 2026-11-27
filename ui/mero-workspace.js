@@ -21,13 +21,13 @@
   }
 
   function matchingButtons(dialog) {
-    const items = dialog.querySelector(".mero-ws-command-items, .mero-ws-emoji-grid");
+    const items = dialog.querySelector(".mero-ws-emoji-grid");
     return items ? [...items.querySelectorAll(buttonSelector)].filter(button => !button.hidden) : [];
   }
 
   function filterItems(dialog) {
     const search = dialog.querySelector('input[type="search"]');
-    const list = dialog.querySelector(".mero-ws-command-items, .mero-ws-emoji-grid");
+    const list = dialog.querySelector(".mero-ws-emoji-grid");
     if (!search || !list) return;
     const query = search.value.trim().toLocaleLowerCase();
     for (const item of list.querySelectorAll(buttonSelector)) {
@@ -373,7 +373,7 @@
     if (target.closest("[data-mero-ws-number]")) updateStepper(target.closest("[data-mero-ws-number]"));
     const editor = target.closest(".mero-ws-writing");
     if (editor) syncEditor(editor);
-    if (target.matches('.mero-ws-command input[type="search"], .mero-ws-emoji input[type="search"]')) filterItems(target.closest("dialog"));
+    if (target.matches('.mero-ws-emoji input[type="search"]')) filterItems(target.closest("dialog"));
   });
   document.addEventListener("change", event => {
     if (event.target.matches("[data-mero-ws-upload] input[type=file]")) {
@@ -383,11 +383,11 @@
       form.querySelector("output").textContent = "";
     }
   });
-  document.addEventListener("click", async event => {
+  document.addEventListener("click", event => {
     const target = event.target;
     if (target.closest("[data-mero-ws-open]")) {
       const opener = target.closest("[data-mero-ws-open]");
-      openDialog(opener.closest("[data-mero-ws-shell],[data-mero-ws-command],[data-mero-ws-emoji]"), opener);
+      openDialog(opener.closest("[data-mero-ws-shell],[data-mero-ws-emoji]"), opener);
     }
     const step = target.closest("[data-mero-ws-number] [data-step]");
     if (step) {
@@ -397,13 +397,6 @@
       else input.stepDown();
       input.dispatchEvent(new Event("input", { bubbles:true }));
       input.dispatchEvent(new Event("change", { bubbles:true }));
-    }
-    const copy = target.closest("[data-command-copy]");
-    if (copy) {
-      const output = copy.closest("[data-mero-ws-command]").querySelector("output");
-      try { await navigator.clipboard.writeText(location.href); output.textContent = "Page link copied."; }
-      catch { output.textContent = "Page link: " + location.href; }
-      copy.closest("dialog").close();
     }
     const contextButton = target.closest("[data-mero-ws-context-open]");
     if (contextButton) {
@@ -443,18 +436,6 @@
     if (event.isComposing) return;
     const target = event.target;
     const key = event.key;
-    if ((event.metaKey || event.ctrlKey) && key.toLowerCase() === "k" && !event.altKey) {
-      const triggers = document.querySelectorAll("[data-mero-ws-command] [data-mero-ws-open]");
-      const trigger = target.closest("[data-mero-ws-command]")?.querySelector("[data-mero-ws-open]") ||
-        [...triggers].find(button => button.checkVisibility({ visibilityProperty:true }) && !button.closest("[inert]"));
-      if (trigger && !document.querySelector("dialog[open]")) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        const origin = document.activeElement;
-        openDialog(trigger.closest("[data-mero-ws-command]"), origin && origin !== document.body ? origin : trigger);
-      }
-      return;
-    }
     const row = target.closest(".mero-ws-context-row");
     if (row && (key === "ContextMenu" || (event.shiftKey && key === "F10"))) {
       event.preventDefault();
@@ -468,7 +449,7 @@
       } else moveFocus(event,[...activeMenu.menu.querySelectorAll('[role="menuitem"]')]);
       return;
     }
-    const dialog = target.closest(".mero-ws-command-dialog, .mero-ws-emoji dialog");
+    const dialog = target.closest(".mero-ws-emoji dialog");
     if (dialog) {
       const buttons = matchingButtons(dialog);
       if (key === "Enter" && target.type === "search" && buttons[0]) {

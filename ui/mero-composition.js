@@ -38,16 +38,6 @@
     const scope = picker?.closest("[data-mero-theme-scope]");
     if (scope) scope.dataset.theme = picker.value;
   });
-  document.addEventListener("submit", (event) => {
-    const form = event.target.closest("[data-mero-check-form]");
-    if (!form) return;
-    event.preventDefault();
-    form.querySelector("output").textContent = form.getAttribute("data-mero-check-form") || "SKU format accepted.";
-  });
-  document.addEventListener("input", (event) => {
-    const form = event.target.closest("[data-mero-check-form]");
-    if (form) form.querySelector("output").textContent = "";
-  });
   let tick;
   function update() {
     const clocks = document.querySelectorAll("[data-mero-cutoff-hour]");

@@ -111,18 +111,21 @@ function appLayout(sidebarOnly = false) {
 </section>`;
 }
 
-const command = `<section class="mero-ws-command" data-mero-ws-command>
-  <button class="mero-ws-launch" type="button" data-mero-ws-open><span>Search commands</span><kbd>⌘ / Ctrl K</kbd></button>
-  <dialog class="mero-dialog mero-ws-command-dialog" aria-label="Workspace commands">
-    <div class="mero-ws-command-head"><input type="search" data-command-search placeholder="Search pages and actions…" aria-label="Search commands" autofocus><button type="button" data-mero-close aria-label="Close commands">${icon("close")}</button></div>
-    <div class="mero-ws-command-items">
-      <a href="/layouts/dashboard?view=inventory"><strong>Open inventory</strong><small>Workspace</small></a>
-      <a href="/layouts/dashboard?view=settings"><strong>Workspace settings</strong><small>Workspace</small></a>
-      <button type="button" data-command-copy><strong>Copy page link</strong><small>Action</small></button>
+const command = `<section class="mero-ws-command">
+  <button class="mero-ws-launch" type="button" data-mero-open="ws-commands" aria-keyshortcuts="Meta+K Control+K"><span>Search commands</span><kbd>⌘ / Ctrl K</kbd></button>
+  <dialog class="mero-dialog mero-command" id="ws-commands" data-mero-command aria-label="Workspace commands">
+    <div class="mero-combo" data-mero-combo>
+      <input class="mero-input" type="search" role="combobox" aria-label="Search commands" aria-expanded="false"
+        aria-controls="ws-commands-options" aria-autocomplete="list" autocomplete="off" placeholder="Search pages and actions…" autofocus>
+      <div class="mero-listbox mero-combo-list" id="ws-commands-options" role="listbox" aria-label="Workspace commands" hidden>
+        <a id="ws-cmd-inventory" role="option" tabindex="-1" href="/layouts/dashboard?view=inventory">Open inventory</a>
+        <a id="ws-cmd-settings" role="option" tabindex="-1" href="/layouts/dashboard?view=settings">Workspace settings</a>
+        <button id="ws-cmd-copy" role="option" tabindex="-1" type="button" data-mero-copy="https://mero-ui.rubenlangeweg.com/components/command" data-mero-copy-message="Page link copied.">Copy page link</button>
+        <div role="option" aria-disabled="true" data-mero-empty-option hidden>No matching commands</div>
+      </div>
+      <span class="mero-description" data-mero-combo-status role="status"></span>
     </div>
-    <p class="mero-ws-command-empty" hidden>No matching commands</p>
   </dialog>
-  <output class="mero-ws-status" role="status"></output>
 </section>`;
 
 const contextMenu = `<section class="mero-ws-context" data-mero-ws-context>
@@ -202,7 +205,7 @@ export const groups = [
     component("app-layout","App Layout","A responsive workspace with a sidebar, content area and mobile navigation drawer.",appLayout()),
     component("sidebar","Sidebar","Navigate the workspace from a side rail that becomes a drawer at narrow widths.",appLayout(true)),
     component("navbar","Navbar","Place the workspace name and destinations in a wrapping top bar.",`<header class="mero-ws-navbar"><strong>Studio North</strong>${nav("Primary navigation")}</header>`),
-    component("command","Command","Search destinations and actions, then use the arrows and Enter to execute.",command,"Click the trigger or press Cmd/Ctrl K. Escape returns focus to where you were working."),
+    component("command","Command","Search local destinations and actions, then use the arrows and Enter to execute.",command,"Built on core dialog[data-mero-command] with local data-mero-combo filtering. Click the trigger or press Cmd/Ctrl K. Escape closes the results, then the dialog, and returns focus to where you were working."),
     component("context-menu","Context Menu","Open item actions with the visible button, a secondary click, or Shift F10.",contextMenu),
     component("segment","Segment","Choose one display density in a compact segmented control.",segment),
     component("stepper","Stepper","Move through validated project details and review the values before submitting.",stepper),

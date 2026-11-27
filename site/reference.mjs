@@ -56,7 +56,7 @@ const methods = [
   ["MeroUI.toast(message, { tone, duration, trigger })", "Shows a notification. <code>tone</code> is <code>accent</code>, <code>success</code>, <code>warning</code> or <code>danger</code>. <code>duration</code> is in milliseconds, 4800 by default. Use 0 to keep it until dismissed. <code>trigger</code> is the element the notification belongs to, by default the focused element. When it is inside an open dialog, the notification shows in that dialog."],
   ["MeroUI.init(root)", "Sets up tabs, listboxes, comboboxes, auto-opening dialogs, and—when loaded—<code>mero-forms.js</code> state helpers (<code>data-mero-dirty</code>, <code>data-mero-show-when</code>, <code>data-mero-confirm</code>) and <code>mero-live.js</code> polling inside <code>root</code>. Mero calls it for every htmx swap. Call it yourself for markup you insert another way."],
   ["MeroUI.cleanup(root)", "Tears down Mero state inside <code>root</code> before removing it outside htmx: stops and aborts <code>data-mero-live</code> polls, clears tracked tooltips and closes any open row preview in <code>root</code>."],
-  ["MeroUI.configure({ messages, locale, dialogBackdrop })", "Configures runtime strings (<code>messages</code>), default formatting locale (<code>locale</code>, or <code>\"document\"</code> / <code>\"browser\"</code>) and backdrop light-dismiss scope (<code>dialogBackdrop</code>: <code>\"all\"</code> or <code>\"mero-only\"</code>). Returns the resolved configuration snapshot."],
+  ["MeroUI.configure({ messages, locale, dialogBackdrop })", "Configures runtime strings (<code>messages</code>), default formatting locale (<code>locale</code>, or <code>\"document\"</code> / <code>\"browser\"</code>) and backdrop light-dismiss scope (<code>dialogBackdrop</code>: <code>\"mero-only\"</code> by default, or <code>\"all\"</code>). Returns the resolved configuration snapshot."],
 ];
 
 // [attribute, description]. A leading "*" marks an attribute Mero sets itself.
@@ -67,7 +67,7 @@ const attributes = [
     ["data-mero-close", "On a control inside a dialog. Closes it. The value becomes the dialog’s <code>returnValue</code>."],
     ["data-mero-autoopen", "On a dialog. Opens it as soon as it is on the page or swapped in."],
     ["data-mero-static", "On a dialog. A click on the backdrop does not close it."],
-    ["data-mero-dialog", "On a dialog without <code>.mero-dialog</code>. Opts the dialog into backdrop light-dismiss when <code>MeroUI.configure({ dialogBackdrop: \"mero-only\" })</code> is set."],
+    ["data-mero-dialog", "On a dialog without <code>.mero-dialog</code>. Opts the dialog into backdrop light-dismiss under the default <code>dialogBackdrop: \"mero-only\"</code> mode."],
     ["data-mero-toast", "On a button. Shows the value as a notification on click."],
     ["data-mero-tone", "With <code>data-mero-toast</code>. One of <code>accent</code>, <code>success</code>, <code>warning</code> or <code>danger</code>."],
     ["data-mero-toggle", "On a button. Flips <code>aria-pressed</code> on click."],
@@ -96,7 +96,7 @@ const attributes = [
     ["*data-mero-tooltip-dismissed", "On a tooltip closed with Escape, until the pointer and focus leave it."],
     ["data-mero-cell-label", `On an <code>aria-hidden=&quot;true&quot;</code> span inside a table cell. Copy its column heading here for the card layout. Add <code>mero-table-cards</code> to the table wrapper for cards below 768 px, or <code>mero-table-cards-wide</code> for 1024 px. See the <a href="/components/sortable-table">Sortable Table</a> for the table roles and sort links.`],
     ["data-mero-card-hidden", `On a <code>th</code> or <code>td</code> in a <code>mero-table-cards</code> table. Hides that column in the card layout below 768 px, or 1024 px with <code>mero-table-cards-wide</code>. Put it on the column's header and on each of its cells. See the <a href="/components/table?variant=Cards%20on%20phones">Table</a>.`],
-    ["data-mero-command", "On a <code>&lt;dialog&gt;</code> holding a remote combobox. Cmd or Ctrl K opens it with an empty query, and choosing an option runs that option’s link, <code>hx-*</code> request or toast. Give the shortcut to one command menu per page, including the workspace Command. Group server results with <code>role=&quot;group&quot;</code> and <code>aria-labelledby</code> pointing to a visible heading. Give each option a unique ID. Up and Down cross groups, Home and End reach the first and last result, and the status counts selectable options. Omit empty groups and return one disabled “No results” option when nothing matches."],
+    ["data-mero-command", "On a <code>&lt;dialog&gt;</code> holding a local or remote combobox. Cmd or Ctrl K opens it with an empty query (skipping dialogs inside <code>[inert]</code> or <code>[hidden]</code> ancestors), and choosing an option runs that option’s link, <code>hx-*</code> request, copy action or toast. Give the shortcut to one command menu per page. Group server results with <code>role=&quot;group&quot;</code> and <code>aria-labelledby</code> pointing to a visible heading. Give each option a unique ID. Up and Down cross groups, Home and End reach the first and last result, and the status counts selectable options. Omit empty groups and return one disabled “No results” option when nothing matches."],
     ["data-mero-peek", `Around a table wrapper whose rows have a <code>.mero-row-link</code>. With a row link focused, Space shows the row’s <code>data-mero-peek-body</code> template in a Preview panel beside the table, or in a bottom sheet below 768 px. While it is open, Up and Down Arrow move between rows and the panel follows focus. Space or Escape closes it and focuses the row. See the <a href="/components/sortable-table">Sortable Table</a> Row peek variant.`],
     ["data-mero-peek-body", "On a <code>&lt;template&gt;</code> inside a row of a <code>data-mero-peek</code> table. Holds the server-rendered preview for that row. Give the row a stable <code>id</code> so the preview follows it through swaps; otherwise Mero matches the row link’s <code>href</code>."],
     ["*data-mero-peek-close", "On the Close button of the Preview panel Mero adds."],
@@ -196,8 +196,7 @@ const attributes = [
   ]],
   ["Workspace", "mero-workspace.js", [
     ["data-mero-ws-shell", "Root of an app shell. A <code>data-mero-ws-open</code> button inside opens its dialog."],
-    ["data-mero-ws-open", "On a button inside a shell, command menu or emoji picker. Opens that component’s dialog."],
-    ["data-mero-ws-command", "Root of a command menu. Cmd or Ctrl and K opens it, and typing filters its actions."],
+    ["data-mero-ws-open", "On a button inside a shell or emoji picker. Opens that component’s dialog."],
     ["data-mero-ws-emoji", "Root of an emoji picker. Choosing an emoji fills its hidden input and closes the dialog."],
     ["data-mero-ws-context", "Root of a context menu. A right click, the menu key or Shift and F10 on a row opens its <code>role=\"menu\"</code>."],
     ["data-mero-ws-context-open", "On the button that opens the same context menu."],
@@ -223,7 +222,6 @@ const attributes = [
     ["data-mero-theme-scope", "On a section. Receives the theme chosen in the picker inside it."],
     ["data-mero-theme-picker", "On a select or radio. Its value becomes the scope’s <code>data-theme</code>."],
     ["data-mero-cutoff-hour", "Around a <code>&lt;time&gt;</code>. Counts down to that hour, 0 to 23 in UTC."],
-    ["data-mero-check-form", "<em>Deprecated.</em> Demo-only validation form hook; will be removed in 1.0."],
   ]],
 ];
 

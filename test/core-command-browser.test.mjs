@@ -180,6 +180,10 @@ test("command menu searches the server with keyboard support and focus return",
     await page.goto(base + "/preview/command");
     await page.locator("body").press("Control+K");
     await page.getByRole("dialog", { name: "Workspace commands" }).waitFor();
-    assert.equal(await page.locator("dialog[data-mero-command]").count(), 0);
+    assert.equal(await page.locator("dialog[data-mero-command]").count(), 1);
+    assert.equal(await page.locator("[data-mero-ws-command]").count(), 0);
+    const localInput = page.locator("dialog[data-mero-command] [role=combobox]");
+    await localInput.fill("settings");
+    assert.equal(await page.locator("dialog[data-mero-command] [role=option]:not([hidden])").count(), 1);
     assert.deepEqual(errors, []);
   });

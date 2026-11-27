@@ -41,6 +41,7 @@ test("workspace and gallery interactions survive hidden panels, resized viewport
   await page.keyboard.press("Control+k");
   await page.getByRole("dialog",{name:"Workspace commands"}).waitFor();
   await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
   await page.waitForFunction(() => document.activeElement?.textContent.trim() === "Preview");
 
   await page.goto(base + "/preview/emoji-picker");
