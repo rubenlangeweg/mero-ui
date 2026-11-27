@@ -227,11 +227,14 @@ test("issue #64: data-mero-boost guards explicit hx-get targeting the boosted re
         <nav aria-label="App">
           <button type="button" id="hx-slow" hx-get="/hxboost/slow" hx-target="#main">Slow filter</button>
           <button type="button" id="hx-b" hx-get="/hxboost/b" hx-target="#main">Page B</button>
+          <button type="button" id="hx-inner" hx-get="/hxboost/b" hx-target="#main" hx-swap="innerHTML">Inner B</button>
+          <button type="button" id="hx-retarget" hx-get="/hxboost/sidebar" hx-target="#main">Retargeted sidebar</button>
           <button type="button" id="hx-login" hx-get="/hxboost/login" hx-target="#main">Login</button>
           <button type="button" id="hx-down" hx-get="/hxboost/down" hx-target="#main">Down</button>
           <button type="button" id="hx-frag" hx-get="/hxboost/fragment" hx-target="#main" data-mero-boost-ignore>Raw fragment</button>
           <button type="button" id="open-drawer" data-mero-open="drawer">Menu</button>
         </nav>
+        <aside id="sidebar"></aside>
         <dialog class="mero-dialog mero-drawer" id="drawer" aria-label="Menu">
           <div class="mero-dialog-body">
             <button type="button" id="drawer-hx-b" hx-get="/hxboost/b" hx-target="#main">Drawer B</button>
@@ -255,6 +258,7 @@ test("issue #64: data-mero-boost guards explicit hx-get targeting the boosted re
       if (path === "/hxboost/c") return html(doc("Page C", "<p>Detail view</p>"));
       if (path === "/hxboost/login") return html('<!doctype html><title>Sign in</title><form><h1>Sign in</h1></form>');
       if (path === "/hxboost/fragment") return html('<section id="raw-frag"><h2>Fragment content</h2></section>');
+      if (path === "/hxboost/sidebar") return html('<div id="side-item">Sidebar fragment</div>');
       if (path === "/hxboost/down") return route.abort();
       return html(doc("Page A"));
     });
@@ -292,8 +296,39 @@ test("issue #64: data-mero-boost guards explicit hx-get targeting the boosted re
     assert.equal(await page.locator("#drawer").evaluate(d => d.open), true, "opt-out fragment keeps drawer open");
     assert.equal(await page.locator("#main").count(), 1, "innerHTML swap preserved #main wrapper");
 
-    // 5. Foreign response without #main triggers full-page fallback.
+    // 4b. Explicit hx-swap="innerHTML" extracts #main's inner content without duplicating <nav> or nesting <main id="main">.
     await page.evaluate(() => window.MeroUI.close("drawer"));
+    await page.locator("#hx-inner").click();
+    await page.locator("#main h1", { hasText: "Page B" }).waitFor();
+    assert.equal(await page.locator("main#main").count(), 1, "explicit innerHTML never nests a second #main");
+    assert.equal(await page.locator("nav").count(), 1, "explicit innerHTML never duplicates outer nav shell");
+
+    // 4c. Programmatic htmx.ajax('GET', ..., { target: '#main' }) is NOT hijacked into a full-page load.
+    await page.evaluate(() => window.htmx.ajax("GET", "/hxboost/fragment", { target: "#main" }));
+    await page.locator("#raw-frag h2", { hasText: "Fragment content" }).waitFor();
+    assert.ok(page.url().endsWith("/hxboost/a"), "htmx.ajax swaps fragment in place without top-level navigation");
+
+    // 4d. A later htmx:config:request listener retargeting away from #main undoes Mero's auto select/swap and sends HX-Request-Type: partial.
+    let sidebarReqType = null;
+    await page.evaluate(() => {
+      document.addEventListener("htmx:config:request", event => {
+        if (event.detail.ctx.sourceElement?.id === "hx-retarget") {
+          event.detail.ctx.target = document.getElementById("sidebar");
+        }
+      });
+      document.addEventListener("htmx:before:request", event => {
+        if (event.detail.ctx.sourceElement?.id === "hx-retarget") {
+          window.retargetType = event.detail.ctx.request.headers["HX-Request-Type"];
+        }
+      });
+    });
+    await page.locator("#hx-retarget").click();
+    await page.locator("#sidebar #side-item", { hasText: "Sidebar fragment" }).waitFor();
+    sidebarReqType = await page.evaluate(() => window.retargetType);
+    assert.equal(sidebarReqType, "partial", "retargeted request sends HX-Request-Type: partial and swaps into #sidebar");
+    assert.ok(page.url().endsWith("/hxboost/a"), "retargeted sidebar fragment stays in-page");
+
+    // 5. Foreign response without #main triggers full-page fallback.
     await page.locator("#hx-login").click();
     await page.waitForURL("**/hxboost/login");
     await page.waitForFunction(() => document.title === "Sign in" && !document.querySelector("#main"));
