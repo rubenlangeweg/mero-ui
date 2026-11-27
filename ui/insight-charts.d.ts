@@ -1,4 +1,4 @@
-/*! @rubenlangeweg/mero-ui 0.9.0 | MIT */
+/*! @rubenlangeweg/mero-ui 0.10.0 | MIT */
 export type MeroChartType = "line" | "area" | "bar" | "composed" | "pie" | "radar" | "radial";
 
 export interface MeroChartRow {

@@ -1,4 +1,4 @@
-/*! @rubenlangeweg/mero-ui 0.9.0 | MIT */
+/*! @rubenlangeweg/mero-ui 0.10.0 | MIT */
 @layer mero {
 /* Workspace forms, navigation and editing tools. Uses the host's Mero tokens. */
 :where(.mero-ws-cell,.mero-ws-labeled,.mero-ws-cardform,.mero-ws-inline,.mero-ws-upload,.mero-ws-editor,.mero-ws-shell,.mero-ws-navbar,.mero-ws-command,.mero-ws-context,.mero-ws-segment,.mero-ws-wizard,.mero-ws-split,.mero-ws-emoji,.mero-ws-filter,.mero-ws-dock,.mero-ws-mega,.mero-ws-fab) {

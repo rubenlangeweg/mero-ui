@@ -1,4 +1,4 @@
-/*! @rubenlangeweg/mero-ui 0.9.0 | MIT */
+/*! @rubenlangeweg/mero-ui 0.10.0 | MIT */
 @layer mero {
 /* Optional native gallery and media examples. */
 mero-gallery, mero-image-diff, mero-holo-card { display: block; min-inline-size: 0; }
