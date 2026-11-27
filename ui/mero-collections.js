@@ -24,11 +24,12 @@
     }
     const selectors = { field: '.mero-collection-editor input:not([type=hidden])', cancel: '[data-grid-cancel]', invalid:'[aria-invalid="true"]', add:'[data-grid-add]', search:'input[name=q]', filter:'[data-grid-filter]', 'sort-name':'[data-grid-sort=name]', 'sort-status':'[data-grid-sort=status]' };
     // edit-ID and delete-ID return to the row's Actions menu button.
-    const row = /^(?:edit|delete)-(.+)$/.exec(key);
-    const selector = Object.hasOwn(selectors, key) ? selectors[key] : (row ? `[data-grid-actions="${CSS.escape(row[1])}"]` : '');
-    if (!selector) return;
+    const row = /^(?:edit|delete)-(.+)$/s.exec(key);
+    const selector = Object.hasOwn(selectors, key) ? selectors[key] : '';
+    if (!selector && !row) return;
+    const control = selector ? grid.querySelector(selector) : [...grid.querySelectorAll('[data-grid-actions]')].find(item => item.dataset.gridActions === row[1]);
     delete grid.dataset.meroGridFocus;
-    (grid.querySelector(selector) || grid.querySelector('[data-grid-add]'))?.focus();
+    (control || grid.querySelector('[data-grid-add]'))?.focus();
   }
   function syncGrids(root, focus = false) {
     const grids = root.matches?.(gridSelector) ? [root] : root.querySelectorAll?.(gridSelector) || [];

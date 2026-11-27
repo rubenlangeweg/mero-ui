@@ -43,7 +43,7 @@ test('grid selection excludes disabled controls and row focus accepts opaque IDs
     await all.click();
     assert.equal(await all.isChecked(), false);
     assert.equal(await count.textContent(), '0 selected');
-    for (const id of ['42', 'a10f246e-763f-4c08-9315-fc1282dc0528', 'asset"[west]\\rack']) {
+    for (const id of ['42', 'a10f246e-763f-4c08-9315-fc1282dc0528', 'asset"[west]\\rack', 'asset\nwest', 'asset\rwest', 'asset\u2028west']) {
       for (const action of ['edit', 'delete']) {
         await page.getByRole('button', {name:'Add', exact:true}).focus();
         await page.locator('form').evaluate((grid, {id, action}) => {
