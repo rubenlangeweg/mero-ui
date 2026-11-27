@@ -2,7 +2,7 @@
 /* Optional Studio collection interactions. HTMX owns requests and swaps. */
 (() => {
   const gridSelector = '[data-mero-grid]';
-  const rowSelector = 'input[type="checkbox"][name="row"]';
+  const rowSelector = 'input[type="checkbox"][name="row"]:not(:disabled)';
   function updateSelection(grid) {
     const boxes = [...grid.querySelectorAll(rowSelector)];
     const selected = boxes.filter(box => box.checked);
@@ -18,8 +18,8 @@
     if (!key) return;
     const selectors = { field: '.mero-collection-editor input:not([type=hidden])', cancel: '[data-grid-cancel]', invalid:'[aria-invalid="true"]', add:'[data-grid-add]', search:'input[name=q]', filter:'[data-grid-filter]', 'sort-name':'[data-grid-sort=name]', 'sort-status':'[data-grid-sort=status]' };
     // edit-ID and delete-ID return to the row's Actions menu button.
-    const row = /^(?:edit|delete)-(\d+)$/.exec(key);
-    const selector = Object.hasOwn(selectors, key) ? selectors[key] : (row ? `[data-grid-actions="${row[1]}"]` : '');
+    const row = /^(?:edit|delete)-(.+)$/.exec(key);
+    const selector = Object.hasOwn(selectors, key) ? selectors[key] : (row ? `[data-grid-actions="${CSS.escape(row[1])}"]` : '');
     if (!selector) return;
     delete grid.dataset.meroGridFocus;
     (grid.querySelector(selector) || grid.querySelector('[data-grid-add]'))?.focus();

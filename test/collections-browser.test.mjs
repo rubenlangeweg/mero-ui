@@ -8,6 +8,54 @@ const playwright = await import(browserConfig.playwrightModule || 'playwright').
   throw error;
 });
 
+test('grid selection excludes disabled controls and row focus accepts opaque IDs',
+  {skip: !playwright && 'Install Playwright to run the browser regression'}, async t => {
+    const engine = browserConfig.engine || 'chromium';
+    const browser = await playwright[engine].launch({executablePath:engine === 'chromium' ? browserConfig.chromeExecutable : undefined});
+    t.after(() => browser.close());
+    const page = await browser.newPage();
+    await page.setContent(`<form data-mero-grid>
+      <input type="checkbox" data-grid-all aria-label="Select all">
+      <input type="checkbox" name="row" value="enabled" aria-label="Enabled">
+      <input type="checkbox" name="row" value="other" aria-label="Other">
+      <input type="checkbox" name="row" value="disabled" disabled aria-label="Disabled">
+      <fieldset disabled><input type="checkbox" name="row" value="fieldset" checked aria-label="Disabled fieldset"></fieldset>
+      <div data-grid-bar hidden><span data-grid-count></span><button type="button" data-grid-clear>Clear</button></div>
+      <button type="button" data-grid-add>Add</button>
+      <button type="button" data-grid-actions>Actions</button>
+    </form>`);
+    await page.addScriptTag({path: 'ui/mero-collections.js'});
+    const all = page.getByRole('checkbox', {name:'Select all', exact:true});
+    const count = page.locator('[data-grid-count]');
+    assert.equal(await count.textContent(), '0 selected');
+    await page.getByRole('checkbox', {name:'Enabled', exact:true}).check();
+    assert.equal(await all.evaluate(el => el.indeterminate), true);
+    await all.check();
+    assert.equal(await count.textContent(), '2 selected');
+    assert.deepEqual(await page.locator('form').evaluate(el => new FormData(el).getAll('row')), ['enabled', 'other']);
+    assert.equal(await page.getByRole('checkbox', {name:'Disabled', exact:true}).isChecked(), false);
+    assert.equal(await all.evaluate(el => el.indeterminate), false);
+    await page.getByRole('button', {name:'Clear', exact:true}).click();
+    assert.equal(await count.textContent(), '0 selected');
+    assert.equal(await page.locator('[data-grid-bar]').isHidden(), true);
+    assert.equal(await page.getByRole('checkbox', {name:'Disabled fieldset', exact:true}).isChecked(), true);
+    await page.locator('input[name=row]').evaluateAll(boxes => boxes.forEach(box => { box.disabled = true; }));
+    await all.click();
+    assert.equal(await all.isChecked(), false);
+    assert.equal(await count.textContent(), '0 selected');
+    for (const id of ['42', 'a10f246e-763f-4c08-9315-fc1282dc0528', 'asset"[west]\\rack']) {
+      for (const action of ['edit', 'delete']) {
+        await page.getByRole('button', {name:'Add', exact:true}).focus();
+        await page.locator('form').evaluate((grid, {id, action}) => {
+          grid.querySelector('[data-grid-actions]').dataset.gridActions = id;
+          grid.dataset.meroGridFocus = `${action}-${id}`;
+          grid.dispatchEvent(new CustomEvent('htmx:after:settle', {bubbles:true}));
+        }, {id, action});
+        assert.equal(await page.locator('[data-grid-actions]').evaluate(el => el === document.activeElement), true);
+      }
+    }
+  });
+
 test('collection interactions preserve drafts, keyboard focus and access to popover actions',
   {skip: !playwright && 'Install Playwright to run the browser regression'}, async t => {
     const server = createApp();
