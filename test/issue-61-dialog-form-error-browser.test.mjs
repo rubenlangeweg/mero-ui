@@ -45,6 +45,7 @@ test("issue #61: [data-mero-form-error] clears and hides on dialog close and for
       </dialog>
 
       <form id="page-form" hx-post="/save" hx-swap="none" data-mero-form>
+        <input id="page-name" name="name" value="Initial" aria-label="Name">
         <p id="page-error" class="mero-field-error" data-mero-form-error role="alert" hidden></p>
         <button id="page-save" type="submit" class="mero-button">Save inline</button>
         <button id="page-reset" type="reset" class="mero-button">Reset</button>
@@ -96,20 +97,34 @@ test("issue #61: [data-mero-form-error] clears and hides on dialog close and for
     await page.locator("#open-edit").click();
     assert.equal(await page.locator("#dlg-error").isHidden(), true, "Escape close hides error");
     assert.equal(await page.locator("#dlg-error").textContent(), "");
+
+    // 3. Synchronous MeroUI.close(dialog); MeroUI.open(dialog) in one turn clears the previous error before reopening.
+    await page.locator("#dlg-save").click();
+    await page.locator("#dlg-error").waitFor({ state: "visible" });
+    await page.evaluate(() => {
+      const dialog = document.getElementById("edit-dialog");
+      window.MeroUI.close(dialog);
+      window.MeroUI.open(dialog);
+    });
+    assert.equal(await page.locator("#edit-dialog").evaluate(d => d.open), true);
+    assert.equal(await page.locator("#dlg-error").isHidden(), true, "immediate close+open clears prior error");
+    assert.equal(await page.locator("#dlg-error").textContent(), "");
     await page.evaluate(() => window.MeroUI.close("edit-dialog"));
 
-    // 3. Inline form outside dialog: canceled reset keeps error, normal reset clears and hides it.
+    // 4. Inline form outside dialog: trusted reset click canceled on window keeps error; normal reset clears it.
+    await page.locator("#page-name").fill("Edited");
     await page.locator("#page-save").click();
     await page.locator("#page-error").waitFor({ state: "visible" });
     assert.equal(await page.locator("#page-error").textContent(), "Value is too high");
 
     await page.evaluate(() => {
-      const form = document.getElementById("page-form");
-      form.addEventListener("reset", e => e.preventDefault(), { once: true });
-      form.reset();
+      window.addEventListener("reset", e => e.preventDefault(), { once: true });
     });
-    await page.waitForTimeout(10);
-    assert.equal(await page.locator("#page-error").isVisible(), true, "canceled reset keeps form error visible");
+    await page.locator("#page-reset").click();
+    await page.waitForTimeout(30);
+    assert.equal(await page.locator("#page-name").inputValue(), "Edited", "window listener canceled reset");
+    assert.equal(await page.locator("#page-error").isVisible(), true, "trusted reset click canceled on window keeps form error visible");
+    assert.equal(await page.locator("#page-error").textContent(), "Value is too high");
 
     await page.locator("#page-reset").click();
     await page.waitForFunction(() => document.getElementById("page-error").hidden === true);
