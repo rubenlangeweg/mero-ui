@@ -157,10 +157,16 @@
     formRequests.set(ctx, form);
     if (form.matches("[data-mero-dirty]")) submittedSnapshots.set(form, snapshotForm(form));
     const buttons = [...form.elements].filter(control => !control.disabled && (control.type === "submit" || control.type === "image"));
+    const inertNodes = [
+      ...[...form.elements].filter(control => !control.closest?.("[inert], [data-mero-multiselect]") &&
+        control.matches("input, select, textarea, [type=reset]") && !control.matches("[type=submit], [type=button], [type=image], [type=hidden]")),
+      ...[...form.querySelectorAll("[data-mero-multiselect], [contenteditable]:not([contenteditable='false'])")].filter(node => !node.closest?.("[inert]")),
+    ];
     const submitter = ctx.request.submitter?.form === form ? ctx.request.submitter : null;
-    requesting.set(form, { buttons, ctx, owners: [submitter, form] });
+    requesting.set(form, { buttons, inertNodes, ctx, owners: [submitter, form] });
     form.setAttribute("aria-busy", "true");
     buttons.forEach((button) => { button.disabled = true; });
+    inertNodes.forEach((node) => { node.inert = true; });
     clearFormError(form);
     const panel = unknownPanel([submitter, form]);
     if (panel) panel.hidden = true;
@@ -222,10 +228,12 @@
     const form = formRequests.get(ctx);
     // A cancelled duplicate has no entry, so it never releases the request still in flight.
     if (!form) return;
-    const owners = requesting.get(form)?.owners ?? [form];
+    const active = requesting.get(form);
+    const owners = active?.owners ?? [form];
     const holder = owners.find(Boolean);
     form.removeAttribute("aria-busy");
-    requesting.get(form)?.buttons.forEach((button) => { button.disabled = false; });
+    active?.buttons.forEach((button) => { button.disabled = false; });
+    active?.inertNodes.forEach((node) => { node.inert = false; });
     requesting.delete(form);
     const typed = form.matches(confirmSelector);
     if (typed) checkConfirmation(form);
