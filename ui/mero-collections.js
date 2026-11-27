@@ -1,4 +1,4 @@
-/*! @rubenlangeweg/mero-ui 0.10.0 | MIT */
+/*! @rubenlangeweg/mero-ui 1.0.0 | MIT */
 /* Optional Studio collection interactions. HTMX owns requests and swaps. */
 (() => {
   const gridSelector = '[data-mero-grid]';

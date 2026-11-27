@@ -1,6 +1,6 @@
 {
   "name": "@rubenlangeweg/mero-ui",
-  "version": "0.10.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "HTML components and HTMX patterns for server-rendered interfaces.",
   "scripts": {

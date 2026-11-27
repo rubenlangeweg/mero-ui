@@ -53,9 +53,9 @@ npx mero-ui upgrade public/mero
 
 Pass `--minified` to copy `dist/ui/*.min.{css,js}` instead of unminified `ui/` files. `mero-ui verify` exits non-zero if any vendored file drifted from `MERO.json`, and `mero-ui upgrade` prints every **Breaking:** and **Deprecated:** changelog entry since the previously vendored version.
 
-To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.10.0/ui/mero.css`.
+To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v1.0.0/ui/mero.css`.
 
-Mero targets htmx 4 and is tested against htmx 4.0.2; later 4.x releases are expected to work but are not tested until the pin moves. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. The first line of each file names its release, for example `/*! @rubenlangeweg/mero-ui 0.10.0 | MIT */`, so a copied file shows which version it is. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
+Mero targets htmx 4 and is tested against htmx 4.0.2; later 4.x releases are expected to work but are not tested until the pin moves. Copy the Mero files you use from `node_modules/@rubenlangeweg/mero-ui/ui/` into your app’s static directory. The first line of each file names its release, for example `/*! @rubenlangeweg/mero-ui 1.0.0 | MIT */`, so a copied file shows which version it is. Serve `htmx.org/dist/htmx.min.js` at the path used in your HTML.
 
 The Mero scripts listen to htmx 4 events and read `event.detail.ctx`. Load `mero.js` on every page that uses a Mero script.
 

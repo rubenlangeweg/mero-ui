@@ -1,4 +1,4 @@
-/*! @rubenlangeweg/mero-ui 0.10.0 | MIT */
+/*! @rubenlangeweg/mero-ui 1.0.0 | MIT */
 export type MeroTone = "accent" | "success" | "warning" | "danger";
 export type MeroActionState = "pending" | "succeeded" | "rejected" | "unknown";
 export type MeroDialogBackdropMode = "all" | "mero-only";

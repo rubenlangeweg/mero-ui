@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 · 27 November 2026
 
 - **Breaking:** removed the deprecated `data-mero-check-form` hook from `ui/mero-composition.js`. Use pure CSS `.mero-validator` + `.mero-validator-hint` for client constraint hints and `data-mero-form` for server-backed validation.
 - **Breaking:** removed the deprecated `data-mero-ws-command` command palette from `ui/mero-workspace.js` (and its Cmd/Ctrl+K yield in `ui/mero.js`). Use core `dialog[data-mero-command]`, which now also supports local `data-mero-combo` option lists alongside remote HTMX searches and skips dialogs inside `[hidden]` ancestors.
