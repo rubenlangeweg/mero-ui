@@ -2,8 +2,8 @@
 (() => {
   "use strict";
 
-  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), defaults: {}, config: { locale: null, dialogBackdrop: "all", messages: {} } });
-  const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "all", messages: {} });
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), defaults: {}, config: { locale: null, dialogBackdrop: "mero-only", messages: {} } });
+  const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "mero-only", messages: {} });
   const defaults = (lifecycle.defaults ??= {});
   const defaultMessages = {
     notificationsLabel: "Notifications",
@@ -94,7 +94,8 @@
       input.removeAttribute("data-mero-combo-dismissed");
       input.removeAttribute("data-mero-combo-error");
       setComboOpen(input, false);
-      input.dispatchEvent(new CustomEvent("mero:query", { bubbles: true }));
+      if (input.closest("[data-mero-combo-remote]")) input.dispatchEvent(new CustomEvent("mero:query", { bubbles: true }));
+      else { input.focus({ preventScroll: true }); showComboResults(input); }
     }
     dialog.dispatchEvent(new CustomEvent("mero:dialog", { bubbles: true, detail: { open: true, dialog, returnValue: "" } }));
   }
@@ -902,10 +903,12 @@
   document.addEventListener("keydown", event => {
     const target = event.target;
     if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "k" &&
-      !event.defaultPrevented && !event.isComposing && !target.isContentEditable && !document.querySelector("dialog[open]") &&
-      // mero-workspace.js loads later and owns the shortcut when its command is on the page.
-      ![...document.querySelectorAll("[data-mero-ws-command]")].some(node => !node.closest("[inert]"))) {
-      const dialog = [...document.querySelectorAll("dialog[data-mero-command]")].find(node => !node.closest("[inert]"));
+      !event.defaultPrevented && !event.isComposing && !target.isContentEditable && !document.querySelector("dialog[open]")) {
+      const dialog = [...document.querySelectorAll("dialog[data-mero-command]")].find(node => {
+        if (node.closest("[inert], [hidden], details:not([open])") || (node.parentElement && getComputedStyle(node.parentElement).visibility !== "visible")) return false;
+        for (let el = node.parentElement; el; el = el.parentElement) if (getComputedStyle(el).display === "none") return false;
+        return true;
+      });
       if (dialog) {
         event.preventDefault();
         const active = document.activeElement;
@@ -1068,8 +1071,7 @@
       comboStatus(input, msg("comboLoading"));
       setComboOpen(input, false);
     } else {
-      if (input.closest("[data-mero-multiselect]")) syncMultiselect(input.closest("[data-mero-multiselect]"));
-    filterCombo(input);
+      showComboResults(input);
     }
   });
 

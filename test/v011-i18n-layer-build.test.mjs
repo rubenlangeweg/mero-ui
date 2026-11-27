@@ -39,7 +39,7 @@ test("TypeScript declarations cover window.MeroUI methods and core mero:* events
   for (const method of surface.api) {
     assert.match(dts, new RegExp(`\\b${method}\\(`), `mero.d.ts declares MeroAPI.${method}`);
   }
-  for (const eventName of ["mero:action", "mero:tab", "mero:toggle", "mero:selection", "mero:select", "mero:dialog", "mero:peek", "mero:dirty", "mero:form-saved", "mero:toast"]) {
+  for (const eventName of ["mero:action", "mero:tab", "mero:toggle", "mero:selection", "mero:select", "mero:dialog", "mero:peek", "mero:dirty", "mero:boost-unmatched", "mero:form-saved", "mero:toast"]) {
     assert.ok(dts.includes(`"${eventName}"`), `mero.d.ts declares ${eventName}`);
   }
 });
@@ -185,19 +185,25 @@ test("MeroUI.configure translates messages, resolves [lang]/data-mero-locale, sc
     await page.locator("#confirm-input").fill("delete/prod");
     assert.equal(await page.locator("#confirm-hint").textContent(), "Klaar om te bevestigen.");
 
-    // 4. dialogBackdrop: "mero-only" protects bare non-Mero dialogs while dismissing .mero-dialog.
+    // 4. dialogBackdrop defaults to "mero-only" (protecting bare non-Mero dialogs while dismissing .mero-dialog) and can opt into "all".
+    assert.equal(await page.evaluate(() => window.MeroUI.configure().dialogBackdrop), "mero-only");
     await page.evaluate(() => {
-      window.MeroUI.configure({ dialogBackdrop: "mero-only" });
       document.getElementById("bare-dialog").showModal();
     });
     await page.mouse.click(5, 5);
-    assert.equal(await page.locator("#bare-dialog").evaluate(d => d.open), true, "bare dialog stays open under mero-only");
+    assert.equal(await page.locator("#bare-dialog").evaluate(d => d.open), true, "bare dialog stays open under default mero-only");
     await page.evaluate(() => {
       document.getElementById("bare-dialog").close();
       document.getElementById("mero-dlg").showModal();
     });
     await page.mouse.click(5, 5);
     assert.equal(await page.locator("#mero-dlg").evaluate(d => d.open), false, ".mero-dialog still light-dismisses");
+    await page.evaluate(() => {
+      window.MeroUI.configure({ dialogBackdrop: "all" });
+      document.getElementById("bare-dialog").showModal();
+    });
+    await page.mouse.click(5, 5);
+    assert.equal(await page.locator("#bare-dialog").evaluate(d => d.open), false, "bare dialog light-dismisses when opted into all");
 
     // 5. @layer mero yields to @layer utilities and unlayered host CSS, while [hidden] still beats unlayered .host-grid.
     const styles = await page.locator("#btn-layered").evaluate(el => {

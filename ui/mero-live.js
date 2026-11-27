@@ -3,8 +3,8 @@
 // With data-mero-live-follow, an error response carrying HX-Redirect, HX-Location or HX-Refresh
 // (such as a 401 after the session expired) is handed to htmx instead of retried.
 (() => {
-  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), defaults: {}, config: { locale: null, dialogBackdrop: "all", messages: {} } });
-  const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "all", messages: {} });
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), defaults: {}, config: { locale: null, dialogBackdrop: "mero-only", messages: {} } });
+  const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "mero-only", messages: {} });
   const defaults = (lifecycle.defaults ??= {});
   const defaultMessages = { liveError: "Couldn't refresh. Retrying…" };
   Object.assign(defaults, defaultMessages);

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Breaking:** removed the deprecated `data-mero-check-form` hook from `ui/mero-composition.js`. Use pure CSS `.mero-validator` + `.mero-validator-hint` for client constraint hints and `data-mero-form` for server-backed validation.
+- **Breaking:** removed the deprecated `data-mero-ws-command` command palette from `ui/mero-workspace.js` (and its Cmd/Ctrl+K yield in `ui/mero.js`). Use core `dialog[data-mero-command]`, which now also supports local `data-mero-combo` option lists alongside remote HTMX searches and skips dialogs inside `[hidden]` ancestors.
+- **Breaking:** changed the default `MeroUI.configure({ dialogBackdrop })` mode from `"all"` to `"mero-only"`. Mero now light-dismisses backdrop clicks on `.mero-dialog`, `[data-mero-dialog]`, and dialogs opened through `data-mero-open` / `MeroUI.open()`, leaving bare third-party or Alpine `<dialog>` elements untouched by default. Call `MeroUI.configure({ dialogBackdrop: "all" })` to opt back in to dismissing all modal dialogs.
+- **1.0.0 stability guarantee:** locked the public API surface (`test/api-surface.json`, Core 4 runtime, TypeScript declarations, and zero-dependency `mero-ui` CLI) under strict SemVer — breaking changes happen only in major releases (`2.0.0+`).
+
 ## 0.10.0 · 27 November 2026
 
 - **Breaking:** moved the demo image (`studio-lamp.webp`) and Studio demo files (`mero-inventory.css`, `mero-inventory.js`) out of `ui/` into `public/` and moved demo `.mero-lamp-photo` rules out of `ui/mero-gallery.css` so `@rubenlangeweg/mero-ui/ui` ships self-contained text-only reusable assets.

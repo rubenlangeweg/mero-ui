@@ -11,8 +11,8 @@
  * data-mero-action-expect turns a success without the expected content into unknown.
  */
 (() => {
-  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), defaults: {}, config: { locale: null, dialogBackdrop: "all", messages: {} } });
-  const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "all", messages: {} });
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), defaults: {}, config: { locale: null, dialogBackdrop: "mero-only", messages: {} } });
+  const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "mero-only", messages: {} });
   const defaults = (lifecycle.defaults ??= {});
   const defaultMessages = {
     confirmTypePhrase: "Type the phrase exactly to enable confirmation.",
