@@ -16,6 +16,12 @@
   function focusGrid(grid) {
     const key = grid.dataset.meroGridFocus;
     if (!key) return;
+    const explicit = [...grid.querySelectorAll('[data-grid-focus-key]')].find(control => control.dataset.gridFocusKey === key);
+    if (explicit) {
+      delete grid.dataset.meroGridFocus;
+      explicit.focus();
+      return;
+    }
     const selectors = { field: '.mero-collection-editor input:not([type=hidden])', cancel: '[data-grid-cancel]', invalid:'[aria-invalid="true"]', add:'[data-grid-add]', search:'input[name=q]', filter:'[data-grid-filter]', 'sort-name':'[data-grid-sort=name]', 'sort-status':'[data-grid-sort=status]' };
     // edit-ID and delete-ID return to the row's Actions menu button.
     const row = /^(?:edit|delete)-(.+)$/.exec(key);
@@ -65,8 +71,9 @@
       return;
     }
     if (!target.matches?.(gridSelector)) return;
-    const revision = ctx.response?.headers.get('Inventory-Revision') ?? null;
-    if ((revision !== null && Number(revision) < Number(target.dataset.inventoryRevision)) || (status >= 400 && status !== 409 && status !== 422)) {
+    const revision = ctx.response?.headers.get(target.dataset.gridRevisionHeader || 'Inventory-Revision') ?? null;
+    const currentRevision = target.dataset.gridRevision ?? target.dataset.inventoryRevision;
+    if ((revision !== null && Number(revision) < Number(currentRevision)) || (status >= 400 && status !== 409 && status !== 422)) {
       event.preventDefault();
     }
   });

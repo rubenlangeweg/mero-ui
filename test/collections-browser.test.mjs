@@ -56,6 +56,40 @@ test('grid selection excludes disabled controls and row focus accepts opaque IDs
     }
   });
 
+test('grid focus and stale-response protection support application-defined contracts',
+  {skip: !playwright && 'Install Playwright to run the browser regression'}, async t => {
+    const engine = browserConfig.engine || 'chromium';
+    const browser = await playwright[engine].launch({executablePath:engine === 'chromium' ? browserConfig.chromeExecutable : undefined});
+    t.after(() => browser.close());
+    const page = await browser.newPage();
+    await page.setContent(`<section data-mero-grid data-grid-revision="7" data-grid-revision-header="Assets-Revision" data-inventory-revision="100">
+      <input name="q"><input name="asset-search" data-grid-focus-key="search">
+      <button data-grid-focus-key="sort-price">Price</button>
+    </section><section data-mero-grid><button data-grid-focus-key="sort-price">Other price</button></section>`);
+    await page.addScriptTag({path:'ui/mero-collections.js'});
+    for (const key of ['search', 'sort-price']) {
+      await page.locator('section').first().evaluate((grid, key) => {
+        grid.dataset.meroGridFocus = key;
+        grid.dispatchEvent(new CustomEvent('htmx:after:settle', {bubbles:true}));
+      }, key);
+      assert.equal(await page.locator('section').first().locator(`[data-grid-focus-key="${key}"]`).evaluate(el => el === document.activeElement), true);
+    }
+    for (const [headers, status, allowed] of [
+      [{'Assets-Revision':'6'}, 200, false],
+      [{'Assets-Revision':'7'}, 200, true],
+      [{'Assets-Revision':'8'}, 200, true],
+      [{'Inventory-Revision':'1'}, 200, true],
+      [{}, 200, true], [{}, 409, true], [{}, 422, true], [{}, 500, false],
+    ]) {
+      assert.equal(await page.locator('section').first().evaluate((grid, {headers, status}) => {
+        return grid.dispatchEvent(new CustomEvent('htmx:before:swap', {
+          bubbles:true, cancelable:true,
+          detail:{ctx:{target:grid, response:{status, headers:new Headers(headers)}}},
+        }));
+      }, {headers, status}), allowed, JSON.stringify({headers, status}));
+    }
+  });
+
 test('collection interactions preserve drafts, keyboard focus and access to popover actions',
   {skip: !playwright && 'Install Playwright to run the browser regression'}, async t => {
     const server = createApp();
