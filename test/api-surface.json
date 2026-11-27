@@ -149,6 +149,7 @@
   ],
   "events": [
     "mero:action",
+    "mero:boost-unmatched",
     "mero:dialog",
     "mero:dirty",
     "mero:form-saved",

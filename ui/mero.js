@@ -1258,10 +1258,26 @@
     let found;
     try { found = page.content.querySelector(selector); } catch {}
     if (!found) {
-      // A login page, an error page from a proxy or any other document: let the browser show it.
       event.preventDefault();
       unswappedBoosts.add(ctx);
-      location.assign(ctx.response?.raw?.url || ctx.request.action);
+      if (isGet(ctx)) {
+        // A login page, an error page from a proxy or any other document: let the browser show it.
+        location.assign(ctx.response?.raw?.url || ctx.request.action);
+      } else {
+        // Never replay a non-GET action URL as GET; keep the page intact and hand the response to the host.
+        const source = ctx.sourceElement ?? null;
+        (source?.isConnected ? source : document).dispatchEvent(new CustomEvent("mero:boost-unmatched", {
+          bubbles: true,
+          detail: {
+            source,
+            status: ctx.response?.status ?? 0,
+            method: ctx.request.method.toUpperCase(),
+            url: ctx.response?.raw?.url || ctx.request.action,
+            text: ctx.text ?? "",
+            response: ctx.response ?? null,
+          },
+        }));
+      }
       return;
     }
     const open = [...document.querySelectorAll("dialog[open]:not([data-mero-static], [role='alertdialog'])")];

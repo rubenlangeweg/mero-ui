@@ -127,6 +127,15 @@ export interface MeroDirtyEventDetail {
   form: HTMLFormElement;
 }
 
+export interface MeroBoostUnmatchedEventDetail {
+  source: Element | null;
+  status: number;
+  method: string;
+  url: string;
+  text: string;
+  response: unknown;
+}
+
 export interface MeroEventMap {
   "mero:action": CustomEvent<MeroActionEventDetail>;
   "mero:tab": CustomEvent<MeroTabEventDetail>;
@@ -136,6 +145,7 @@ export interface MeroEventMap {
   "mero:dialog": CustomEvent<MeroDialogEventDetail>;
   "mero:peek": CustomEvent<MeroPeekEventDetail>;
   "mero:dirty": CustomEvent<MeroDirtyEventDetail>;
+  "mero:boost-unmatched": CustomEvent<MeroBoostUnmatchedEventDetail>;
   "mero:query": CustomEvent<undefined>;
   "mero:refresh": CustomEvent<undefined>;
   "mero:toast": CustomEvent<{ message: string } & MeroToastOptions>;
