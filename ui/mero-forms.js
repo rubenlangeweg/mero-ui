@@ -34,6 +34,13 @@
   const formSelector = "form[data-mero-form]";
   const confirmSelector = "form[data-mero-form][data-mero-confirm]";
   const requesting = new WeakMap();
+  const lockedControls = new WeakSet();
+  document.addEventListener("click", event => {
+    const label = event.target.closest?.("label");
+    if (label?.control && lockedControls.has(label.control) && !event.target.closest?.("a[href], button")) {
+      event.preventDefault();
+    }
+  }, true);
   const formRequests = new WeakMap();
   // A swap can detach the button before finally:request, so the request remembers its button and status.
   const actionRequests = new WeakMap();
@@ -163,11 +170,13 @@
         control.matches("input, select, textarea, [type=reset]") && !control.matches("[type=submit], [type=button], [type=image], [type=hidden]")),
       ...[...form.querySelectorAll("[data-mero-multiselect], [contenteditable]:not([contenteditable='false'])")].filter(node => !node.closest?.("[inert]")),
     ];
+    const activeEl = document.activeElement;
+    const displacedFocus = activeEl && inertNodes.some(node => node === activeEl || node.contains(activeEl)) ? activeEl : null;
     const submitter = ctx.request.submitter?.form === form ? ctx.request.submitter : null;
-    requesting.set(form, { buttons, inertNodes, ctx, owners: [submitter, form] });
+    requesting.set(form, { buttons, inertNodes, displacedFocus, ctx, owners: [submitter, form] });
     form.setAttribute("aria-busy", "true");
     buttons.forEach((button) => { button.disabled = true; });
-    inertNodes.forEach((node) => { node.inert = true; });
+    inertNodes.forEach((node) => { node.inert = true; lockedControls.add(node); });
     clearFormError(form);
     const panel = unknownPanel([submitter, form]);
     if (panel) panel.hidden = true;
@@ -234,8 +243,12 @@
     const holder = owners.find(Boolean);
     form.removeAttribute("aria-busy");
     active?.buttons.forEach((button) => { button.disabled = false; });
-    active?.inertNodes.forEach((node) => { node.inert = false; });
+    active?.inertNodes.forEach((node) => { node.inert = false; lockedControls.delete(node); });
     requesting.delete(form);
+    const focusAfter = document.activeElement;
+    if (form.isConnected && active?.displacedFocus?.isConnected && (!focusAfter || focusAfter === document.body || focusAfter === form.closest("dialog"))) {
+      active.displacedFocus.focus({ preventScroll: true });
+    }
     const typed = form.matches(confirmSelector);
     if (typed) checkConfirmation(form);
     if (cancelled(ctx)) {

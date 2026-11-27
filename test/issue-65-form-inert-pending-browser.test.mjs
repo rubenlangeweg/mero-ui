@@ -33,6 +33,8 @@ test("issue #65: data-mero-form marks editable fields inert while pending withou
           <option value="std" selected>Standard</option>
           <option value="pro">Pro</option>
         </select>
+        <input id="agree" type="checkbox" name="agree" value="yes">
+        <label id="agree-label" for="agree">Agree to terms</label>
         <fieldset id="host-inert" inert>
           <input id="locked" name="locked" value="stay-inert" aria-label="Locked">
         </fieldset>
@@ -107,16 +109,21 @@ test("issue #65: data-mero-form marks editable fields inert while pending withou
     assert.match(receivedBodies[0], /name=Beta/, "inert fields are still submitted in FormData");
     assert.match(receivedBodies[0], /tier=std/);
 
+    // Real mouse click on an associated <label for="agree"> must NOT toggle the locked checkbox while pending.
+    const labelBox = await page.locator("#agree-label").boundingBox();
+    await page.mouse.click(labelBox.x + labelBox.width / 2, labelBox.y + labelBox.height / 2);
+    assert.equal(await page.locator("#agree").isChecked(), false, "label click cannot toggle checkbox while form request is pending");
+
     // Release 422 replacement swap -> replacement form is immediately editable and focuses invalid field.
     release();
     await page.waitForFunction(() => document.getElementById("name")?.getAttribute("aria-invalid") === "true");
     assert.equal(await page.locator("#name").evaluate(el => el.inert), false);
     assert.equal(await page.locator("#name").evaluate(el => el === document.activeElement), true);
 
-    // 2. Surviving form after 500 error restores Mero's inert controls while keeping host's pre-existing inert fieldset intact.
+    // 2. Pressing Enter from #name -> surviving form after 500 error restores inert AND restores displaced focus to #name.
     mode = "500";
     waitArrived = new Promise(resolve => { arrived = resolve; });
-    await page.locator("#save").click();
+    await page.locator("#name").press("Enter");
     await waitArrived;
     assert.equal(await page.locator("#name").evaluate(el => el.inert), true);
     release();
@@ -127,13 +134,19 @@ test("issue #65: data-mero-form marks editable fields inert while pending withou
       tierInert: document.getElementById("tier").inert,
       resetInert: document.getElementById("reset").inert,
       hostFieldsetInert: document.getElementById("host-inert").inert,
+      activeId: document.activeElement?.id ?? null,
     }));
     assert.deepEqual(settledState, {
       nameInert: false,
       tierInert: false,
       resetInert: false,
       hostFieldsetInert: true,
-    }, "Mero restores only its own inert nodes and preserves host-owned inert subtrees");
+      activeId: "name",
+    }, "Mero restores only its own inert nodes, preserves host-owned inert subtrees, and returns displaced focus to #name");
+
+    // Clicking the label works again after the request settles.
+    await page.locator("#agree-label").click();
+    assert.equal(await page.locator("#agree").isChecked(), true, "label click works again once settled");
 
     // Verify user can type again immediately after settle.
     await page.locator("#name").fill("Gamma");
