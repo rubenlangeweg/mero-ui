@@ -91,7 +91,7 @@
     if (mark) mark.focus({preventScroll:true});
     const button = event.target.closest?.('button');
     if (!button || button.disabled) return;
-    if (button.hasAttribute('data-mero-copy')) copy(button);
+    if (button.getAttribute('data-mero-copy') === '' && !button.hasAttribute('data-mero-copy-target')) copy(button);
     if (button.hasAttribute('data-mero-reaction')) {
       const countElement = button.querySelector('[data-mero-count]');
       if (!countElement) return;

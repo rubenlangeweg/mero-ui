@@ -39,11 +39,11 @@ import { agentDocument } from "./site/agent-docs.mjs";
 import { referencePage } from "./site/reference.mjs";
 
 export const sourceArchiveEntries = [
-  "LICENSE", ".gitignore", "README.md", "package.json", "package-lock.json", "server.mjs", "site", "ui", "public", "examples",
+  "LICENSE", "CHANGELOG.md", ".gitignore", "README.md", "package.json", "package-lock.json", "server.mjs", "bin", "site", "ui", "public", "examples",
   "test", "scripts", "skills", "docs", "worker.mjs", "vite.config.mjs", "cloudflare.config.ts",
 ];
-// The files the npm package ships live in ui/. Site-only files stay in public/.
-const libraryAsset = /^(?:mero[a-z-]*\.(?:css|js)|insight-[a-z-]+\.mjs|studio-lamp\.webp)$/;
+// The files the npm package ships live in ui/. Site-only and demo files stay in public/.
+const libraryAsset = /^(?:mero(?!-inventory\.)[a-z-]*\.(?:css|js)|insight-[a-z-]+\.mjs)$/;
 const formAssets = ["mero.css", "vendor/htmx.min.js", "mero.js", "mero-forms.js"];
 const settingsAssets = [...formAssets, "mero-layouts.css"];
 const workbenchAssets = [...formAssets, "mero-inventory.css", "mero-inventory.js"];

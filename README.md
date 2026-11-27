@@ -28,24 +28,30 @@ When changing the library itself, run `npx skills add . --skill mero-ui-contribu
 <script defer src="/mero.js"></script>
 ```
 
-### Try Go or Rust
+### Try a runnable backend
 
-Both [runnable examples](https://github.com/rubenlangeweg/mero-ui/tree/main/examples/backends) serve the same inventory button. From the repository root, choose one backend.
+Choose a minimal single-fragment quick start in Go or Rust, or the full-flow Node starter (CRUD, 422 validation, 409 conflict swap, CSRF 403, multi-select, typed confirmation and live progress with 401 redirect) in [examples/backends](https://github.com/rubenlangeweg/mero-ui/tree/main/examples/backends).
 
 | Backend | Run | Guide |
 | --- | --- | --- |
 | Go 1.22+ with `net/http` and `html/template` | `cd examples/backends && go run ./go/main.go` | [Go quick start](https://mero-ui.rubenlangeweg.com/start#go) |
 | Rust stable with Cargo and Axum | `cd examples/backends && cargo run --locked --manifest-path rust/Cargo.toml` | [Rust quick start](https://mero-ui.rubenlangeweg.com/start#rust) |
+| Node 22+ full-flow CRUD starter | `node examples/backends/node/server.mjs` | [Full-flow starter](examples/backends/node/README.md) |
 
-Open <http://127.0.0.1:4180> and choose **Check inventory**. Your handler returns an HTML fragment showing **6 products · 4 active**.
+Open <http://127.0.0.1:4180> (Go/Rust) or <http://127.0.0.1:4181> (Node full-flow starter).
 
-### Install with npm
+### Install and vendor with npm
 
-Install Mero UI and HTMX from npm.
+Install Mero UI and HTMX from npm, then use the zero-dependency `mero-ui` CLI to vendor pinned files with a `MERO.json` checksum manifest and `LICENSE.txt`.
 
 ```sh
 npm install @rubenlangeweg/mero-ui htmx.org@4.0.2
+npx mero-ui init public/mero --with layouts,gallery
+npx mero-ui verify public/mero
+npx mero-ui upgrade public/mero
 ```
+
+Pass `--minified` to copy `dist/ui/*.min.{css,js}` instead of unminified `ui/` files. `mero-ui verify` exits non-zero if any vendored file drifted from `MERO.json`, and `mero-ui upgrade` prints every **Breaking:** and **Deprecated:** changelog entry since the previously vendored version.
 
 To skip the install, load a file straight from the tag, for example `https://cdn.jsdelivr.net/gh/rubenlangeweg/mero-ui@v0.9.0/ui/mero.css`.
 
@@ -82,9 +88,21 @@ Add `data-mero-peek` around a table wrapper whose rows have a `.mero-row-link`, 
 
 Add `data-mero-restore-focus` to a list container. When someone opens a link in it and then presses Back, `mero.js` focuses that link again. This works after a full page load and after an HTMX history restore. Links are matched by their `href`, so keep row hrefs unique on the page. Mark one control in the container with `data-mero-focus-fallback`. It gets focus when an HTMX swap removes the focused element.
 
-Use the [theme studio](http://127.0.0.1:4173/themes) to try colors, fonts and radii on real components or an app layout. Export the CSS, load it after `mero.css` and set `data-theme="light"` or `data-theme="dark"` on a document or section.
+Use the [theme studio](http://127.0.0.1:4173/themes) to customize tokens, or load the optional `ui/mero-themes.css` (`npx mero-ui init public/mero --with themes`) for composable drop-in palettes (`cobalt`, `fern`, `clay`, `editorial`) and structural modifiers (`compact`, `flat`, `crisp`) alongside `light`, `dark` or `auto` — e.g. `data-theme="cobalt dark compact"`. Adjust borders and elevation globally with `--mero-border-width` and `--mero-depth`.
 
-Media uses `mero-gallery` assets. Collections use `mero-collections`. Workspace controls use `mero-workspace`. Charts and conversation examples use `mero-insights`. Presentation utilities use `mero-composition`. Each pair comprises a stylesheet and a deferred script. Two optional server helpers render charts and a small Markdown subset. Import them as `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown`.
+All shipped stylesheets wrap their rules in `@layer mero` with `:where()` selectors so host styles and utility layers override them predictably. Mero requires no Tailwind or CSS build step; when using Tailwind CSS v4 alongside Mero, declare `mero` before `utilities`:
+
+```css
+@layer theme, base, mero, components, utilities;
+@import "tailwindcss";
+@import "@rubenlangeweg/mero-ui/ui/mero.css";
+```
+
+### Package tiers
+
+- **Core runtime (`ui/mero.css`, `ui/mero.js`, `ui/mero-forms.js`, `ui/mero-live.js`):** Semver-guarded, i18n-configurable via `MeroUI.configure()`, zero-JS `.mero-validator` / `.mero-validator-hint` styling, and tested alongside Alpine.js across Chromium, Firefox and WebKit. Minified copies and SHA-384 SRI hashes ship in `dist/`.
+- **Optional modules:** `mero-themes.css`, `mero-gallery`, `mero-layouts.css`, `mero-collections`, `mero-workspace`, `mero-insights`, `mero-composition`, plus `@rubenlangeweg/mero-ui/charts` and `@rubenlangeweg/mero-ui/markdown` server helpers.
+- **Reference workflows & recipes:** `examples/backends/` (Go, Rust, Node full-flow), `examples/studio-inventory/` and `examples/premium/` stay outside `ui/` as copy-and-own blueprints.
 
 ## Stability
 
@@ -119,7 +137,7 @@ Release 0.3 renames the `rl-` prefix to `mero-` in classes, `--mero-*` tokens an
 
 Download the [complete preview and source](http://127.0.0.1:4173/downloads/mero-ui.tar.gz), extract into an empty directory, then run `npm start`. For the smaller [standalone inventory example](http://127.0.0.1:4173/downloads/studio-inventory.tar.gz), see the [example instructions](examples/studio-inventory/README.md). The local server creates downloads with `tar`. The hosted site serves archives prepared during the build.
 
-The [coverage map](docs/component-coverage.md) links the catalog to the original reference families. The [edit comparison](examples/edit-comparison/README.md) uses the same edit flow across three implementations.
+The [component overview](docs/component-coverage.md) summarizes the shipped component families and verification coverage.
 
 The inventory form uses `mero-forms.js` for pending state, a replacement form on HTTP 422, and a successful `mero:form-saved` event. `mero-forms.js` also reports the outcome of standalone action buttons marked `data-mero-action`. The `Mero-Action-Outcome` (`succeeded`, `rejected` or `unknown`) and `Mero-Action-Message` response headers override the status-based state and its text. The host supplies validation, persistence and authorization in its own application. A chart table, campus map and chat assistant in the catalog use local sample data. The chat demo gives deterministic replies.
 

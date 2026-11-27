@@ -3,6 +3,26 @@
 // With data-mero-live-follow, an error response carrying HX-Redirect, HX-Location or HX-Refresh
 // (such as a 401 after the session expired) is handed to htmx instead of retried.
 (() => {
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), defaults: {}, config: { locale: null, dialogBackdrop: "all", messages: {} } });
+  const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "all", messages: {} });
+  const defaults = (lifecycle.defaults ??= {});
+  const defaultMessages = { liveError: "Couldn't refresh. Retrying…" };
+  Object.assign(defaults, defaultMessages);
+  const msg = key => config.messages[key] ?? defaultMessages[key] ?? "";
+  function validLocale(tag) {
+    if (!tag) return null;
+    try { return Intl.getCanonicalLocales(tag)[0] ?? null; } catch { return null; }
+  }
+  function resolveLocale(node) {
+    const explicit = node.closest("[data-mero-locale]")?.getAttribute("data-mero-locale")?.trim() || config.locale;
+    if (explicit === "browser") return undefined;
+    if (explicit && explicit !== "document") return validLocale(explicit) ?? undefined;
+    const valid = validLocale(node.closest("[lang]")?.getAttribute("lang")?.trim());
+    if (!valid) return undefined;
+    if (explicit === "document" || valid.includes("-")) return valid;
+    const reader = (typeof navigator !== "undefined" && navigator.language || "").split("-")[0].toLowerCase();
+    return valid.toLowerCase() !== reader ? valid : undefined;
+  }
   const selector = "[data-mero-live]";
   const states = new WeakMap();
 
@@ -15,23 +35,48 @@
   function schedule(region, state) {
     clearTimeout(state.timer);
     if (state.request || !region.isConnected || region.hasAttribute("data-mero-live-done") || document.visibilityState !== "visible") return;
-    const interval = Number(region.dataset.meroLive);
-    state.timer = setTimeout(() => refresh(region), Number.isFinite(interval) && interval > 0 ? interval : 3000);
+    const raw = state.interval ?? Number(region.dataset.meroLive);
+    const base = Number.isFinite(raw) && raw > 0 ? raw : 3000;
+    const delay = state.failures > 1 ? Math.min(base * 2 ** Math.min(state.failures - 1, 4), Math.max(base * 8, 30000)) : base;
+    state.timer = setTimeout(() => refresh(region), delay);
   }
 
   function init(region) {
     if (states.has(region)) return;
-    // The server rendered the region, so the page load counts as the first good read.
-    const state = { timer: null, request: null, goodAt: Date.now(), followed: false };
+    // Register state before calling htmx.process() so its synchronous htmx:after:init does not double-schedule.
+    const state = { timer: null, request: null, goodAt: Date.now(), followed: false, failures: 0, interval: null };
     states.set(region, state);
+    if (window.htmx?.process && !region.hasAttribute("data-htmx-powered")) {
+      try { window.htmx.process(region); } catch {}
+    }
     schedule(region, state);
   }
+
+  function initAll(root = document) {
+    if (!(root instanceof Element || root instanceof Document)) return;
+    if (root.matches?.(selector)) init(root);
+    root.querySelectorAll(selector).forEach(init);
+  }
+
+  function cleanupAll(root = document) {
+    if (!(root instanceof Element || root instanceof Document)) return;
+    const regions = [...(root.matches?.(selector) ? [root] : []), ...root.querySelectorAll(selector)];
+    for (const region of regions) {
+      const state = states.get(region);
+      if (!state) continue;
+      pause(region, state);
+      states.delete(region);
+    }
+  }
+
+  lifecycle.init.add(initAll);
+  lifecycle.cleanup.add(cleanupAll);
 
   document.addEventListener("htmx:after:init", event => {
     if (event.target.matches?.(selector)) init(event.target);
   });
   // The optional script can also load after htmx processed the page.
-  document.querySelectorAll(selector).forEach(init);
+  initAll(document);
 
   function pause(region, state) {
     clearTimeout(state.timer);
@@ -60,7 +105,11 @@
 
   document.addEventListener("click", event => {
     const region = event.target.closest?.("[data-mero-live-retry]")?.closest(selector);
-    if (region) refresh(region);
+    if (region) {
+      const state = states.get(region);
+      if (state) state.failures = 0;
+      refresh(region);
+    }
   });
 
   document.addEventListener("htmx:config:request", event => {
@@ -120,11 +169,20 @@
     if (ctx.response || String(ctx.status).startsWith("error")) {
       const failed = !ctx.response?.raw.ok || String(ctx.status).startsWith("error");
       const error = region.querySelector("[data-mero-live-error]");
-      if (!failed) state.goodAt = Date.now();
+      if (!failed) {
+        state.goodAt = Date.now();
+        state.failures = 0;
+        const nextInterval = Number(ctx.response.headers.get("Mero-Live-Interval"));
+        if (Number.isFinite(nextInterval) && nextInterval > 0) state.interval = nextInterval;
+      } else {
+        state.failures += 1;
+      }
       // The author's text may name the last good read: "Couldn't refresh. Showing the status from {time}."
       const template = error?.getAttribute("data-mero-live-error");
-      const time = new Date(state.goodAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      const message = !failed ? "" : template ? template.replaceAll("{time}", time) : "Couldn't refresh. Retrying…";
+      let time;
+      try { time = new Date(state.goodAt).toLocaleTimeString(resolveLocale(region), { hour: "2-digit", minute: "2-digit" }); }
+      catch { time = new Date(state.goodAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }); }
+      const message = !failed ? "" : template ? template.replaceAll("{time}", time) : msg("liveError");
       if (error && error.textContent !== message) error.textContent = message;
       const retry = region.querySelector("[data-mero-live-retry]");
       if (retry) {

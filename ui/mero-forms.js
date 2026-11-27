@@ -11,6 +11,26 @@
  * data-mero-action-expect turns a success without the expected content into unknown.
  */
 (() => {
+  const lifecycle = (globalThis[Symbol.for("mero.lifecycle")] ??= { init: new Set(), cleanup: new Set(), defaults: {}, config: { locale: null, dialogBackdrop: "all", messages: {} } });
+  const config = (lifecycle.config ??= { locale: null, dialogBackdrop: "all", messages: {} });
+  const defaults = (lifecycle.defaults ??= {});
+  const defaultMessages = {
+    confirmTypePhrase: "Type the phrase exactly to enable confirmation.",
+    confirmEnterReason: "Phrase matches. Enter a reason to enable confirmation.",
+    confirmReady: "Ready to confirm.",
+    confirmUnknown: "Outcome unknown. Check the current state before retrying.",
+    confirmRejected: "The server rejected this action.",
+    formUnreachable: "The server could not be reached. Check whether the change was saved before retrying.",
+    formFailed: "The request could not be completed. Check the current state and try again.",
+    actionSucceeded: "Done.",
+    actionRejected: "The server refused this action. Nothing changed.",
+    actionUnknown: "The result is unknown. Check the current state before you try again.",
+    searchError: "Couldn't update the results. The list still shows the previous results.",
+    holdWarning: "Copy what is shown before you leave this page. It cannot be shown again.",
+    dirtyLeaveWarning: "You have unsaved changes. Leave without saving?",
+  };
+  Object.assign(defaults, defaultMessages);
+  const msg = key => config.messages[key] ?? defaultMessages[key] ?? "";
   const formSelector = "form[data-mero-form]";
   const confirmSelector = "form[data-mero-form][data-mero-confirm]";
   const requesting = new WeakMap();
@@ -73,8 +93,8 @@
       button.disabled = !ready || requesting.has(form);
     }
     const hint = form.querySelector("[data-mero-confirm-hint]");
-    const message = !matches ? "Type the phrase exactly to enable confirmation."
-      : !ready ? "Phrase matches. Enter a reason to enable confirmation." : "Ready to confirm.";
+    const message = !matches ? msg("confirmTypePhrase")
+      : !ready ? msg("confirmEnterReason") : msg("confirmReady");
     if (hint && hint.textContent !== message) hint.textContent = message;
     return ready;
   }
@@ -113,6 +133,7 @@
     }
     const { ctx } = event.detail;
     formRequests.set(ctx, form);
+    if (form.matches("[data-mero-dirty]")) submittedSnapshots.set(form, snapshotForm(form));
     const buttons = [...form.elements].filter(control => !control.disabled && (control.type === "submit" || control.type === "image"));
     const submitter = ctx.request.submitter?.form === form ? ctx.request.submitter : null;
     requesting.set(form, { buttons, ctx, owners: [submitter, form] });
@@ -123,7 +144,7 @@
     const panel = unknownPanel([submitter, form]);
     if (panel) panel.hidden = true;
     (submitter ?? form).dataset.meroActionState = "pending";
-    form.dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state: "pending" } }));
+    form.dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state: "pending", source: form, id: form.id || null } }));
   });
 
   // Decide before htmx applies HX-Trigger: a response that is not a confirmed
@@ -153,16 +174,17 @@
     }
     const status = ctx.response?.status;
     if (!(status >= 400) || !requestForm(event)) return;
-    // htmx 4 swaps every error response. Only a 422 carries a replacement form.
-    if (status !== 422) event.preventDefault();
+    // htmx 4 swaps every error response. Only 422, and 409 when opted in, carry a replacement form.
+    if (status !== 422 && !(status === 409 && form?.hasAttribute("data-mero-conflict-swap"))) event.preventDefault();
   });
 
   // after:swap, not after:settle: htmx 4 applies [autofocus] in the new form after settling.
   // It fires on the source, which htmx points at the new form when the swap replaced it.
   document.addEventListener("htmx:after:swap", (event) => {
-    if (event.detail.ctx.response?.status !== 422) return;
+    const status = event.detail.ctx.response?.status;
     const form = event.target.closest?.(formSelector);
-    const field = form?.querySelector('[aria-invalid="true"]');
+    if (status !== 422 && !(status === 409 && form?.hasAttribute("data-mero-conflict-swap"))) return;
+    const field = (status === 409 && form?.querySelector("[data-mero-conflict-focus]")) || form?.querySelector('[aria-invalid="true"]');
     field?.focus();
   });
 
@@ -194,7 +216,10 @@
     const live = form.isConnected ? form : ctx.sourceElement?.matches?.(formSelector) && ctx.sourceElement.isConnected ? ctx.sourceElement : null;
     if (form.hasAttribute("data-mero-clear-passwords")) {
       for (const node of new Set([form, live])) {
-        node?.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; });
+        node?.querySelectorAll('input[type="password"]').forEach(input => {
+          input.value = "";
+          input.defaultValue = "";
+        });
       }
     }
     const state = outcomeOf(ctx, owners);
@@ -205,8 +230,8 @@
     let message = headerMessage;
     if (state === "succeeded") {
       if (message) window.MeroUI?.toast(message, { tone: "success", trigger: live ?? undefined });
-    } else if (state === "rejected" && status === 422 && !explicit) {
-      // The replacement form shows its own field errors.
+    } else if (state === "rejected" && (status === 422 || (status === 409 && form.hasAttribute("data-mero-conflict-swap"))) && !explicit) {
+      // The replacement form shows its own field or conflict details.
     } else {
       if (state === "unknown") {
         message ||= unknownText(owners);
@@ -217,14 +242,14 @@
       if (!message) {
         const signal = ctx.request.signal;
         message = typed
-          ? (state === "unknown" ? "Outcome unknown. Check the current state before retrying." : "The server rejected this action.")
+          ? msg(state === "unknown" ? "confirmUnknown" : "confirmRejected")
           : !ctx.response && (signal?.reason === "timeout" || !signal?.aborted)
-            ? "The server could not be reached. Check whether the change was saved before retrying."
-            : "The request could not be completed. Check the current state and try again.";
+            ? msg("formUnreachable")
+            : msg("formFailed");
       }
       if (live) showError(live, message);
     }
-    (live ?? document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message } }));
+    (live ?? document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message, source: form, id: form.id || null } }));
   });
 
   document.addEventListener("mero:form-saved", (event) => {
@@ -244,15 +269,23 @@
       window.MeroUI.close(dialog, { focus: parent ? null : focus });
       dialog = parent;
     }
+    if (form.isConnected && form.matches("[data-mero-dirty]")) {
+      if (form.getAttribute("data-mero-dirty") === "dirty") form.setAttribute("data-mero-dirty", "");
+      const submitted = submittedSnapshots.get(form) ?? snapshotForm(form);
+      submittedSnapshots.delete(form);
+      formBaselines.set(form, submitted);
+      syncSavedDefaults(form, submitted);
+      updateForm(form);
+    }
     focus?.focus({ preventScroll: true });
     if (event.detail.message) window.MeroUI.toast(event.detail.message, { tone: "success" });
   });
 
   const actionOf = event => event.target.closest?.("[data-mero-action]");
-  const actionMessages = {
-    succeeded: ["Done.", "success"],
-    rejected: ["The server refused this action. Nothing changed.", "warning"],
-    unknown: ["The result is unknown. Check the current state before you try again.", "danger"],
+  const actionTones = {
+    succeeded: ["actionSucceeded", "success"],
+    rejected: ["actionRejected", "warning"],
+    unknown: ["actionUnknown", "danger"],
   };
   const actionStatus = action => action.parentElement?.querySelector("[data-mero-action-status]");
 
@@ -275,7 +308,7 @@
     if (output) { output.textContent = ""; delete output.dataset.tone; }
     const panel = unknownPanel([action]);
     if (panel) panel.hidden = true;
-    action.dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state: "pending" } }));
+    action.dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state: "pending", source: action, id: action.id || null } }));
   });
 
   // htmx fires finally:request after load, error, abort and timeout alike.
@@ -294,9 +327,9 @@
     }
     const status = ctx.response?.status ?? 0;
     const state = outcomeOf(ctx, [action]);
-    const [fallback, tone] = actionMessages[state];
+    const [fallbackKey, tone] = actionTones[state];
     const headerMessage = state === serverOutcome(ctx) && ctx.response?.headers.get("Mero-Action-Message");
-    const message = headerMessage || (state === "unknown" && unknownText([action])) || fallback;
+    const message = headerMessage || (state === "unknown" && unknownText([action])) || msg(fallbackKey);
     if (state === "unknown") {
       const panel = unknownPanel([action]);
       if (panel) panel.hidden = false;
@@ -312,12 +345,65 @@
     } else {
       window.MeroUI?.toast(message, { tone, trigger: action.isConnected ? action : event.target });
     }
-    (action.isConnected ? action : document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message } }));
+    (action.isConnected ? action : document).dispatchEvent(new CustomEvent("mero:action", { bubbles: true, detail: { state, status, message, source: action, id: action.id || null } }));
   });
   // Form state helpers. [data-mero-show-when="field=value other"] shows a branch only while the form's
   // field has one of the values, and disables its controls while hidden so they neither validate nor submit.
-  // form[data-mero-dirty] keeps its submit buttons disabled until a control differs from the rendered value.
+  // form[data-mero-dirty] keeps its submit buttons disabled until a control differs from the acknowledged baseline.
   const disabledByBranch = new WeakSet();
+  const dirtyStates = new WeakMap();
+  const formBaselines = new WeakMap();
+  const submittedSnapshots = new WeakMap();
+  const submittingNative = new WeakSet();
+  const multiSnapshot = multi => [...multi.querySelectorAll('[data-mero-multiselect-chips] input[type="hidden"]')].map(i => i.value).join("\0");
+  const selectSnapshot = select => [...select.selectedOptions].map(option => option.value).join("\0");
+  const isTrackableField = control => control.matches("input, select, textarea") && !control.matches("[type=submit], [type=button], [type=reset], [type=image]");
+
+  function syncSavedDefaults(form, snapshot) {
+    const clearPwd = form.hasAttribute("data-mero-clear-passwords");
+    for (const [control, saved] of snapshot.fields) {
+      if (!form.contains(control)) continue;
+      if (clearPwd && control.matches("input[type=password]")) continue;
+      if (control.matches("input[type=checkbox], input[type=radio]")) {
+        control.defaultChecked = Boolean(saved);
+      } else if (control.matches("select")) {
+        const remaining = saved === "" ? [] : String(saved).split("\0");
+        for (const option of control.options) {
+          const idx = remaining.indexOf(option.value);
+          option.defaultSelected = idx !== -1;
+          if (idx !== -1) remaining.splice(idx, 1);
+        }
+      } else if (control.matches("input, textarea")) {
+        // Hidden inputs share value and defaultValue; skip if a mid-flight edit changed value.
+        if (control.type === "hidden" && control.value !== String(saved)) continue;
+        control.defaultValue = String(saved);
+      }
+    }
+    for (const [multi, chips] of snapshot.multiChips ?? []) {
+      if (form.contains(multi)) lifecycle.setMultiBaseline?.(multi, chips);
+    }
+  }
+
+  function snapshotForm(form) {
+    const clearPwd = form.hasAttribute("data-mero-clear-passwords");
+    const fields = new Map();
+    for (const control of form.elements) {
+      if (control.closest?.("[data-mero-multiselect]") || !isTrackableField(control)) continue;
+      if (clearPwd && control.matches("input[type=password]")) continue;
+      if (control.matches("input[type=checkbox], input[type=radio]")) fields.set(control, control.checked);
+      else if (control.matches("select")) fields.set(control, selectSnapshot(control));
+      else fields.set(control, control.value);
+    }
+    const multis = new Map();
+    const multiChips = new Map();
+    for (const multi of form.querySelectorAll("[data-mero-multiselect]")) {
+      multis.set(multi, multiSnapshot(multi));
+      const chips = lifecycle.captureMultiChips?.(multi);
+      if (chips) multiChips.set(multi, chips);
+    }
+    return { fields, multis, multiChips };
+  }
+
   function fieldValues(form, name) {
     const values = [];
     for (const control of form.elements) {
@@ -328,35 +414,141 @@
     }
     return values;
   }
+
   function changed(form) {
+    if (form.getAttribute("data-mero-dirty") === "dirty") return true;
+    let baseline = formBaselines.get(form);
+    if (!baseline) {
+      baseline = snapshotForm(form);
+      formBaselines.set(form, baseline);
+    }
+    for (const multi of form.querySelectorAll("[data-mero-multiselect]")) {
+      if (!baseline.multis.has(multi)) baseline.multis.set(multi, multiSnapshot(multi));
+      if (multiSnapshot(multi) !== baseline.multis.get(multi)) return true;
+    }
+    const clearPwd = form.hasAttribute("data-mero-clear-passwords");
     return [...form.elements].some(control => {
+      if (control.closest?.("[data-mero-multiselect]") || !isTrackableField(control)) return false;
+      if (clearPwd && control.matches("input[type=password]")) return control.value !== "";
+      if (baseline.fields.has(control)) {
+        if (control.matches("input[type=checkbox], input[type=radio]")) return control.checked !== baseline.fields.get(control);
+        if (control.matches("select")) return selectSnapshot(control) !== baseline.fields.get(control);
+        return control.value !== baseline.fields.get(control);
+      }
       if (control.matches("input[type=checkbox], input[type=radio]")) return control.checked !== control.defaultChecked;
       if (control.matches("select")) return [...control.options].some(option => option.selected !== option.defaultSelected);
-      return control.matches("input, textarea") && !control.matches("[type=submit], [type=button], [type=reset], [type=image]") && control.value !== control.defaultValue;
+      return control.value !== control.defaultValue;
     });
   }
+
   function updateForm(form) {
     // Outer branches first, so a nested branch reads the state its parent left.
     for (const branch of form.querySelectorAll("[data-mero-show-when]")) {
-      const [name, wanted = ""] = branch.getAttribute("data-mero-show-when").split("=");
+      const expr = branch.getAttribute("data-mero-show-when");
+      const negated = expr.includes("!=");
+      const [name, wanted = ""] = expr.split(negated ? "!=" : "=");
       const values = fieldValues(form, name.trim());
-      const show = wanted.trim().split(/\s+/).some(value => values.includes(value)) && !branch.parentElement.closest("[data-mero-show-when][hidden]");
+      const trimmed = wanted.trim();
+      const targets = trimmed === "" ? [""] : trimmed.split(/\s+/);
+      const matched = targets.some(value => values.includes(value));
+      const show = (negated ? !matched : matched) && !branch.parentElement.closest("[data-mero-show-when][hidden]");
       branch.hidden = !show;
+      if (branch.hasAttribute("data-mero-show-when-keep-enabled")) continue;
       if (branch.matches("fieldset")) branch.disabled = !show;
       else for (const control of branch.querySelectorAll("input, select, textarea, button")) {
         if (!show && !control.disabled) { control.disabled = true; disabledByBranch.add(control); }
         else if (show && disabledByBranch.delete(control)) control.disabled = false;
       }
     }
-    if (form.matches("[data-mero-dirty]") && !requesting.has(form)) {
-      const clean = !changed(form);
-      for (const button of form.querySelectorAll("button:not([type]), [type=submit], [type=image]")) {
-        if (!button.closest("[data-mero-show-when][hidden]")) button.disabled = clean;
+    if (form.matches("[data-mero-dirty]")) {
+      const dirty = changed(form);
+      if (!requesting.has(form)) {
+        for (const button of form.querySelectorAll("button:not([type]), [type=submit], [type=image]")) {
+          if (!button.closest("[data-mero-show-when][hidden]")) button.disabled = !dirty;
+        }
+      }
+      const previous = dirtyStates.get(form);
+      dirtyStates.set(form, dirty);
+      if (previous !== undefined && previous !== dirty) {
+        form.dispatchEvent(new CustomEvent("mero:dirty", { bubbles: true, detail: { dirty, form } }));
       }
     }
   }
-  const stateForms = root => [...(root.matches?.("form") ? [root] : []), ...(root.querySelectorAll?.("form") ?? [])]
-    .filter(form => form.matches("[data-mero-dirty]") || form.querySelector("[data-mero-show-when]"));
+
+  function dirtyGuardedForms() {
+    return [...document.querySelectorAll("form[data-mero-dirty][data-mero-dirty-guard]")]
+      .filter(form => form.isConnected && !requesting.has(form) && !submittingNative.has(form) && changed(form));
+  }
+  const dirtyGuarded = () => dirtyGuardedForms()[0] ?? null;
+
+  let dirtyHistoryDecision = null;
+  function setDirtyHistoryDecision(value) {
+    dirtyHistoryDecision = value;
+    setTimeout(() => { if (dirtyHistoryDecision === value) dirtyHistoryDecision = null; }, 50);
+  }
+  function confirmLeaveDirty(guarded) {
+    return window.confirm(guarded.getAttribute("data-mero-dirty-guard") || msg("dirtyLeaveWarning"));
+  }
+
+  document.addEventListener("submit", event => {
+    if (event.defaultPrevented || !(event.target instanceof HTMLFormElement)) return;
+    const target = (event.submitter?.getAttribute("formtarget") || event.target.getAttribute("target") || "").trim().toLowerCase();
+    // Only exempt submissions that navigate this document (not iframe or _blank targets).
+    if (target && target !== "_self" && target !== "_top" && target !== "_parent") return;
+    submittingNative.add(event.target);
+    setTimeout(() => submittingNative.delete(event.target), 2000);
+  });
+  addEventListener("pageshow", () => {
+    for (const form of document.querySelectorAll("form[data-mero-dirty-guard]")) submittingNative.delete(form);
+  });
+
+  document.addEventListener("htmx:config:request", event => {
+    const { ctx } = event.detail;
+    if (event.defaultPrevented || ctx.request.method.toUpperCase() !== "GET") return;
+    const candidates = dirtyGuardedForms();
+    if (!candidates.length) return;
+    const target = typeof ctx.target === "string" ? document.querySelector(ctx.target) : ctx.target;
+    const isHistory = Boolean(ctx.request.headers["HX-History-Restore-Request"]);
+    const fullLeave = Boolean(ctx.request.headers["HX-Boosted"] || isHistory || target === document.body || target === document.documentElement);
+    const guarded = fullLeave ? candidates[0] : candidates.find(form => target?.contains(form));
+    if (!guarded) return;
+    if (isHistory && dirtyHistoryDecision === "allow") return;
+    if (isHistory && dirtyHistoryDecision === "block") { event.preventDefault(); return; }
+    if (!confirmLeaveDirty(guarded)) {
+      event.preventDefault();
+      if (isHistory) {
+        setDirtyHistoryDecision("block");
+        if (location.href !== steady.url) restoreSteady();
+      }
+    } else if (isHistory) {
+      setDirtyHistoryDecision("allow");
+    }
+  });
+  addEventListener("beforeunload", event => {
+    if (!dirtyGuarded()) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
+
+  const stateForms = root => {
+    const found = new Set();
+    const ancestor = root instanceof Element ? root.closest("form") : null;
+    if (ancestor) found.add(ancestor);
+    if (root.matches?.("form")) found.add(root);
+    for (const form of root.querySelectorAll?.("form") ?? []) found.add(form);
+    return [...found].filter(form => form.matches("[data-mero-dirty]") || form.querySelector("[data-mero-show-when]"));
+  };
+  function initForms(root = document) {
+    if (!(root instanceof Element || root instanceof Document)) return;
+    stateForms(root).forEach(updateForm);
+    const confirms = new Set();
+    const ancestor = root instanceof Element ? root.closest(confirmSelector) : null;
+    if (ancestor) confirms.add(ancestor);
+    if (root.matches?.(confirmSelector)) confirms.add(root);
+    for (const form of root.querySelectorAll?.(confirmSelector) ?? []) confirms.add(form);
+    confirms.forEach(checkConfirmation);
+  }
+  lifecycle.init.add(initForms);
   for (const type of ["input", "change"]) document.addEventListener(type, event => {
     const form = event.target.form ?? event.target.closest?.("form");
     if (form && stateForms(form).length) updateForm(form);
@@ -365,13 +557,13 @@
     if (stateForms(event.target).length) setTimeout(() => updateForm(event.target));
   });
   // Swapped-in forms, and forms released after a request, which re-enables their submit buttons.
-  document.addEventListener("htmx:after:settle", event => stateForms(event.target).forEach(updateForm));
+  document.addEventListener("htmx:after:settle", event => initForms(event.target));
   document.addEventListener("htmx:finally:request", event => {
     const form = event.detail.ctx.sourceElement?.closest?.("form");
     if (form && stateForms(form).length) queueMicrotask(() => updateForm(form));
   });
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => stateForms(document).forEach(updateForm), { once: true });
-  else stateForms(document).forEach(updateForm);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => initForms(document), { once: true });
+  else initForms(document);
   // data-mero-action-reread="#region": after an unknown outcome, read the current page again with a GET
   // and morph that region, so the person sees what actually happened. Mero never re-sends the action.
   // The answer is dropped when the page moved on, the region is gone or a newer read started.
@@ -489,7 +681,7 @@
     if (failed && error) {
       error.textContent = "";
       error.textContent = error.getAttribute("data-mero-search-error") || ctx.response?.headers.get("Mero-Form-Error") ||
-        "Couldn't update the results. The list still shows the previous results.";
+        msg("searchError");
       error.hidden = false;
     }
     if (pending.size) return;
@@ -508,16 +700,16 @@
   const pendingHolds = new Map();
   let steady = { url: location.href, key: window.navigation?.currentEntry?.key };
   const remember = () => { steady = { url: location.href, key: window.navigation?.currentEntry?.key }; };
-  const holdFallback = "Copy what is shown before you leave this page. It cannot be shown again.";
+  const holdFallback = () => msg("holdWarning");
   const shown = node => node.isConnected && (node.childElementCount > 0 || node.textContent.trim() !== "");
   const heldEphemeral = () => [...document.querySelectorAll("[data-mero-ephemeral][data-mero-hold]")].filter(shown);
 
   function hold() {
     for (const [ctx, owner] of pendingHolds) {
-      return { elements: [owner, ...heldEphemeral()], message: owner.getAttribute("data-mero-hold") || holdFallback, ctx };
+      return { elements: [owner, ...heldEphemeral()], message: owner.getAttribute("data-mero-hold") || holdFallback(), ctx };
     }
     const elements = heldEphemeral();
-    return elements.length ? { elements, message: elements[0].getAttribute("data-mero-hold") || holdFallback } : null;
+    return elements.length ? { elements, message: elements[0].getAttribute("data-mero-hold") || holdFallback() } : null;
   }
 
   function warnHeld(message) {
@@ -566,18 +758,48 @@
   window.navigation?.addEventListener("currententrychange", event => {
     if (event.navigationType !== "traverse") remember();
   });
+  function restoreSteady() {
+    const entry = steady.key && window.navigation?.entries().find(item => item.key === steady.key);
+    // Let the interrupted traversal settle before going back to the held/guarded entry.
+    setTimeout(() => entry ? window.navigation.traverseTo(entry.key) : history.pushState({ htmx: true }, "", steady.url));
+  }
   // popstate covers every same-document traversal, including entries htmx did not stamp.
   addEventListener("popstate", () => {
     const held = hold();
-    if (!held) return remember();
-    if (location.href === steady.url) return;
-    warnHeld(held.message);
-    const entry = steady.key && window.navigation?.entries().find(item => item.key === steady.key);
-    // Let the interrupted traversal settle before going back to the held entry.
-    setTimeout(() => entry ? window.navigation.traverseTo(entry.key) : history.pushState({ htmx: true }, "", steady.url));
+    if (held) {
+      if (location.href === steady.url) return;
+      warnHeld(held.message);
+      restoreSteady();
+      return;
+    }
+    const guarded = dirtyGuarded();
+    if (!guarded || location.href === steady.url) {
+      if (location.href === steady.url) dirtyHistoryDecision = null;
+      return remember();
+    }
+    if (dirtyHistoryDecision === "allow") return remember();
+    if (dirtyHistoryDecision === "block") return restoreSteady();
+    if (confirmLeaveDirty(guarded)) {
+      setDirtyHistoryDecision("allow");
+      remember();
+    } else {
+      setDirtyHistoryDecision("block");
+      restoreSteady();
+    }
   });
   document.addEventListener("htmx:before:history:restore", event => {
-    if (hold()) event.preventDefault();
+    if (hold()) { event.preventDefault(); return; }
+    const guarded = dirtyGuarded();
+    if (!guarded) return;
+    if (dirtyHistoryDecision === "allow") return;
+    if (dirtyHistoryDecision === "block") { event.preventDefault(); return; }
+    if (confirmLeaveDirty(guarded)) {
+      setDirtyHistoryDecision("allow");
+    } else {
+      setDirtyHistoryDecision("block");
+      event.preventDefault();
+      if (location.href !== steady.url) restoreSteady();
+    }
   });
 
   addEventListener("beforeunload", event => {

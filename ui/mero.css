@@ -1,8 +1,13 @@
 /*! @rubenlangeweg/mero-ui 0.9.0 | MIT */
+@layer mero {
 :root {
   --mero-control-height: 2.5rem;
+  --mero-control-height-sm: 2rem;
+  --mero-control-height-lg: 3rem;
   --mero-control-padding-inline: .75rem;
   --mero-control-gap: .5rem;
+  --mero-border-width: 1px;
+  --mero-depth: 1;
   --mero-radius: .74rem;
   --mero-radius-panel: 1.12rem;
   --mero-font: Geist, Inter, system-ui, -apple-system, sans-serif;
@@ -11,7 +16,7 @@
   --mero-enter: 270ms;
 }
 
-:root, [data-theme="light"] {
+:root, [data-theme~="light"], [data-theme~="auto"] {
   color-scheme: light;
   --mero-select-indicator: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 6 5 5 5-5' fill='none' stroke='%23575962' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --mero-switch-active: var(--mero-accent);
@@ -31,10 +36,10 @@
   --mero-warning: #775000;
   --mero-danger: #a41c42;
   --mero-info: #145a95;
-  --mero-shadow: 0 18px 48px #14192317, 0 2px 6px #1419230d;
+  --mero-shadow: 0 calc(18px * var(--mero-depth)) calc(48px * var(--mero-depth)) #14192317, 0 calc(2px * var(--mero-depth)) calc(6px * var(--mero-depth)) #1419230d;
 }
 
-[data-theme="dark"] {
+[data-theme~="dark"] {
   color-scheme: dark;
   --mero-select-indicator: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 6 5 5 5-5' fill='none' stroke='%23c3c4cb' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --mero-switch-active: color-mix(in srgb, var(--mero-accent) 75%, #00132a);
@@ -54,7 +59,32 @@
   --mero-warning: #efcd88;
   --mero-danger: #ff9db3;
   --mero-info: #9ec9f2;
-  --mero-shadow: 0 18px 48px #08080a80, 0 2px 6px #08080a46;
+  --mero-shadow: 0 calc(18px * var(--mero-depth)) calc(48px * var(--mero-depth)) #08080a80, 0 calc(2px * var(--mero-depth)) calc(6px * var(--mero-depth)) #08080a46;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme~="auto"] {
+    color-scheme: dark;
+    --mero-select-indicator: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 6 5 5 5-5' fill='none' stroke='%23c3c4cb' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    --mero-switch-active: color-mix(in srgb, var(--mero-accent) 75%, #00132a);
+    --mero-bg: #151516;
+    --mero-surface: #1c1c1e;
+    --mero-raised: #262629;
+    --mero-hover: #303035;
+    --mero-line: #37373b;
+    --mero-control-line: #70727b;
+    --mero-text: #f5f5f6;
+    --mero-muted: #a8a9b0;
+    --mero-primary: #f4f4f5;
+    --mero-primary-ink: #171719;
+    --mero-accent: #86bdff;
+    --mero-accent-ink: #102237;
+    --mero-success: #8ad9b4;
+    --mero-warning: #efcd88;
+    --mero-danger: #ff9db3;
+    --mero-info: #9ec9f2;
+    --mero-shadow: 0 calc(18px * var(--mero-depth)) calc(48px * var(--mero-depth)) #08080a80, 0 calc(2px * var(--mero-depth)) calc(6px * var(--mero-depth)) #08080a46;
+  }
 }
 
 :where([class^="mero-"], [class*=" mero-"]):focus-visible,
@@ -107,7 +137,7 @@
   box-sizing: border-box;
   min-inline-size: 0;
   padding: .55rem .94rem;
-  border: 1px solid var(--_border);
+  border: var(--mero-border-width) solid var(--_border);
   border-radius: var(--mero-radius);
   background: var(--_bg);
   color: var(--_ink);
@@ -133,7 +163,7 @@
 :where(.mero-button-primary, .mero-button[data-variant="primary"]) {
   --_bg: var(--mero-primary);
   --_ink: var(--mero-primary-ink);
-  box-shadow: inset 0 1px #ffffff24;
+  box-shadow: inset 0 calc(1px * var(--mero-depth)) #ffffff24;
 }
 
 :where(.mero-button-primary, .mero-button[data-variant="primary"]):hover:not(:disabled, [aria-disabled="true"]) {
@@ -156,9 +186,13 @@
   --_bg: color-mix(in srgb, var(--mero-danger) 17%, var(--mero-surface));
   --_ink: var(--mero-danger);
 }
+:where(.mero-button-danger, .mero-button[data-variant="danger"]):hover:not(:disabled, [aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--mero-danger) 10%, var(--mero-surface));
+  border-color: color-mix(in srgb, var(--mero-danger) 55%, transparent);
+}
 
-:where(.mero-button-sm) { --_height: 2rem; padding: .34rem .68rem; font-size: .8rem; }
-:where(.mero-button-lg) { --_height: 3rem; padding: .64rem 1.16rem; font-size: .96rem; }
+:where(.mero-button-sm) { --_height: var(--mero-control-height-sm, 2rem); padding: .34rem .68rem; font-size: .8rem; }
+:where(.mero-button-lg) { --_height: var(--mero-control-height-lg, 3rem); padding: .64rem 1.16rem; font-size: .96rem; }
 :where(.mero-button-icon, .mero-close-button) { inline-size: var(--_height); block-size: var(--_height); flex: none; padding: 0; }
 :where(.mero-dismiss-mark) { display: inline-grid; inline-size: 1rem; block-size: 1rem; place-items: center; }
 :where(.mero-dismiss-mark)::before, :where(.mero-dismiss-mark)::after { content: ""; grid-area: 1 / 1; inline-size: .875rem; block-size: 2px; border-radius: 1px; background: currentColor; transform: rotate(45deg); }
@@ -238,7 +272,7 @@
   min-inline-size: 0;
   min-block-size: var(--mero-control-height);
   padding: .5rem var(--mero-control-padding-inline);
-  border: 1px solid var(--mero-control-line);
+  border: var(--mero-border-width) solid var(--mero-control-line);
   border-radius: var(--mero-radius);
   background-color: var(--mero-raised);
   color: var(--mero-text);
@@ -270,6 +304,23 @@
 }
 
 :where(.mero-input, .mero-select, .mero-textarea, .mero-combobox)[aria-invalid="true"] { border-color: var(--mero-danger); }
+/* Zero-JS constraint validation styling: activates only after user interaction (:user-invalid) or server 422 (aria-invalid). */
+:where(.mero-validator):user-invalid { border-color: var(--mero-danger); }
+:where(.mero-validator):user-invalid:focus {
+  border-color: var(--mero-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mero-danger), transparent 82%);
+}
+:where(.mero-validator):user-valid:not([aria-invalid="true"]) { border-color: var(--mero-success); }
+:where(.mero-validator-hint) {
+  display: none;
+  margin: 0;
+  color: var(--mero-danger);
+  font: 400 .79rem/1.45 var(--mero-font);
+}
+:where(.mero-validator:user-invalid, .mero-validator[aria-invalid="true"]) + :where(.mero-validator-hint),
+:where(.mero-field:has(.mero-validator:user-invalid, .mero-validator[aria-invalid="true"])) :where(.mero-validator-hint) {
+  display: block;
+}
 :where(.mero-input, .mero-textarea)::placeholder { color: var(--mero-muted); opacity: 1; }
 :where(.mero-input, .mero-select, .mero-textarea):disabled { opacity: .5; cursor: not-allowed; }
 :where(.mero-textarea) { display: block; min-block-size: 5.8rem; resize: vertical; }
@@ -357,7 +408,7 @@
   --mero-panel-bg: var(--mero-surface);
   box-sizing: border-box;
   padding: var(--mero-panel-padding, 1.06rem);
-  border: 1px solid var(--mero-line);
+  border: var(--mero-border-width) solid var(--mero-line);
   border-radius: var(--mero-radius-panel);
   background: var(--mero-panel-bg);
   color: var(--mero-text);
@@ -416,7 +467,7 @@
   display: grid;
   gap: .25rem;
   padding: .73rem .87rem;
-  border: 1px solid color-mix(in srgb, var(--mero-tone) 33%, var(--mero-line));
+  border: var(--mero-border-width) solid color-mix(in srgb, var(--mero-tone) 33%, var(--mero-line));
   border-radius: var(--mero-radius);
   background: color-mix(in srgb, var(--mero-tone) 9%, var(--mero-surface));
   color: var(--mero-tone);
@@ -538,7 +589,7 @@
 /* One real link per row; its ::after covers the row while other controls sit above it. */
 :where(.mero-table tr:has(.mero-row-link)) { position: relative; cursor: pointer; }
 :where(.mero-row-link) { color: inherit; text-decoration: none; }
-:where(.mero-row-link)::after { content: ""; position: absolute; inset: 0; }
+:where(.mero-table .mero-row-link)::after { content: ""; position: absolute; inset: 0; }
 :where(.mero-table tr:has(.mero-row-link)) :where(a, button, input, select):not(.mero-row-link) { position: relative; z-index: 1; }
 :where(.mero-row-link):focus-visible { outline: none; }
 :where(.mero-table tr:has(.mero-row-link:focus-visible)) { outline: 2px solid var(--mero-accent); outline-offset: -2px; }
@@ -915,6 +966,36 @@
 :where(.mero-menu-item-danger) { color: var(--mero-danger); }
 :where(.mero-menu-item-danger:hover, .mero-menu-item-danger:focus) { background: color-mix(in srgb, var(--mero-danger) 12%, var(--mero-surface)); }
 :where(.mero-combo) { position: relative; inline-size: 100%; }
+:where(.mero-multiselect) { position: relative; inline-size: 100%; }
+:where(.mero-multiselect-control) {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem;
+  min-block-size: var(--mero-control-height);
+  padding: .3rem var(--mero-control-padding-inline);
+  border: 1px solid var(--mero-control-line);
+  border-radius: var(--mero-radius);
+  background: var(--mero-raised);
+  transition: border-color var(--mero-fast), box-shadow var(--mero-fast);
+}
+:where(.mero-multiselect-control):focus-within {
+  border-color: var(--mero-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mero-accent), transparent 85%);
+}
+:where(.mero-multiselect-chips) { display: contents; }
+:where(.mero-multiselect-input) {
+  flex: 1 1 7rem;
+  min-inline-size: 4rem;
+  min-block-size: 1.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--mero-text);
+  font: 400 .9rem/1.4 var(--mero-font);
+}
+:where(.mero-multiselect-input):focus { outline: none; }
 :where(.mero-combo-list:not([hidden])) {
   position: absolute;
   z-index: 4;
@@ -983,7 +1064,9 @@
 :where(.htmx-request .mero-indicator, .htmx-request.mero-indicator, [data-mero-pending] .mero-indicator) { display: inline-flex; }
 :where(.htmx-request[data-mero-request], [data-mero-pending][data-mero-request]) { cursor: progress; }
 /* Outranks the aria-disabled cursor on .mero-button. */
-.mero-button[data-mero-action-state=pending] { cursor: progress; }
+.mero-button[data-mero-action-state=pending],
+.mero-button[data-mero-pending][data-mero-request],
+.mero-button.htmx-request[data-mero-request] { cursor: progress; }
 :where(.mero-action-status) { color: var(--mero-muted); font-size: .8rem; }
 :where(.mero-action-status[data-tone=success]) { color: var(--mero-success); }
 :where(.mero-action-status[data-tone=warning]) { color: var(--mero-warning); }
@@ -1018,4 +1101,5 @@
   :where(.mero-switch)::before { forced-color-adjust: none; background: ButtonText; }
   :where(.mero-switch):checked { border-color: Highlight; }
   :where(.mero-switch):checked::before { background: Highlight; }
+}
 }

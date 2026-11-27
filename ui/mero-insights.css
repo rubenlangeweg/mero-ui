@@ -1,4 +1,5 @@
 /*! @rubenlangeweg/mero-ui 0.9.0 | MIT */
+@layer mero {
 /* Optional charts, metrics and conversation styles. Uses Mero's semantic theme. */
 .mero-plot, .mero-chat, .mero-chat-inbox, .mero-code-block, .mero-insight-metric, .mero-chat-disclosure, .mero-markdown-editor {
   box-sizing: border-box;
@@ -166,3 +167,4 @@
 .mero-report-period {width:min(100%,35rem);}
 .mero-report-period form {display:flex;align-items:end;gap:.45rem;margin-bottom:.6rem;}
 .mero-report-period label {display:grid;gap:.28rem;font:500 .76rem var(--mero-font);}
+}

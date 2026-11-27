@@ -1,4 +1,5 @@
 /*! @rubenlangeweg/mero-ui 0.9.0 | MIT */
+@layer mero {
 /* Workspace forms, navigation and editing tools. Uses the host's Mero tokens. */
 :where(.mero-ws-cell,.mero-ws-labeled,.mero-ws-cardform,.mero-ws-inline,.mero-ws-upload,.mero-ws-editor,.mero-ws-shell,.mero-ws-navbar,.mero-ws-command,.mero-ws-context,.mero-ws-segment,.mero-ws-wizard,.mero-ws-split,.mero-ws-emoji,.mero-ws-filter,.mero-ws-dock,.mero-ws-mega,.mero-ws-fab) {
   box-sizing:border-box; max-inline-size:100%; color:var(--mero-text); font:400 .9rem/1.45 var(--mero-font);
@@ -149,4 +150,5 @@
   .mero-ws-split { grid-template-columns:minmax(0,var(--mero-ws-first,40%)) 1.5rem minmax(0,1fr); }
   .mero-ws-step-number button,.mero-ws-editor-tools button,.mero-ws-command-head button { min-block-size:2.75rem; min-inline-size:2.75rem; }
   .mero-ws-step-number { grid-template-columns:2.75rem 3.2rem 2.75rem; }
+}
 }

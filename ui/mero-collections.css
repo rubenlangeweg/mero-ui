@@ -1,4 +1,5 @@
 /*! @rubenlangeweg/mero-ui 0.9.0 | MIT */
+@layer mero {
 /* Optional collection components. Everything inherits the base Mero theme. */
 :where(.mero-collection,.mero-agenda,.mero-item-card,.mero-list-view,.mero-widget,.mero-file-tree,.mero-kanban,.mero-toc,.mero-place-map,.mero-collection-timeline,.mero-hover-card,.mero-collection-empty) {
   box-sizing: border-box;
@@ -137,4 +138,5 @@
   .mero-collection-pick { inline-size:2.25rem; block-size:2.25rem; }
   .mero-agenda .mero-collection-actions button { inline-size:2.75rem; min-block-size:2.75rem; }
   .mero-map-pin { inline-size:2.75rem; block-size:2.75rem; }
+}
 }

@@ -42,7 +42,7 @@
     const form = event.target.closest("[data-mero-check-form]");
     if (!form) return;
     event.preventDefault();
-    form.querySelector("output").textContent = "SKU format accepted.";
+    form.querySelector("output").textContent = form.getAttribute("data-mero-check-form") || "SKU format accepted.";
   });
   document.addEventListener("input", (event) => {
     const form = event.target.closest("[data-mero-check-form]");

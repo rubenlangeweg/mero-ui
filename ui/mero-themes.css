@@ -1,0 +1,186 @@
+/*! @rubenlangeweg/mero-ui 0.9.0 | MIT */
+@layer mero {
+/* Optional drop-in theme presets and structural modifiers.
+   Load after mero.css and combine freely on data-theme, e.g. data-theme="cobalt dark compact". */
+
+/* Palette: Cobalt (cool slate surfaces + cobalt accent) */
+[data-theme~="cobalt"] {
+  --mero-bg: oklch(.965 .013 250);
+  --mero-surface: oklch(.995 .013 250);
+  --mero-raised: oklch(.945 .013 250);
+  --mero-hover: oklch(.91 .013 250);
+  --mero-line: oklch(.86 .013 250);
+  --mero-control-line: oklch(.54 .013 250);
+  --mero-text: oklch(.19 .013 250);
+  --mero-muted: oklch(.44 .013 250);
+  --mero-accent: oklch(.393 .14 249);
+  --mero-primary: oklch(.393 .14 249);
+  --mero-accent-ink: #fff;
+  --mero-primary-ink: #fff;
+}
+[data-theme~="cobalt"][data-theme~="dark"] {
+  --mero-bg: oklch(.17 .013 250);
+  --mero-surface: oklch(.215 .013 250);
+  --mero-raised: oklch(.265 .013 250);
+  --mero-hover: oklch(.31 .013 250);
+  --mero-line: oklch(.34 .013 250);
+  --mero-control-line: oklch(.57 .013 250);
+  --mero-text: oklch(.965 .013 250);
+  --mero-muted: oklch(.77 .013 250);
+  --mero-accent: oklch(.813 .14 249);
+  --mero-primary: oklch(.813 .14 249);
+  --mero-accent-ink: #101216;
+  --mero-primary-ink: #101216;
+  --mero-switch-active: color-mix(in srgb, var(--mero-accent) 56%, #101216);
+}
+
+/* Palette: Fern (crisp neutral surfaces + forest green accent) */
+[data-theme~="fern"] {
+  --mero-bg: oklch(.965 0 0);
+  --mero-surface: oklch(.995 0 0);
+  --mero-raised: oklch(.945 0 0);
+  --mero-hover: oklch(.91 0 0);
+  --mero-line: oklch(.86 0 0);
+  --mero-control-line: oklch(.54 0 0);
+  --mero-text: oklch(.19 0 0);
+  --mero-muted: oklch(.44 0 0);
+  --mero-accent: oklch(.388 .13 155);
+  --mero-primary: oklch(.388 .13 155);
+  --mero-accent-ink: #fff;
+  --mero-primary-ink: #fff;
+}
+[data-theme~="fern"][data-theme~="dark"] {
+  --mero-bg: oklch(.17 0 0);
+  --mero-surface: oklch(.215 0 0);
+  --mero-raised: oklch(.265 0 0);
+  --mero-hover: oklch(.31 0 0);
+  --mero-line: oklch(.34 0 0);
+  --mero-control-line: oklch(.57 0 0);
+  --mero-text: oklch(.965 0 0);
+  --mero-muted: oklch(.77 0 0);
+  --mero-accent: oklch(.808 .13 155);
+  --mero-primary: oklch(.808 .13 155);
+  --mero-accent-ink: #101216;
+  --mero-primary-ink: #101216;
+  --mero-switch-active: color-mix(in srgb, var(--mero-accent) 56%, #101216);
+}
+
+/* Palette: Clay (warm stone surfaces + amber-terracotta accent) */
+[data-theme~="clay"] {
+  --mero-bg: oklch(.965 .016 65);
+  --mero-surface: oklch(.995 .016 65);
+  --mero-raised: oklch(.945 .016 65);
+  --mero-hover: oklch(.91 .016 65);
+  --mero-line: oklch(.86 .016 65);
+  --mero-control-line: oklch(.54 .016 65);
+  --mero-text: oklch(.19 .016 65);
+  --mero-muted: oklch(.44 .016 65);
+  --mero-accent: oklch(.407 .14 47);
+  --mero-primary: oklch(.407 .14 47);
+  --mero-accent-ink: #fff;
+  --mero-primary-ink: #fff;
+}
+[data-theme~="clay"][data-theme~="dark"] {
+  --mero-bg: oklch(.17 .016 65);
+  --mero-surface: oklch(.215 .016 65);
+  --mero-raised: oklch(.265 .016 65);
+  --mero-hover: oklch(.31 .016 65);
+  --mero-line: oklch(.34 .016 65);
+  --mero-control-line: oklch(.57 .016 65);
+  --mero-text: oklch(.965 .016 65);
+  --mero-muted: oklch(.77 .016 65);
+  --mero-accent: oklch(.827 .14 47);
+  --mero-primary: oklch(.827 .14 47);
+  --mero-accent-ink: #101216;
+  --mero-primary-ink: #101216;
+  --mero-switch-active: color-mix(in srgb, var(--mero-accent) 56%, #101216);
+}
+
+/* Palette: Editorial (warm paper, serif typography, flat elevation, sharp radius) */
+[data-theme~="editorial"] {
+  --mero-font: Georgia, "Iowan Old Style", ui-serif, serif;
+  --mero-radius: .25rem;
+  --mero-radius-panel: .35rem;
+  --mero-depth: 0;
+  --mero-shadow: none;
+  --mero-bg: #f8f5ef;
+  --mero-surface: #fffdf9;
+  --mero-raised: #f1ece2;
+  --mero-hover: #e7e0d3;
+  --mero-line: #d6cec0;
+  --mero-control-line: #877f72;
+  --mero-text: #1c1915;
+  --mero-muted: #5a544a;
+  --mero-primary: #1c1915;
+  --mero-primary-ink: #fffdf9;
+  --mero-accent: #8f341c;
+  --mero-accent-ink: #fffdf9;
+}
+[data-theme~="editorial"][data-theme~="dark"] {
+  --mero-bg: #171512;
+  --mero-surface: #1f1c18;
+  --mero-raised: #29251f;
+  --mero-hover: #342f28;
+  --mero-line: #3e3830;
+  --mero-control-line: #7a7165;
+  --mero-text: #f5efe6;
+  --mero-muted: #b3aa9c;
+  --mero-primary: #f5efe6;
+  --mero-primary-ink: #171512;
+  --mero-accent: #f0a489;
+  --mero-accent-ink: #1f120d;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme~="cobalt"][data-theme~="auto"] {
+    --mero-bg: oklch(.17 .013 250); --mero-surface: oklch(.215 .013 250);
+    --mero-raised: oklch(.265 .013 250); --mero-hover: oklch(.31 .013 250);
+    --mero-line: oklch(.34 .013 250); --mero-control-line: oklch(.57 .013 250);
+    --mero-text: oklch(.965 .013 250); --mero-muted: oklch(.77 .013 250);
+    --mero-accent: oklch(.813 .14 249); --mero-primary: oklch(.813 .14 249);
+    --mero-accent-ink: #101216; --mero-primary-ink: #101216;
+  }
+  [data-theme~="fern"][data-theme~="auto"] {
+    --mero-bg: oklch(.17 0 0); --mero-surface: oklch(.215 0 0);
+    --mero-raised: oklch(.265 0 0); --mero-hover: oklch(.31 0 0);
+    --mero-line: oklch(.34 0 0); --mero-control-line: oklch(.57 0 0);
+    --mero-text: oklch(.965 0 0); --mero-muted: oklch(.77 0 0);
+    --mero-accent: oklch(.808 .13 155); --mero-primary: oklch(.808 .13 155);
+    --mero-accent-ink: #101216; --mero-primary-ink: #101216;
+  }
+  [data-theme~="clay"][data-theme~="auto"] {
+    --mero-bg: oklch(.17 .016 65); --mero-surface: oklch(.215 .016 65);
+    --mero-raised: oklch(.265 .016 65); --mero-hover: oklch(.31 .016 65);
+    --mero-line: oklch(.34 .016 65); --mero-control-line: oklch(.57 .016 65);
+    --mero-text: oklch(.965 .016 65); --mero-muted: oklch(.77 .016 65);
+    --mero-accent: oklch(.827 .14 47); --mero-primary: oklch(.827 .14 47);
+    --mero-accent-ink: #101216; --mero-primary-ink: #101216;
+  }
+  [data-theme~="editorial"][data-theme~="auto"] {
+    --mero-bg: #171512; --mero-surface: #1f1c18; --mero-raised: #29251f; --mero-hover: #342f28;
+    --mero-line: #3e3830; --mero-control-line: #7a7165; --mero-text: #f5efe6; --mero-muted: #b3aa9c;
+    --mero-primary: #f5efe6; --mero-primary-ink: #171512; --mero-accent: #f0a489; --mero-accent-ink: #1f120d;
+  }
+}
+
+/* Structural modifiers (composable with any palette or light/dark/auto) */
+[data-theme~="compact"] {
+  --mero-control-height: 2rem;
+  --mero-control-height-sm: 1.75rem;
+  --mero-control-height-lg: 2.5rem;
+  --mero-control-padding-inline: .6rem;
+  --mero-control-gap: .38rem;
+  --mero-radius: .45rem;
+  --mero-radius-panel: .75rem;
+  --mero-panel-padding: .75rem;
+}
+[data-theme~="flat"] {
+  --mero-depth: 0;
+  --mero-shadow: none;
+}
+[data-theme~="crisp"] {
+  --mero-border-width: 2px;
+  --mero-radius: .3rem;
+  --mero-radius-panel: .5rem;
+}
+}
