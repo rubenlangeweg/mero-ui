@@ -26,8 +26,16 @@ test("issue #62: show-when collects referenced fields in a single pass, handles 
       "/htmx.js": ["text/javascript", "public/vendor/htmx.min.js"],
     };
 
-    // Build a form with both nested dependent branches and 600 repeated row branches (600+ controls).
-    const rows = Array.from({ length: 600 }, (_, i) => `
+    // Build a form with nested dependent pairs, a multiselect-driven branch, a non-fieldset hidden div, and 400 repeated branches.
+    const depPairs = Array.from({ length: 100 }, (_, i) => `
+      <fieldset id="dep-parent-${i}" data-mero-show-when="depMode=on">
+        <input type="hidden" name="dep_${i}" value="on">
+      </fieldset>
+      <fieldset id="dep-child-${i}" data-mero-show-when="dep_${i}=on">
+        <input name="dep_val_${i}" value="ok" aria-label="Dep ${i}">
+      </fieldset>
+    `).join("");
+    const rows = Array.from({ length: 400 }, (_, i) => `
       <fieldset id="row-${i}" data-mero-show-when="entity=${i % 2 === 0 ? "products" : "orders"}">
         <select name="col_${i}" aria-label="Col ${i}">
           <option value="a" selected>A</option>
@@ -47,6 +55,10 @@ test("issue #62: show-when collects referenced fields in a single pass, handles 
           <option value="products" selected>Products</option>
           <option value="orders">Orders</option>
         </select>
+        <select id="dep-mode" name="depMode" aria-label="Dep mode">
+          <option value="off" selected>Off</option>
+          <option value="on">On</option>
+        </select>
         <select id="plan" name="plan" aria-label="Plan">
           <option value="pro" selected>Pro</option>
           <option value="free">Free</option>
@@ -60,6 +72,23 @@ test("issue #62: show-when collects referenced fields in a single pass, handles 
         <fieldset id="dependent-branch" data-mero-show-when="tier=enterprise">
           <input id="sso" name="sso" value="saml" aria-label="SSO">
         </fieldset>
+        <div id="div-branch" data-mero-show-when="plan=enterprise" hidden>
+          <input id="div-req" name="divReq" required aria-label="Div req">
+        </div>
+        <div id="channels" class="mero-multiselect" data-mero-multiselect data-mero-combo data-mero-multiselect-name="channels">
+          <ul class="mero-multiselect-chips" data-mero-multiselect-chips>
+            <li class="mero-chip" data-value="web">Web<input type="hidden" name="channels" value="web"><button type="button" data-mero-multiselect-remove>×</button></li>
+          </ul>
+          <input id="ch-input" name="search_unused" type="text" role="combobox" aria-label="Channels" aria-expanded="false" aria-controls="ch-list">
+          <ul id="ch-list" role="listbox" aria-multiselectable="true" hidden>
+            <li id="opt-web" role="option" data-value="web" aria-selected="true">Web</li>
+            <li id="opt-b2b" role="option" data-value="b2b" aria-selected="false">B2B</li>
+          </ul>
+        </div>
+        <fieldset id="b2b-branch" data-mero-show-when="channels=b2b" hidden>
+          <input id="vat" name="vat" value="NL1" aria-label="VAT">
+        </fieldset>
+        ${depPairs}
         ${rows}
         <button id="save-btn" type="submit">Save</button>
       </form>
@@ -94,7 +123,43 @@ test("issue #62: show-when collects referenced fields in a single pass, handles 
     await page.locator("#plan").selectOption("pro");
     assert.equal(await page.locator("#dependent-branch").isVisible(), true);
 
-    // 3. Single-pass scale check: switching entity across 600 branches + 600 selects stays fast,
+    // 2b. Multiselect change (dispatched on search_unused input) resolves data-mero-multiselect-name="channels".
+    assert.equal(await page.locator("#b2b-branch").isHidden(), true);
+    await page.locator("#ch-input").fill("B2");
+    await page.locator("#opt-b2b").click();
+    await page.locator("#ch-input").press("Escape");
+    assert.equal(await page.locator("#b2b-branch").isVisible(), true, "multiselect selection reveals channels=b2b branch");
+
+    // 2c. Non-fieldset hidden div re-disables an input that external code re-enabled even while branch stays hidden.
+    await page.evaluate(() => { document.getElementById("div-req").disabled = false; });
+    await page.locator("#plan").selectOption("free");
+    assert.equal(await page.locator("#div-req").isDisabled(), true, "hidden non-fieldset branch reconciles re-enabled descendant");
+
+    // 2d. 100 dependent fieldset pairs scan form.elements at most once for show-when (no O(N^2) rescans).
+    const depCheck = await page.evaluate(() => {
+      const form = document.getElementById("big-form");
+      const origDesc = Object.getOwnPropertyDescriptor(HTMLFormElement.prototype, "elements");
+      let elementReads = 0;
+      Object.defineProperty(form, "elements", {
+        configurable: true,
+        get() { elementReads += 1; return origDesc.get.call(this); },
+      });
+      const sel = document.getElementById("dep-mode");
+      sel.value = "on";
+      sel.dispatchEvent(new Event("change", { bubbles: true }));
+      delete form.elements;
+      return {
+        elementReads,
+        child0Hidden: document.getElementById("dep-child-0").hidden,
+        child99Hidden: document.getElementById("dep-child-99").hidden,
+      };
+    });
+    assert.equal(depCheck.child0Hidden, false);
+    assert.equal(depCheck.child99Hidden, false);
+    // 1 read for show-when indexFormControls + 1 read for data-mero-dirty changed(form) = 2 total (not 101!).
+    assert.ok(depCheck.elementReads <= 3, `expected <= 3 form.elements reads for 100 dependent pairs, got ${depCheck.elementReads}`);
+
+    // 3. Single-pass scale check: switching entity across 400 branches + 100 dependent pairs stays fast,
     // and editing an unreferenced field skips branch re-evaluation while still marking form dirty.
     const timings = await page.evaluate(() => {
       const entity = document.getElementById("entity");

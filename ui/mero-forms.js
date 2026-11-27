@@ -404,17 +404,26 @@
     return { fields, multis, multiChips };
   }
 
-  function collectFieldValues(form, names) {
-    const map = new Map();
+  function indexFormControls(form, names) {
+    const byName = new Map();
     for (const control of form.elements) {
-      if (!names.has(control.name) || control.disabled || control.matches(":disabled")) continue;
-      let list = map.get(control.name);
-      if (!list) map.set(control.name, list = []);
-      if (control.type === "checkbox" || control.type === "radio") { if (control.checked) list.push(control.value); }
-      else if (control.tagName === "SELECT") { for (const option of control.selectedOptions) list.push(option.value); }
-      else list.push(control.value);
+      if (!names.has(control.name)) continue;
+      let list = byName.get(control.name);
+      if (!list) byName.set(control.name, list = []);
+      list.push(control);
     }
-    return map;
+    return byName;
+  }
+
+  function valuesFor(controls) {
+    const values = [];
+    for (const control of controls ?? []) {
+      if (control.disabled || control.matches(":disabled")) continue;
+      if (control.type === "checkbox" || control.type === "radio") { if (control.checked) values.push(control.value); }
+      else if (control.tagName === "SELECT") { for (const option of control.selectedOptions) values.push(option.value); }
+      else values.push(control.value);
+    }
+    return values;
   }
 
   function changed(form) {
@@ -457,25 +466,25 @@
       return [branch, name, negated, trimmed === "" ? [""] : trimmed.split(/\s+/)];
     });
     if (changedName !== null && !names.has(changedName)) return;
-    let map = null;
+    const byName = indexFormControls(form, names);
+    const cache = new Map();
     // Outer branches first, so a nested branch reads the state its parent left.
     for (const [branch, name, negated, targets] of specs) {
-      map ??= collectFieldValues(form, names);
-      const values = map.get(name) ?? [];
+      let values = cache.get(name);
+      if (!values) cache.set(name, values = valuesFor(byName.get(name)));
       const matched = targets.some(value => values.includes(value));
       const show = (negated ? !matched : matched) && !branch.parentElement.closest("[data-mero-show-when][hidden]");
-      const wasHidden = branch.hidden;
       branch.hidden = !show;
       if (branch.hasAttribute("data-mero-show-when-keep-enabled")) continue;
       if (branch.tagName === "FIELDSET") {
         if (branch.disabled !== !show) {
           branch.disabled = !show;
-          if ([...branch.elements].some(control => names.has(control.name))) map = null;
+          for (const control of branch.elements) if (names.has(control.name)) cache.delete(control.name);
         }
-      } else if (!(wasHidden && !show && changedName !== null)) {
+      } else {
         for (const control of branch.querySelectorAll("input, select, textarea, button")) {
-          if (!show && !control.disabled) { control.disabled = true; disabledByBranch.add(control); if (names.has(control.name)) map = null; }
-          else if (show && disabledByBranch.delete(control)) { control.disabled = false; if (names.has(control.name)) map = null; }
+          if (!show && !control.disabled) { control.disabled = true; disabledByBranch.add(control); if (names.has(control.name)) cache.delete(control.name); }
+          else if (show && disabledByBranch.delete(control)) { control.disabled = false; if (names.has(control.name)) cache.delete(control.name); }
         }
       }
     }
@@ -575,7 +584,10 @@
   for (const type of ["input", "change"]) document.addEventListener(type, event => {
     const form = event.target.form ?? event.target.closest?.("form");
     if (!form || !(form.matches("[data-mero-dirty]") || form.querySelector("[data-mero-show-when]"))) return;
-    const changedName = typeof event.target.name === "string" && event.target.name !== "" ? event.target.name : null;
+    const multi = event.target.closest?.("[data-mero-multiselect]");
+    const changedName = multi
+      ? (multi.getAttribute("data-mero-multiselect-name") || null)
+      : (typeof event.target.name === "string" && event.target.name !== "" ? event.target.name : null);
     updateForm(form, changedName);
   });
   document.addEventListener("reset", event => {
