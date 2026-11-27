@@ -106,16 +106,38 @@
   document.addEventListener("htmx:after:init", event => {
     if (event.target.matches?.(confirmSelector)) checkConfirmation(event.target);
   });
-  document.addEventListener("reset", event => {
-    if (event.target.matches(confirmSelector)) queueMicrotask(() => checkConfirmation(event.target));
-  });
-  document.addEventListener("close", event => {
-    if (!event.target.matches?.("dialog") || event.target.open) return;
-    for (const form of event.target.querySelectorAll(confirmSelector)) {
+  function clearFormError(form) {
+    for (const error of form.querySelectorAll("[data-mero-form-error]")) {
+      error.textContent = "";
+      error.hidden = true;
+    }
+  }
+  function clearDialogForms(dialog) {
+    if (!(dialog instanceof Element)) return;
+    for (const form of dialog.querySelectorAll(formSelector)) clearFormError(form);
+    for (const form of dialog.querySelectorAll(confirmSelector)) {
       const input = form.querySelector("[data-mero-confirm-input]");
       if (input) input.value = "";
       checkConfirmation(form);
     }
+  }
+
+  document.addEventListener("reset", event => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    // Wait for a task so bubbling window reset listeners can cancel before cleanup runs.
+    setTimeout(() => {
+      if (event.defaultPrevented || !form.isConnected) return;
+      if (form.matches(formSelector)) clearFormError(form);
+      if (form.matches(confirmSelector)) checkConfirmation(form);
+    });
+  });
+  document.addEventListener("mero:dialog", event => {
+    if (event.detail?.open === false) clearDialogForms(event.detail.dialog);
+  });
+  document.addEventListener("close", event => {
+    if (!event.target.matches?.("dialog") || event.target.open) return;
+    clearDialogForms(event.target);
   }, true);
 
   // Guard implicit and scripted submissions too, before htmx can queue a duplicate.
@@ -139,8 +161,7 @@
     requesting.set(form, { buttons, ctx, owners: [submitter, form] });
     form.setAttribute("aria-busy", "true");
     buttons.forEach((button) => { button.disabled = true; });
-    const error = form.querySelector("[data-mero-form-error]");
-    if (error) error.hidden = true;
+    clearFormError(form);
     const panel = unknownPanel([submitter, form]);
     if (panel) panel.hidden = true;
     (submitter ?? form).dataset.meroActionState = "pending";
