@@ -203,3 +203,199 @@ test("the Drawer's Boosted navigation variant swaps the region, closes the drawe
     await page.waitForFunction(() => document.activeElement?.id === "boost-demo-main");
     assert.equal(page.url(), url, "the demo keeps the preview URL");
   });
+
+test("issue #64: data-mero-boost guards explicit hx-get targeting the boosted region and respects data-mero-boost-ignore",
+  { skip: !playwright && "Install Playwright to run the browser regression" }, async t => {
+    const server = createApp();
+    await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+    t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
+    const base = "http://127.0.0.1:" + server.address().port;
+    const engine = browserConfig.engine || "chromium";
+    const browser = await playwright[engine].launch({ executablePath: engine === "chromium" ? browserConfig.chromeExecutable : undefined });
+    t.after(() => browser.close());
+    const page = await browser.newPage();
+    page.setDefaultTimeout(5000);
+    const errors = [];
+    page.on("pageerror", error => errors.push(error.message));
+    const seen = [];
+    page.on("request", request => { if (request.url().includes("/hxboost/")) seen.push([new URL(request.url()).pathname, request.method(), request.resourceType()]); });
+
+    // Real-world setup: hx-boost:inherited config without separate hx-select:inherited / hx-swap:inherited.
+    const doc = (title, body = `<a id="in-main-c" href="/hxboost/c" hx-get="/hxboost/c" hx-target="#main">Open C</a>`) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${title}</title>
+      <link rel="stylesheet" href="/mero.css"><script src="/vendor/htmx.min.js"></script><script src="/mero.js"></script></head>
+      <body hx-boost:inherited='target:#main, select:#main, swap:"outerHTML"' data-mero-boost="#main">
+        <nav aria-label="App">
+          <button type="button" id="hx-slow" hx-get="/hxboost/slow" hx-target="#main">Slow filter</button>
+          <button type="button" id="hx-b" hx-get="/hxboost/b" hx-target="#main">Page B</button>
+          <button type="button" id="data-hx-b" data-hx-get="/hxboost/b" data-hx-target="#main">Data HX B</button>
+          <button type="button" id="hx-inner" hx-get="/hxboost/b" hx-target="#main" hx-swap="innerHTML">Inner B</button>
+          <button type="button" id="hx-mod" hx-get="/hxboost/c" hx-target="#main" hx-swap="settle:10ms">Modifier only</button>
+          <button type="button" id="hx-reswap" hx-get="/hxboost/reswap-outer" hx-target="#main" hx-swap="innerHTML">Reswap outer</button>
+          <span hx-swap="innerHTML"><button type="button" id="hx-ancestor-swap" hx-get="/hxboost/c" hx-target="#main">Non-inherited swap</button></span>
+          <button type="button" id="hx-retarget" hx-get="/hxboost/sidebar" hx-target="#main">Retargeted sidebar</button>
+          <button type="button" id="hx-retarget-custom" hx-get="/hxboost/sidebar-page" hx-target="#main">Retargeted with select/swap</button>
+          <button type="button" id="hx-retarget-body" hx-get="/hxboost/body" hx-target="#main">Retargeted to body</button>
+          <button type="button" id="hx-login" hx-get="/hxboost/login" hx-target="#main">Login</button>
+          <button type="button" id="hx-down" hx-get="/hxboost/down" hx-target="#main">Down</button>
+          <button type="button" id="hx-frag" hx-get="/hxboost/fragment" hx-target="#main" data-mero-boost-ignore>Raw fragment</button>
+          <button type="button" id="open-drawer" data-mero-open="drawer">Menu</button>
+        </nav>
+        <aside id="sidebar"></aside>
+        <aside id="sidebar-custom"></aside>
+        <dialog class="mero-dialog mero-drawer" id="drawer" aria-label="Menu">
+          <div class="mero-dialog-body">
+            <button type="button" id="drawer-hx-b" hx-get="/hxboost/b" hx-target="#main">Drawer B</button>
+            <button type="button" id="drawer-frag" hx-get="/hxboost/fragment" hx-target="#main" data-mero-boost-ignore>Drawer fragment</button>
+          </div>
+        </dialog>
+        <main id="main" data-page="${title}">
+          <h1>${title}</h1>
+          ${body}
+        </main>
+      </body></html>`;
+
+    const holds = {};
+    const hold = name => new Promise(resolve => { holds[name] = resolve; });
+    let slowGate = null, slowArrived = null;
+    await page.route("**/hxboost/**", async route => {
+      const path = new URL(route.request().url()).pathname;
+      const html = (body, headers = {}) => route.fulfill({ status: 200, contentType: "text/html", headers, body }).catch(() => {});
+      if (path === "/hxboost/slow") { slowArrived?.(); await slowGate; return html(doc("Slow page")); }
+      if (path === "/hxboost/b") return html(doc("Page B"));
+      if (path === "/hxboost/c") return html(doc("Page C", "<p>Detail view</p>"));
+      if (path === "/hxboost/reswap-outer") return html(doc("Reswapped Page"), { "HX-Reswap": "outerHTML" });
+      if (path === "/hxboost/body") return html(doc("Body Page"));
+      if (path === "/hxboost/login") return html('<!doctype html><title>Sign in</title><form><h1>Sign in</h1></form>');
+      if (path === "/hxboost/fragment") return html('<section id="raw-frag"><h2>Fragment content</h2></section>');
+      if (path === "/hxboost/sidebar") return html('<div id="side-item">Sidebar fragment</div>');
+      if (path === "/hxboost/sidebar-page") return html('<div class="wrap"><aside id="sidebar-replaced"><p>Custom sidebar</p></aside></div>');
+      if (path === "/hxboost/down") return route.abort();
+      return html(doc("Page A"));
+    });
+
+    const start = async () => { await page.goto(base + "/hxboost/a"); await page.waitForFunction(() => window.htmx && window.MeroUI); };
+
+    // 1. Explicit hx-get targeting #main: newest wins (older request is aborted), full-page answer selects #main without nesting, and focus moves to #main.
+    await start();
+    slowGate = hold("slow");
+    const slowInFlight = new Promise(resolve => { slowArrived = resolve; });
+    const slowAborted = page.waitForEvent("requestfailed", request => new URL(request.url()).pathname === "/hxboost/slow");
+    await page.locator("#hx-slow").click();
+    await slowInFlight;
+    await page.locator("#hx-b").click();
+    await page.locator("#main h1", { hasText: "Page B" }).waitFor();
+    await slowAborted;
+    holds.slow();
+    slowArrived = null;
+    assert.equal(await page.locator("#main h1").textContent(), "Page B", "older explicit hx-get is aborted and never overwrites newer one");
+    assert.equal(await page.locator("main#main").count(), 1, "full-page answer extracts #main via outerHTML with no nested main");
+    await page.waitForFunction(() => document.activeElement?.id === "main");
+
+    // 1b. Prefixed data-hx-get targeting #main is guarded and selects #main without nesting.
+    await page.locator("#in-main-c").click();
+    await page.locator("#main h1", { hasText: "Page C" }).waitFor();
+    await page.locator("#data-hx-b").click();
+    await page.locator("#main h1", { hasText: "Page B" }).waitFor();
+    assert.equal(await page.locator("main#main").count(), 1, "data-hx-get selects #main via outerHTML without nesting");
+    assert.equal(await page.locator("nav").count(), 1, "data-hx-get never duplicates outer nav shell");
+
+    // 2. Explicit hx-get inside #main (detached by outerHTML swap) still moves focus to the new #main.
+    await page.locator("#in-main-c").click();
+    await page.locator("#main h1", { hasText: "Page C" }).waitFor();
+    await page.waitForFunction(() => document.activeElement?.id === "main");
+
+    // 3. Open drawer closes on guarded explicit hx-get.
+    await page.locator("#open-drawer").click();
+    assert.equal(await page.locator("#drawer").evaluate(d => d.open), true);
+    await page.locator("#drawer-hx-b").click();
+    await page.locator("#main h1", { hasText: "Page B" }).waitFor();
+    assert.equal(await page.locator("#drawer").evaluate(d => d.open), false, "drawer closes on guarded explicit hx-get");
+
+    // 4. Opt-out via data-mero-boost-ignore: swaps a raw fragment without #main and keeps drawer open.
+    await page.locator("#open-drawer").click();
+    await page.locator("#drawer-frag").click();
+    await page.locator("#raw-frag h2", { hasText: "Fragment content" }).waitFor();
+    assert.equal(await page.locator("#drawer").evaluate(d => d.open), true, "opt-out fragment keeps drawer open");
+    assert.equal(await page.locator("#main").count(), 1, "innerHTML swap preserved #main wrapper");
+
+    // 4b. Explicit hx-swap="innerHTML", modifier-only hx-swap="settle:10ms", HX-Reswap: outerHTML, and non-inherited ancestor hx-swap.
+    await page.evaluate(() => window.MeroUI.close("drawer"));
+    await page.locator("#hx-inner").click();
+    await page.locator("#main h1", { hasText: "Page B" }).waitFor();
+    assert.equal(await page.locator("main#main").count(), 1, "explicit innerHTML never nests a second #main");
+    assert.equal(await page.locator("nav").count(), 1, "explicit innerHTML never duplicates outer nav shell");
+
+    await page.locator("#hx-mod").click();
+    await page.locator("#main h1", { hasText: "Page C" }).waitFor();
+    assert.equal(await page.locator("main#main").count(), 1, "modifier-only hx-swap still strips #main wrapper without nesting");
+    assert.equal(await page.locator("nav").count(), 1, "modifier-only hx-swap never duplicates outer nav shell");
+
+    await page.locator("#hx-reswap").click();
+    await page.locator("#main h1", { hasText: "Reswapped Page" }).waitFor();
+    assert.equal(await page.locator("main#main").count(), 1, "HX-Reswap: outerHTML keeps #main wrapper intact");
+    assert.equal(await page.locator("#main").getAttribute("data-page"), "Reswapped Page");
+
+    await page.locator("#hx-ancestor-swap").click();
+    await page.locator("#main h1", { hasText: "Page C" }).waitFor();
+    assert.equal(await page.locator("#main").getAttribute("data-page"), "Page C", "non-inherited ancestor hx-swap does not block automatic outerHTML");
+
+    // 4c. Programmatic htmx.ajax() (even with an [hx-get] source or event) is NOT hijacked into a full-page load.
+    await page.evaluate(() => window.htmx.ajax("GET", "/hxboost/fragment", { target: "#main" }));
+    await page.locator("#raw-frag h2", { hasText: "Fragment content" }).waitFor();
+    assert.ok(page.url().endsWith("/hxboost/a"), "htmx.ajax swaps fragment in place without top-level navigation");
+
+    await page.locator("#hx-b").click();
+    await page.locator("#main h1", { hasText: "Page B" }).waitFor();
+    await page.evaluate(() => window.htmx.ajax("GET", "/hxboost/fragment", { source: "#hx-b", target: "#main" }));
+    await page.locator("#raw-frag h2", { hasText: "Fragment content" }).waitFor();
+    assert.ok(page.url().endsWith("/hxboost/a"), "htmx.ajax with an [hx-get] source is not treated as declarative");
+
+    // 4d. Later htmx:config:request listeners retargeting away from #main (with or without custom select/swap) or to document.body work cleanly.
+    let sidebarReqType = null;
+    await page.evaluate(() => {
+      document.addEventListener("htmx:config:request", event => {
+        const id = event.detail.ctx.sourceElement?.id;
+        if (id === "hx-retarget") {
+          event.detail.ctx.target = document.getElementById("sidebar");
+        } else if (id === "hx-retarget-custom") {
+          event.detail.ctx.target = document.getElementById("sidebar-custom");
+          event.detail.ctx.select = "#sidebar-replaced";
+          event.detail.ctx.swap = "outerHTML";
+        } else if (id === "hx-retarget-body") {
+          event.detail.ctx.target = document.body;
+        }
+      });
+      document.addEventListener("htmx:before:request", event => {
+        if (event.detail.ctx.sourceElement?.id === "hx-retarget") {
+          window.retargetType = event.detail.ctx.request.headers["HX-Request-Type"];
+        }
+      });
+    });
+    await page.locator("#hx-retarget").click();
+    await page.locator("#sidebar #side-item", { hasText: "Sidebar fragment" }).waitFor();
+    sidebarReqType = await page.evaluate(() => window.retargetType);
+    assert.equal(sidebarReqType, "partial", "retargeted request sends HX-Request-Type: partial and swaps into #sidebar");
+    assert.ok(page.url().endsWith("/hxboost/a"), "retargeted sidebar fragment stays in-page");
+
+    await page.locator("#hx-retarget-custom").click();
+    await page.locator("#sidebar-replaced", { hasText: "Custom sidebar" }).waitFor();
+    assert.equal(await page.locator("#sidebar-custom").count(), 0, "listener's select and outerHTML swap are preserved on retarget");
+
+    await page.locator("#hx-retarget-body").click();
+    await page.locator("#main h1", { hasText: "Body Page" }).waitFor();
+    assert.equal(await page.locator("nav").count(), 1, "retargeting to document.body preserves the surrounding page shell");
+    assert.equal(await page.locator("main#main").count(), 1);
+
+    // 5. Foreign response without #main triggers full-page fallback.
+    await page.locator("#hx-login").click();
+    await page.waitForURL("**/hxboost/login");
+    await page.waitForFunction(() => document.title === "Sign in" && !document.querySelector("#main"));
+
+    // 6. Failed explicit hx-get triggers full-load fallback.
+    await start();
+    seen.length = 0;
+    await page.locator("#hx-down").click();
+    await page.waitForEvent("requestfailed", request => request.url().endsWith("/hxboost/down") && request.resourceType() === "document").catch(() => {});
+    assert.ok(seen.some(([path, , type]) => path === "/hxboost/down" && type === "document"), JSON.stringify(seen));
+    assert.deepEqual(errors, []);
+  });

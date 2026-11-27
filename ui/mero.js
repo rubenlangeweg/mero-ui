@@ -1221,22 +1221,84 @@
     }
   });
 
-  // data-mero-boost="#main" on a boosted container: the newest boosted GET wins, a response without the
-  // region (and without an htmx redirect header) or a failed GET becomes a full page load, open
-  // non-static dialogs such as a navigation drawer close, and focus moves to the new region.
+  // data-mero-boost="#main" on a boosted container: the newest boosted GET (or declarative hx-get whose
+  // target is or contains the region, unless opted out with data-mero-boost-ignore) wins, a GET response
+  // without the region (and without an htmx redirect header) or a failed GET becomes a full page load,
+  // non-GET responses without the region cancel the swap and fire mero:boost-unmatched, open non-static
+  // dialogs such as a navigation drawer close, and focus moves to the new region.
   const boostRequests = new Set();
   const supersededBoosts = new WeakSet();
   const boostFocus = new WeakMap();
   const unswappedBoosts = new WeakSet();
-  const boostSelectors = new WeakMap();
-  const boostRegion = ctx => boostSelectors.get(ctx) ?? (ctx.request?.headers?.["HX-Boosted"] && ctx.sourceElement?.closest?.("[data-mero-boost]")?.getAttribute("data-mero-boost"));
-  const isGet = ctx => ctx.request.method.toUpperCase() === "GET";
+  const boostGuarded = new WeakMap();
+  const autoSelected = new WeakSet();
+  const isGet = ctx => ctx.request?.method?.toUpperCase() === "GET";
+  const hxNames = name => {
+    const prefix = window.htmx?.config ? window.htmx.config.prefix : "data-hx-";
+    return prefix ? [name, name.replace(/^hx-/, prefix)] : [name];
+  };
+  const hasHxAttr = (el, name) => hxNames(name).some(attr => el.hasAttribute(attr));
+  const isDeclarativeGet = ctx => {
+    const el = ctx.sourceElement;
+    return Boolean(
+      isGet(ctx) &&
+      el && hasHxAttr(el, "hx-get") &&
+      ctx.sourceEvent instanceof Event &&
+      !("source" in ctx) &&
+      !("event" in ctx)
+    );
+  };
+  const hasExplicitSwap = el => {
+    if (!el) return false;
+    const inheritedAttr = "hx-swap" + (window.htmx?.config?.metaCharacter || ":") + "inherited";
+    if (hasHxAttr(el, "hx-swap") || hasHxAttr(el, inheritedAttr)) return true;
+    const attrs = window.htmx?.config?.implicitInheritance
+      ? [...hxNames("hx-swap"), ...hxNames(inheritedAttr)]
+      : hxNames(inheritedAttr);
+    return Boolean(el.parentElement?.closest?.(attrs.map(a => `[${CSS.escape(a)}]`).join(",")));
+  };
+  function resolveBoostRegion(ctx) {
+    if (!ctx.request) return null;
+    const source = ctx.sourceElement;
+    const selector = source?.closest?.("[data-mero-boost]")?.getAttribute("data-mero-boost");
+    if (!selector || source.closest?.("[data-mero-boost-ignore]")) return null;
+    if (ctx.request.headers?.["HX-Boosted"]) return selector;
+    // Guard declarative [hx-get] navigations only; never hijack programmatic htmx.ajax() calls.
+    if (!isDeclarativeGet(ctx)) return null;
+    let region;
+    try { region = document.querySelector(selector); } catch { return null; }
+    const target = typeof ctx.target === "string" ? document.querySelector(ctx.target) : ctx.target;
+    if (!region || !target || (target !== region && !target.contains(region))) return null;
+    return selector;
+  }
 
   document.addEventListener("htmx:before:request", event => {
     const { ctx } = event.detail;
-    const selector = !event.defaultPrevented && boostRegion(ctx);
+    if (event.defaultPrevented) return;
+    // Evaluate after all htmx:config:request listeners have settled ctx.target, ctx.select and ctx.swap.
+    const selector = resolveBoostRegion(ctx);
     if (!selector) return;
-    boostSelectors.set(ctx, selector);
+    boostGuarded.set(ctx, selector);
+    if (!ctx.request.headers?.["HX-Boosted"] && !ctx.select) {
+      let region;
+      try { region = document.querySelector(selector); } catch {}
+      const target = typeof ctx.target === "string" ? document.querySelector(ctx.target) : ctx.target;
+      if (region && target === region) {
+        const rawSwap = (ctx.swap || "").trim();
+        const hasStyle = Boolean(rawSwap && !/^\S*:/.test(rawSwap));
+        const style = hasStyle ? rawSwap.split(/\s+/, 1)[0] : (window.htmx?.config?.defaultSwap || "innerHTML");
+        if (!hasExplicitSwap(ctx.sourceElement) && rawSwap === "innerHTML") {
+          ctx.select = selector;
+          ctx.swap = "outerHTML";
+          autoSelected.add(ctx);
+          ctx.request.headers["HX-Request-Type"] = "full";
+        } else if (/^(inner|outer)/i.test(style)) {
+          ctx.select = selector;
+          autoSelected.add(ctx);
+          ctx.request.headers["HX-Request-Type"] = "full";
+        }
+      }
+    }
     boostFocus.set(ctx, document.activeElement);
     if (!isGet(ctx)) return;
     // Only navigations are aborted, never a boosted form that changes data.
@@ -1249,8 +1311,8 @@
   });
 
   document.addEventListener("htmx:before:swap", event => {
-    const { ctx } = event.detail;
-    const selector = boostRegion(ctx);
+    const { ctx, tasks } = event.detail;
+    const selector = boostGuarded.get(ctx);
     if (!selector || event.defaultPrevented) return;
     if (supersededBoosts.has(ctx)) {
       unswappedBoosts.add(ctx);
@@ -1283,6 +1345,13 @@
       }
       return;
     }
+    if (autoSelected.has(ctx)) {
+      const mainTask = tasks?.find(task => task.type === "main");
+      if (mainTask?.swapSpec && /^inner/i.test(mainTask.swapSpec.style) &&
+          mainTask.fragment?.childElementCount === 1 && mainTask.fragment.firstElementChild.matches(selector)) {
+        mainTask.swapSpec.strip = true;
+      }
+    }
     const open = [...document.querySelectorAll("dialog[open]:not([data-mero-static], [role='alertdialog'])")];
     // Closing a dialog moves focus to its opener; that move is Mero's, not the person's.
     if (open.some(dialog => dialog.contains(boostFocus.get(ctx)))) boostFocus.set(ctx, null);
@@ -1299,7 +1368,7 @@
   // After htmx's [autofocus]. Focus that the person moved during the load stays where they put it.
   document.addEventListener("htmx:finally:swap", event => {
     const { ctx } = event.detail;
-    const selector = boostRegion(ctx);
+    const selector = boostGuarded.get(ctx);
     const before = boostFocus.get(ctx);
     boostFocus.delete(ctx);
     if (!selector || unswappedBoosts.has(ctx)) return;
