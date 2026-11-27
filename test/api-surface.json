@@ -12,6 +12,7 @@
     "data-mero-autoopen",
     "data-mero-before",
     "data-mero-boost",
+    "data-mero-boost-ignore",
     "data-mero-card-hidden",
     "data-mero-cell-label",
     "data-mero-chart",

@@ -203,3 +203,106 @@ test("the Drawer's Boosted navigation variant swaps the region, closes the drawe
     await page.waitForFunction(() => document.activeElement?.id === "boost-demo-main");
     assert.equal(page.url(), url, "the demo keeps the preview URL");
   });
+
+test("issue #64: data-mero-boost guards explicit hx-get targeting the boosted region and respects data-mero-boost-ignore",
+  { skip: !playwright && "Install Playwright to run the browser regression" }, async t => {
+    const server = createApp();
+    await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+    t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
+    const base = "http://127.0.0.1:" + server.address().port;
+    const engine = browserConfig.engine || "chromium";
+    const browser = await playwright[engine].launch({ executablePath: engine === "chromium" ? browserConfig.chromeExecutable : undefined });
+    t.after(() => browser.close());
+    const page = await browser.newPage();
+    page.setDefaultTimeout(5000);
+    const errors = [];
+    page.on("pageerror", error => errors.push(error.message));
+    const seen = [];
+    page.on("request", request => { if (request.url().includes("/hxboost/")) seen.push([new URL(request.url()).pathname, request.method(), request.resourceType()]); });
+
+    // Real-world setup: hx-boost:inherited config without separate hx-select:inherited / hx-swap:inherited.
+    const doc = (title, body = `<a id="in-main-c" href="/hxboost/c" hx-get="/hxboost/c" hx-target="#main">Open C</a>`) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${title}</title>
+      <link rel="stylesheet" href="/mero.css"><script src="/vendor/htmx.min.js"></script><script src="/mero.js"></script></head>
+      <body hx-boost:inherited='target:#main, select:#main, swap:"outerHTML"' data-mero-boost="#main">
+        <nav aria-label="App">
+          <button type="button" id="hx-slow" hx-get="/hxboost/slow" hx-target="#main">Slow filter</button>
+          <button type="button" id="hx-b" hx-get="/hxboost/b" hx-target="#main">Page B</button>
+          <button type="button" id="hx-login" hx-get="/hxboost/login" hx-target="#main">Login</button>
+          <button type="button" id="hx-down" hx-get="/hxboost/down" hx-target="#main">Down</button>
+          <button type="button" id="hx-frag" hx-get="/hxboost/fragment" hx-target="#main" data-mero-boost-ignore>Raw fragment</button>
+          <button type="button" id="open-drawer" data-mero-open="drawer">Menu</button>
+        </nav>
+        <dialog class="mero-dialog mero-drawer" id="drawer" aria-label="Menu">
+          <div class="mero-dialog-body">
+            <button type="button" id="drawer-hx-b" hx-get="/hxboost/b" hx-target="#main">Drawer B</button>
+            <button type="button" id="drawer-frag" hx-get="/hxboost/fragment" hx-target="#main" data-mero-boost-ignore>Drawer fragment</button>
+          </div>
+        </dialog>
+        <main id="main">
+          <h1>${title}</h1>
+          ${body}
+        </main>
+      </body></html>`;
+
+    const holds = {};
+    const hold = name => new Promise(resolve => { holds[name] = resolve; });
+    let slowGate = null;
+    await page.route("**/hxboost/**", async route => {
+      const path = new URL(route.request().url()).pathname;
+      const html = body => route.fulfill({ status: 200, contentType: "text/html", body }).catch(() => {});
+      if (path === "/hxboost/slow") { await slowGate; return html(doc("Slow page")); }
+      if (path === "/hxboost/b") return html(doc("Page B"));
+      if (path === "/hxboost/c") return html(doc("Page C", "<p>Detail view</p>"));
+      if (path === "/hxboost/login") return html('<!doctype html><title>Sign in</title><form><h1>Sign in</h1></form>');
+      if (path === "/hxboost/fragment") return html('<section id="raw-frag"><h2>Fragment content</h2></section>');
+      if (path === "/hxboost/down") return route.abort();
+      return html(doc("Page A"));
+    });
+
+    const start = async () => { await page.goto(base + "/hxboost/a"); await page.waitForFunction(() => window.htmx && window.MeroUI); };
+
+    // 1. Explicit hx-get targeting #main: newest wins, full-page answer selects #main without nesting, and focus moves to #main.
+    await start();
+    slowGate = hold("slow");
+    await page.locator("#hx-slow").click();
+    await page.locator("#hx-b").click();
+    await page.locator("#main h1", { hasText: "Page B" }).waitFor();
+    holds.slow();
+    await page.waitForTimeout(200);
+    assert.equal(await page.locator("#main h1").textContent(), "Page B", "older explicit hx-get never overwrites newer one");
+    assert.equal(await page.locator("main#main").count(), 1, "full-page answer extracts #main via outerHTML with no nested main");
+    await page.waitForFunction(() => document.activeElement?.id === "main");
+
+    // 2. Explicit hx-get inside #main (detached by outerHTML swap) still moves focus to the new #main.
+    await page.locator("#in-main-c").click();
+    await page.locator("#main h1", { hasText: "Page C" }).waitFor();
+    await page.waitForFunction(() => document.activeElement?.id === "main");
+
+    // 3. Open drawer closes on guarded explicit hx-get.
+    await page.locator("#open-drawer").click();
+    assert.equal(await page.locator("#drawer").evaluate(d => d.open), true);
+    await page.locator("#drawer-hx-b").click();
+    await page.locator("#main h1", { hasText: "Page B" }).waitFor();
+    assert.equal(await page.locator("#drawer").evaluate(d => d.open), false, "drawer closes on guarded explicit hx-get");
+
+    // 4. Opt-out via data-mero-boost-ignore: swaps a raw fragment without #main and keeps drawer open.
+    await page.locator("#open-drawer").click();
+    await page.locator("#drawer-frag").click();
+    await page.locator("#raw-frag h2", { hasText: "Fragment content" }).waitFor();
+    assert.equal(await page.locator("#drawer").evaluate(d => d.open), true, "opt-out fragment keeps drawer open");
+    assert.equal(await page.locator("#main").count(), 1, "innerHTML swap preserved #main wrapper");
+
+    // 5. Foreign response without #main triggers full-page fallback.
+    await page.evaluate(() => window.MeroUI.close("drawer"));
+    await page.locator("#hx-login").click();
+    await page.waitForURL("**/hxboost/login");
+    await page.waitForFunction(() => document.title === "Sign in" && !document.querySelector("#main"));
+
+    // 6. Failed explicit hx-get triggers full-load fallback.
+    await start();
+    seen.length = 0;
+    await page.locator("#hx-down").click();
+    await page.waitForEvent("requestfailed", request => request.url().endsWith("/hxboost/down") && request.resourceType() === "document").catch(() => {});
+    assert.ok(seen.some(([path, , type]) => path === "/hxboost/down" && type === "document"), JSON.stringify(seen));
+    assert.deepEqual(errors, []);
+  });
