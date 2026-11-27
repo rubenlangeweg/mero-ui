@@ -395,6 +395,8 @@
 :where(.mero-switch):checked { background-color: var(--mero-switch-active); border-color: transparent; }
 :where(.mero-switch):checked::before { background-color: #fff; transform: translateX(var(--_travel)); }
 :where(.mero-switch, .mero-checkbox, .mero-radio, .mero-slider):disabled { opacity: .5; cursor: not-allowed; }
+:where(label:has(> .mero-checkbox, > .mero-radio)) { cursor: pointer; }
+:where(label > .mero-checkbox, label > .mero-radio) { margin-inline-end: var(--mero-control-gap); }
 :where(.mero-checkbox-group, .mero-radio-group) { display: grid; gap: .25rem; }
 :where(.mero-checkbox-group > label, .mero-radio-group > label, label.mero-row:has(> .mero-checkbox, > .mero-radio, > .mero-switch)) {
   display: flex;
@@ -403,6 +405,8 @@
   min-block-size: 1.75rem;
   cursor: pointer;
 }
+:where(.mero-checkbox-group > label, .mero-radio-group > label, label.mero-row) > :where(.mero-checkbox, .mero-radio) { margin-inline-end: 0; }
+:where(label:has(> .mero-checkbox:disabled, > .mero-radio:disabled, > .mero-switch:disabled)) { cursor: not-allowed; }
 
 :where(.mero-card, .mero-section, .mero-surface) {
   --mero-panel-bg: var(--mero-surface);
