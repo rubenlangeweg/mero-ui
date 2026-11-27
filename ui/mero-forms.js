@@ -157,7 +157,8 @@
     formRequests.set(ctx, form);
     if (form.matches("[data-mero-dirty]")) submittedSnapshots.set(form, snapshotForm(form));
     const buttons = [...form.elements].filter(control => !control.disabled && (control.type === "submit" || control.type === "image"));
-    const inertNodes = [
+    const keepEditable = (form.getAttribute("data-mero-form") || "").split(/\s+/).includes("keep-editable");
+    const inertNodes = keepEditable ? [] : [
       ...[...form.elements].filter(control => !control.closest?.("[inert], [data-mero-multiselect]") &&
         control.matches("input, select, textarea, [type=reset]") && !control.matches("[type=submit], [type=button], [type=image], [type=hidden]")),
       ...[...form.querySelectorAll("[data-mero-multiselect], [contenteditable]:not([contenteditable='false'])")].filter(node => !node.closest?.("[inert]")),

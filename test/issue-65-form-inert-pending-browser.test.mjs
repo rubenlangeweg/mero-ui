@@ -138,5 +138,16 @@ test("issue #65: data-mero-form marks editable fields inert while pending withou
     // Verify user can type again immediately after settle.
     await page.locator("#name").fill("Gamma");
     assert.equal(await page.locator("#name").inputValue(), "Gamma");
+
+    // 3. Opt-out via data-mero-form="keep-editable" leaves fields editable while pending.
+    await page.evaluate(() => document.getElementById("channel-form").setAttribute("data-mero-form", "keep-editable"));
+    waitArrived = new Promise(resolve => { arrived = resolve; });
+    await page.locator("#save").click();
+    await waitArrived;
+    assert.equal(await page.locator("#name").evaluate(el => el.inert), false, "keep-editable leaves fields editable while pending");
+    await page.locator("#name").fill("Delta");
+    release();
+    await page.locator("#err").waitFor({ state: "visible" });
+    assert.equal(await page.locator("#name").inputValue(), "Delta");
     assert.deepEqual(errors, []);
   });
