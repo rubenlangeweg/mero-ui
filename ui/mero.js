@@ -905,7 +905,7 @@
     if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "k" &&
       !event.defaultPrevented && !event.isComposing && !target.isContentEditable && !document.querySelector("dialog[open]")) {
       const dialog = [...document.querySelectorAll("dialog[data-mero-command]")].find(node => {
-        if (node.closest("[inert], [hidden]") || (node.parentElement && getComputedStyle(node.parentElement).visibility !== "visible")) return false;
+        if (node.closest("[inert], [hidden], details:not([open])") || (node.parentElement && getComputedStyle(node.parentElement).visibility !== "visible")) return false;
         for (let el = node.parentElement; el; el = el.parentElement) if (getComputedStyle(el).display === "none") return false;
         return true;
       });
@@ -1071,8 +1071,7 @@
       comboStatus(input, msg("comboLoading"));
       setComboOpen(input, false);
     } else {
-      if (input.closest("[data-mero-multiselect]")) syncMultiselect(input.closest("[data-mero-multiselect]"));
-    filterCombo(input);
+      showComboResults(input);
     }
   });
 

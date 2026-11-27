@@ -120,7 +120,7 @@ const command = `<section class="mero-ws-command">
       <div class="mero-listbox mero-combo-list" id="ws-commands-options" role="listbox" aria-label="Workspace commands" hidden>
         <a id="ws-cmd-inventory" role="option" tabindex="-1" href="/layouts/dashboard?view=inventory">Open inventory</a>
         <a id="ws-cmd-settings" role="option" tabindex="-1" href="/layouts/dashboard?view=settings">Workspace settings</a>
-        <button id="ws-cmd-copy" role="option" tabindex="-1" type="button" data-mero-copy="https://mero-ui.rubenlangeweg.com/components/command" data-mero-copy-message="Page link copied.">Copy page link</button>
+        <button id="ws-cmd-copy" role="option" tabindex="-1" type="button" data-mero-copy="studio-north" data-mero-copy-message="Workspace ID copied.">Copy workspace ID</button>
         <div role="option" aria-disabled="true" data-mero-empty-option hidden>No matching commands</div>
       </div>
       <span class="mero-description" data-mero-combo-status role="status"></span>
