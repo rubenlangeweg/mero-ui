@@ -404,15 +404,17 @@
     return { fields, multis, multiChips };
   }
 
-  function fieldValues(form, name) {
-    const values = [];
+  function collectFieldValues(form, names) {
+    const map = new Map();
     for (const control of form.elements) {
-      if (control.name !== name || control.disabled) continue;
-      if (control.matches("input[type=checkbox], input[type=radio]")) { if (control.checked) values.push(control.value); }
-      else if (control.matches("select")) values.push(...[...control.selectedOptions].map(option => option.value));
-      else values.push(control.value);
+      if (!names.has(control.name) || control.disabled || control.matches(":disabled")) continue;
+      let list = map.get(control.name);
+      if (!list) map.set(control.name, list = []);
+      if (control.type === "checkbox" || control.type === "radio") { if (control.checked) list.push(control.value); }
+      else if (control.tagName === "SELECT") { for (const option of control.selectedOptions) list.push(option.value); }
+      else list.push(control.value);
     }
-    return values;
+    return map;
   }
 
   function changed(form) {
@@ -441,25 +443,46 @@
     });
   }
 
-  function updateForm(form) {
-    // Outer branches first, so a nested branch reads the state its parent left.
-    for (const branch of form.querySelectorAll("[data-mero-show-when]")) {
-      const expr = branch.getAttribute("data-mero-show-when");
+  function updateShowWhen(form, changedName = null) {
+    const branches = form.querySelectorAll("[data-mero-show-when]");
+    if (!branches.length) return;
+    const names = new Set();
+    const specs = [...branches].map(branch => {
+      const expr = branch.getAttribute("data-mero-show-when") || "";
       const negated = expr.includes("!=");
-      const [name, wanted = ""] = expr.split(negated ? "!=" : "=");
-      const values = fieldValues(form, name.trim());
+      const [raw, wanted = ""] = expr.split(negated ? "!=" : "=");
+      const name = raw.trim();
       const trimmed = wanted.trim();
-      const targets = trimmed === "" ? [""] : trimmed.split(/\s+/);
+      names.add(name);
+      return [branch, name, negated, trimmed === "" ? [""] : trimmed.split(/\s+/)];
+    });
+    if (changedName !== null && !names.has(changedName)) return;
+    let map = null;
+    // Outer branches first, so a nested branch reads the state its parent left.
+    for (const [branch, name, negated, targets] of specs) {
+      map ??= collectFieldValues(form, names);
+      const values = map.get(name) ?? [];
       const matched = targets.some(value => values.includes(value));
       const show = (negated ? !matched : matched) && !branch.parentElement.closest("[data-mero-show-when][hidden]");
+      const wasHidden = branch.hidden;
       branch.hidden = !show;
       if (branch.hasAttribute("data-mero-show-when-keep-enabled")) continue;
-      if (branch.matches("fieldset")) branch.disabled = !show;
-      else for (const control of branch.querySelectorAll("input, select, textarea, button")) {
-        if (!show && !control.disabled) { control.disabled = true; disabledByBranch.add(control); }
-        else if (show && disabledByBranch.delete(control)) control.disabled = false;
+      if (branch.tagName === "FIELDSET") {
+        if (branch.disabled !== !show) {
+          branch.disabled = !show;
+          if ([...branch.elements].some(control => names.has(control.name))) map = null;
+        }
+      } else if (!(wasHidden && !show && changedName !== null)) {
+        for (const control of branch.querySelectorAll("input, select, textarea, button")) {
+          if (!show && !control.disabled) { control.disabled = true; disabledByBranch.add(control); if (names.has(control.name)) map = null; }
+          else if (show && disabledByBranch.delete(control)) { control.disabled = false; if (names.has(control.name)) map = null; }
+        }
       }
     }
+  }
+
+  function updateForm(form, changedName = null) {
+    updateShowWhen(form, changedName);
     if (form.matches("[data-mero-dirty]")) {
       const dirty = changed(form);
       if (!requesting.has(form)) {
@@ -540,7 +563,7 @@
   };
   function initForms(root = document) {
     if (!(root instanceof Element || root instanceof Document)) return;
-    stateForms(root).forEach(updateForm);
+    stateForms(root).forEach(form => updateForm(form));
     const confirms = new Set();
     const ancestor = root instanceof Element ? root.closest(confirmSelector) : null;
     if (ancestor) confirms.add(ancestor);
@@ -551,7 +574,9 @@
   lifecycle.init.add(initForms);
   for (const type of ["input", "change"]) document.addEventListener(type, event => {
     const form = event.target.form ?? event.target.closest?.("form");
-    if (form && stateForms(form).length) updateForm(form);
+    if (!form || !(form.matches("[data-mero-dirty]") || form.querySelector("[data-mero-show-when]"))) return;
+    const changedName = typeof event.target.name === "string" && event.target.name !== "" ? event.target.name : null;
+    updateForm(form, changedName);
   });
   document.addEventListener("reset", event => {
     if (stateForms(event.target).length) setTimeout(() => updateForm(event.target));
