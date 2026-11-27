@@ -227,6 +227,7 @@ test("issue #64: data-mero-boost guards explicit hx-get targeting the boosted re
         <nav aria-label="App">
           <button type="button" id="hx-slow" hx-get="/hxboost/slow" hx-target="#main">Slow filter</button>
           <button type="button" id="hx-b" hx-get="/hxboost/b" hx-target="#main">Page B</button>
+          <button type="button" id="data-hx-b" data-hx-get="/hxboost/b" data-hx-target="#main">Data HX B</button>
           <button type="button" id="hx-inner" hx-get="/hxboost/b" hx-target="#main" hx-swap="innerHTML">Inner B</button>
           <button type="button" id="hx-mod" hx-get="/hxboost/c" hx-target="#main" hx-swap="settle:10ms">Modifier only</button>
           <button type="button" id="hx-reswap" hx-get="/hxboost/reswap-outer" hx-target="#main" hx-swap="innerHTML">Reswap outer</button>
@@ -255,11 +256,11 @@ test("issue #64: data-mero-boost guards explicit hx-get targeting the boosted re
 
     const holds = {};
     const hold = name => new Promise(resolve => { holds[name] = resolve; });
-    let slowGate = null;
+    let slowGate = null, slowArrived = null;
     await page.route("**/hxboost/**", async route => {
       const path = new URL(route.request().url()).pathname;
       const html = (body, headers = {}) => route.fulfill({ status: 200, contentType: "text/html", headers, body }).catch(() => {});
-      if (path === "/hxboost/slow") { await slowGate; return html(doc("Slow page")); }
+      if (path === "/hxboost/slow") { slowArrived?.(); await slowGate; return html(doc("Slow page")); }
       if (path === "/hxboost/b") return html(doc("Page B"));
       if (path === "/hxboost/c") return html(doc("Page C", "<p>Detail view</p>"));
       if (path === "/hxboost/reswap-outer") return html(doc("Reswapped Page"), { "HX-Reswap": "outerHTML" });
@@ -274,17 +275,29 @@ test("issue #64: data-mero-boost guards explicit hx-get targeting the boosted re
 
     const start = async () => { await page.goto(base + "/hxboost/a"); await page.waitForFunction(() => window.htmx && window.MeroUI); };
 
-    // 1. Explicit hx-get targeting #main: newest wins, full-page answer selects #main without nesting, and focus moves to #main.
+    // 1. Explicit hx-get targeting #main: newest wins (older request is aborted), full-page answer selects #main without nesting, and focus moves to #main.
     await start();
     slowGate = hold("slow");
+    const slowInFlight = new Promise(resolve => { slowArrived = resolve; });
+    const slowAborted = page.waitForEvent("requestfailed", request => new URL(request.url()).pathname === "/hxboost/slow");
     await page.locator("#hx-slow").click();
+    await slowInFlight;
     await page.locator("#hx-b").click();
     await page.locator("#main h1", { hasText: "Page B" }).waitFor();
+    await slowAborted;
     holds.slow();
-    await page.waitForTimeout(200);
-    assert.equal(await page.locator("#main h1").textContent(), "Page B", "older explicit hx-get never overwrites newer one");
+    slowArrived = null;
+    assert.equal(await page.locator("#main h1").textContent(), "Page B", "older explicit hx-get is aborted and never overwrites newer one");
     assert.equal(await page.locator("main#main").count(), 1, "full-page answer extracts #main via outerHTML with no nested main");
     await page.waitForFunction(() => document.activeElement?.id === "main");
+
+    // 1b. Prefixed data-hx-get targeting #main is guarded and selects #main without nesting.
+    await page.locator("#in-main-c").click();
+    await page.locator("#main h1", { hasText: "Page C" }).waitFor();
+    await page.locator("#data-hx-b").click();
+    await page.locator("#main h1", { hasText: "Page B" }).waitFor();
+    assert.equal(await page.locator("main#main").count(), 1, "data-hx-get selects #main via outerHTML without nesting");
+    assert.equal(await page.locator("nav").count(), 1, "data-hx-get never duplicates outer nav shell");
 
     // 2. Explicit hx-get inside #main (detached by outerHTML swap) still moves focus to the new #main.
     await page.locator("#in-main-c").click();

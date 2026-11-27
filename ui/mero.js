@@ -1233,18 +1233,29 @@
   const boostGuarded = new WeakMap();
   const autoSelected = new WeakSet();
   const isGet = ctx => ctx.request?.method?.toUpperCase() === "GET";
-  const isDeclarativeGet = ctx => Boolean(
-    isGet(ctx) &&
-    ctx.sourceElement?.matches?.("[hx-get]") &&
-    ctx.sourceEvent instanceof Event &&
-    !("source" in ctx) &&
-    !("event" in ctx)
-  );
+  const hxNames = name => {
+    const prefix = window.htmx?.config ? window.htmx.config.prefix : "data-hx-";
+    return prefix ? [name, name.replace(/^hx-/, prefix)] : [name];
+  };
+  const hasHxAttr = (el, name) => hxNames(name).some(attr => el.hasAttribute(attr));
+  const isDeclarativeGet = ctx => {
+    const el = ctx.sourceElement;
+    return Boolean(
+      isGet(ctx) &&
+      el && (hasHxAttr(el, "hx-get") || hasHxAttr(el, "hx-action")) &&
+      ctx.sourceEvent instanceof Event &&
+      !("source" in ctx) &&
+      !("event" in ctx)
+    );
+  };
   const hasExplicitSwap = el => {
     if (!el) return false;
-    if (el.hasAttribute("hx-swap") || el.hasAttribute("hx-swap:inherited")) return true;
-    const inherited = window.htmx?.config?.implicitInheritance ? "[hx-swap], [hx-swap\\:inherited]" : "[hx-swap\\:inherited]";
-    return Boolean(el.parentElement?.closest?.(inherited));
+    const inheritedAttr = "hx-swap" + (window.htmx?.config?.metaCharacter || ":") + "inherited";
+    if (hasHxAttr(el, "hx-swap") || hasHxAttr(el, inheritedAttr)) return true;
+    const attrs = window.htmx?.config?.implicitInheritance
+      ? [...hxNames("hx-swap"), ...hxNames(inheritedAttr)]
+      : hxNames(inheritedAttr);
+    return Boolean(el.parentElement?.closest?.(attrs.map(a => `[${CSS.escape(a)}]`).join(",")));
   };
   function resolveBoostRegion(ctx) {
     if (!ctx.request) return null;
