@@ -1242,7 +1242,7 @@
     const el = ctx.sourceElement;
     return Boolean(
       isGet(ctx) &&
-      el && (hasHxAttr(el, "hx-get") || hasHxAttr(el, "hx-action")) &&
+      el && hasHxAttr(el, "hx-get") &&
       ctx.sourceEvent instanceof Event &&
       !("source" in ctx) &&
       !("event" in ctx)
