@@ -1228,12 +1228,15 @@
   const supersededBoosts = new WeakSet();
   const boostFocus = new WeakMap();
   const unswappedBoosts = new WeakSet();
-  const boostRegion = ctx => ctx.request?.headers?.["HX-Boosted"] && ctx.sourceElement?.closest?.("[data-mero-boost]")?.getAttribute("data-mero-boost");
+  const boostSelectors = new WeakMap();
+  const boostRegion = ctx => boostSelectors.get(ctx) ?? (ctx.request?.headers?.["HX-Boosted"] && ctx.sourceElement?.closest?.("[data-mero-boost]")?.getAttribute("data-mero-boost"));
   const isGet = ctx => ctx.request.method.toUpperCase() === "GET";
 
   document.addEventListener("htmx:before:request", event => {
     const { ctx } = event.detail;
-    if (event.defaultPrevented || !boostRegion(ctx)) return;
+    const selector = !event.defaultPrevented && boostRegion(ctx);
+    if (!selector) return;
+    boostSelectors.set(ctx, selector);
     boostFocus.set(ctx, document.activeElement);
     if (!isGet(ctx)) return;
     // Only navigations are aborted, never a boosted form that changes data.

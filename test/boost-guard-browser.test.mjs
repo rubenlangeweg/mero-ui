@@ -41,13 +41,15 @@ test("boosted navigation: newest GET wins, foreign responses load fully, drawers
 
     const holds = {};
     const hold = name => new Promise(resolve => { holds[name] = resolve; });
-    let slowGate = null, saveGate = null;
+    let slowGate = null, saveGate = null, publishGate = null, publishArrived = null;
     await page.route("**/boost/**", async route => {
       const path = new URL(route.request().url()).pathname;
       const html = body => route.fulfill({ status: 200, contentType: "text/html", body }).catch(() => {});
       if (path === "/boost/slow") { await slowGate; return html(shell("Slow page")); }
       if (path === "/boost/save") { await saveGate; return html(shell("Saved")); }
       if (path === "/boost/publish") {
+        publishArrived?.();
+        if (publishGate) await publishGate;
         return route.fulfill({
           status: 409,
           contentType: "application/json",
@@ -132,6 +134,30 @@ test("boosted navigation: newest GET wins, foreign responses load fully, drawers
     assert.equal(await heading.textContent(), "Page A", "page content stays intact");
     assert.equal(await page.locator("#drawer").evaluate(dialog => dialog.open), true, "open dialog stays open on unmatched non-GET");
     assert.deepEqual(await page.evaluate(() => window.unmatched[0]), {
+      status: 409,
+      method: "POST",
+      text: '{"error":"Destination is disabled"}',
+      sourceId: "publish-form",
+      hasResponse: true,
+    });
+
+    // Detached-source case: removing the pending form while #main stays mounted still cancels swap and emits mero:boost-unmatched on document.
+    publishGate = hold("publish");
+    const pubSeen = new Promise(resolve => { publishArrived = resolve; });
+    await page.locator("#publish-button").click();
+    await pubSeen;
+    await page.evaluate(() => document.getElementById("publish-form").remove());
+    holds.publish();
+    publishGate = null;
+    publishArrived = null;
+    await page.waitForFunction(() => window.unmatched.length === 2);
+    await page.waitForTimeout(100);
+    assert.equal(await heading.textContent(), "Page A", "detached form 409 JSON never overwrites #main");
+    assert.deepEqual(seen.filter(([path]) => path === "/boost/publish"), [
+      ["/boost/publish", "POST", "fetch"],
+      ["/boost/publish", "POST", "fetch"],
+    ], "detached form never triggers GET /boost/publish");
+    assert.deepEqual(await page.evaluate(() => window.unmatched[1]), {
       status: 409,
       method: "POST",
       text: '{"error":"Destination is disabled"}',
