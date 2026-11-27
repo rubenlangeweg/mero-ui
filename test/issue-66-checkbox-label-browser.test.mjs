@@ -23,11 +23,12 @@ test("issue #66: standalone checkbox and radio labels get inline-flex gap withou
     </head><body>
       <label id="single-cb"><input id="cb-box" class="mero-checkbox" type="checkbox"><span id="cb-text">Save without translation</span></label>
       <label id="single-radio"><input id="radio-box" class="mero-radio" type="radio" name="r"><span id="radio-text">Option A</span></label>
+      <label id="inline-fmt"><input id="fmt-box" class="mero-checkbox" type="checkbox">Delete <strong id="fmt-strong">all</strong> files?</label>
       <label id="disabled-cb"><input class="mero-checkbox" type="checkbox" disabled><span>Disabled</span></label>
       <label id="hidden-cb" hidden><input class="mero-checkbox" type="checkbox"><span>Hidden checkbox</span></label>
       <label id="hidden-radio" hidden><input class="mero-radio" type="radio" name="h"><span>Hidden radio</span></label>
       <div class="mero-checkbox-group">
-        <label id="group-cb"><input class="mero-checkbox" type="checkbox"><span>Grouped</span></label>
+        <label id="group-cb"><input id="group-cb-box" class="mero-checkbox" type="checkbox"><span id="group-cb-text">Grouped</span></label>
       </div>
     </body></html>`;
 
@@ -53,8 +54,11 @@ test("issue #66: standalone checkbox and radio labels get inline-flex gap withou
       return {
         cbGap: gapBetween("cb-box", "cb-text"),
         radioGap: gapBetween("radio-box", "radio-text"),
+        groupGap: gapBetween("group-cb-box", "group-cb-text"),
         singleCb: styleOf("single-cb"),
         singleRadio: styleOf("single-radio"),
+        inlineFmt: styleOf("inline-fmt"),
+        fmtMarginEnd: getComputedStyle(document.getElementById("fmt-box")).marginInlineEnd,
         disabledCb: styleOf("disabled-cb"),
         hiddenCb: { display: getComputedStyle(document.getElementById("hidden-cb")).display, rects: document.getElementById("hidden-cb").getClientRects().length },
         hiddenRadio: { display: getComputedStyle(document.getElementById("hidden-radio")).display, rects: document.getElementById("hidden-radio").getClientRects().length },
@@ -62,16 +66,16 @@ test("issue #66: standalone checkbox and radio labels get inline-flex gap withou
       };
     });
 
-    assert.equal(metrics.singleCb.display, "inline-flex");
-    assert.equal(metrics.singleCb.alignItems, "center");
     assert.equal(metrics.singleCb.cursor, "pointer");
     assert.ok(metrics.cbGap >= 7 && metrics.cbGap <= 9, `checkbox-to-text gap should be ~8px (.5rem), got ${metrics.cbGap}px`);
 
-    assert.equal(metrics.singleRadio.display, "inline-flex");
     assert.ok(metrics.radioGap >= 7 && metrics.radioGap <= 9, `radio-to-text gap should be ~8px (.5rem), got ${metrics.radioGap}px`);
 
+    assert.equal(metrics.inlineFmt.display, "inline", "standalone label keeps inline formatting context for <strong> and text runs");
+    assert.equal(metrics.fmtMarginEnd, "8px", "checkbox receives .5rem margin-inline-end");
     assert.equal(metrics.disabledCb.cursor, "not-allowed", "disabled checkbox label uses not-allowed cursor");
     assert.deepEqual(metrics.hiddenCb, { display: "none", rects: 0 }, "hidden standalone checkbox label stays hidden");
     assert.deepEqual(metrics.hiddenRadio, { display: "none", rects: 0 }, "hidden standalone radio label stays hidden");
     assert.equal(metrics.groupCb.display, "flex", "checkbox-group labels preserve full-row flex layout");
+    assert.ok(metrics.groupGap >= 7 && metrics.groupGap <= 9, `grouped checkbox gap is not doubled (got ${metrics.groupGap}px)`);
   });
