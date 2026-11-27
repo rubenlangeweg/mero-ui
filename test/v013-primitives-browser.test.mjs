@@ -240,14 +240,24 @@ test("v0.13 primitives & peer-review regressions: multiselect, 3-state dirty/gua
     const arrived = new Promise(resolve => { saveArrived = resolve; });
     await page.locator("#save-btn").click();
     await arrived;
-    // Edit title, hidden input and multiselect chips while save is still in flight.
-    await page.locator("#title").fill("Lamp v2");
-    await page.evaluate(() => { document.getElementById("hidden-rev").value = "3"; });
-    await chInput.fill("PO");
-    await page.locator("#opt-pos").click();
-    await chInput.press("Escape");
+    // Editable fields & multiselect are inert to user input while pending; scripted/programmatic mutations stay protected by 3-state snapshots.
+    assert.equal(await page.locator("#title").evaluate(el => el.inert), true, "editable fields become inert while request is pending");
+    assert.equal(await page.locator("#channels").evaluate(el => el.inert), true, "multiselect becomes inert while request is pending");
+    await page.evaluate(() => {
+      const t = document.getElementById("title");
+      t.value = "Lamp v2";
+      t.dispatchEvent(new Event("input", { bubbles: true }));
+      document.getElementById("hidden-rev").value = "3";
+      const li = document.createElement("li");
+      li.className = "mero-chip";
+      li.dataset.value = "pos";
+      li.innerHTML = 'POS<input type="hidden" name="channels" value="pos"><button type="button" data-mero-multiselect-remove>×</button>';
+      document.querySelector("[data-mero-multiselect-chips]").append(li);
+    });
     releaseSave();
     await page.locator(".mero-toast", { hasText: "Saved!" }).waitFor();
+    assert.equal(await page.locator("#title").evaluate(el => el.inert), false, "inert is cleared once pending request settles");
+    assert.equal(await page.locator("#channels").evaluate(el => el.inert), false);
     assert.equal(await page.locator("#save-btn").isDisabled(), false, "mid-flight edit stays dirty after earlier save settles");
     const postSaveState = await page.evaluate(async () => {
       const form = document.getElementById("edit-form");

@@ -34,6 +34,17 @@
   const formSelector = "form[data-mero-form]";
   const confirmSelector = "form[data-mero-form][data-mero-confirm]";
   const requesting = new WeakMap();
+  const lockedControls = new WeakSet();
+  const isLocked = el => {
+    for (let node = el; node; node = node.parentElement) if (lockedControls.has(node)) return true;
+    return false;
+  };
+  document.addEventListener("click", event => {
+    const label = event.target.closest?.("label");
+    if (label?.control && isLocked(label.control) && !event.target.closest?.("a[href], button")) {
+      event.preventDefault();
+    }
+  }, true);
   const formRequests = new WeakMap();
   // A swap can detach the button before finally:request, so the request remembers its button and status.
   const actionRequests = new WeakMap();
@@ -146,6 +157,8 @@
     if (form?.matches(confirmSelector) && (!checkConfirmation(form) || requesting.has(form))) event.preventDefault();
   });
 
+  const lockedWidgets = "[data-mero-combo], [data-mero-multiselect], [data-mero-listbox], [data-mero-ws-number], [data-mero-ws-emoji], [data-mero-ws-editor] [data-format], [contenteditable]:not([contenteditable='false'])";
+
   document.addEventListener("htmx:before:request", (event) => {
     const form = requestForm(event);
     if (!form) return;
@@ -157,10 +170,23 @@
     formRequests.set(ctx, form);
     if (form.matches("[data-mero-dirty]")) submittedSnapshots.set(form, snapshotForm(form));
     const buttons = [...form.elements].filter(control => !control.disabled && (control.type === "submit" || control.type === "image"));
+    const keepEditable = (form.getAttribute("data-mero-form") || "").split(/\s+/).includes("keep-editable");
+    const widgetNodes = keepEditable ? [] : [...form.querySelectorAll(lockedWidgets)].filter(node => {
+      const outer = node.parentElement?.closest?.(lockedWidgets);
+      return !node.closest?.("[inert]") && (!outer || outer === form || !form.contains(outer));
+    });
+    const inertNodes = keepEditable ? [] : [
+      ...[...form.elements].filter(control => !control.closest?.("[inert]") && !widgetNodes.some(node => node.contains(control)) &&
+        control.matches("input, select, textarea, [type=reset]") && !control.matches("[type=submit], [type=button], [type=image], [type=hidden]")),
+      ...widgetNodes,
+    ];
+    const activeEl = document.activeElement;
+    const displacedFocus = activeEl && inertNodes.some(node => node === activeEl || node.contains(activeEl)) ? activeEl : null;
     const submitter = ctx.request.submitter?.form === form ? ctx.request.submitter : null;
-    requesting.set(form, { buttons, ctx, owners: [submitter, form] });
+    requesting.set(form, { buttons, inertNodes, displacedFocus, ctx, owners: [submitter, form] });
     form.setAttribute("aria-busy", "true");
     buttons.forEach((button) => { button.disabled = true; });
+    inertNodes.forEach((node) => { node.inert = true; lockedControls.add(node); });
     clearFormError(form);
     const panel = unknownPanel([submitter, form]);
     if (panel) panel.hidden = true;
@@ -222,11 +248,17 @@
     const form = formRequests.get(ctx);
     // A cancelled duplicate has no entry, so it never releases the request still in flight.
     if (!form) return;
-    const owners = requesting.get(form)?.owners ?? [form];
+    const active = requesting.get(form);
+    const owners = active?.owners ?? [form];
     const holder = owners.find(Boolean);
     form.removeAttribute("aria-busy");
-    requesting.get(form)?.buttons.forEach((button) => { button.disabled = false; });
+    active?.buttons.forEach((button) => { button.disabled = false; });
+    active?.inertNodes.forEach((node) => { node.inert = false; lockedControls.delete(node); });
     requesting.delete(form);
+    const focusAfter = document.activeElement;
+    if (form.isConnected && active?.displacedFocus?.isConnected && (!focusAfter || focusAfter === document.body || focusAfter === form.closest("dialog"))) {
+      active.displacedFocus.focus({ preventScroll: true });
+    }
     const typed = form.matches(confirmSelector);
     if (typed) checkConfirmation(form);
     if (cancelled(ctx)) {

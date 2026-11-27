@@ -142,7 +142,7 @@ function chatScreen(state, params, options={}) {
       <div><h2 tabindex="-1" data-comm-heading>${direct?"":icon("hash")}${room.name}</h2><p>${room.description}</p></div>
       <span class="comm-members" role="img" aria-label="Participants: ${room.members.map(p=>people[p][0]).join(", ")}">${room.members.map(p=>avatar(p,true)).join("")}</span></div>
       <div class="comm-feed" tabindex="0" aria-label="Message history"><div class="comm-date"><span>Today</span></div>
-      <ol>${feed}</ol></div><form ${formAction("chat","send")} class="comm-chat-compose" data-mero-form data-comm-compose="${room.id}">
+      <ol>${feed}</ol></div><form ${formAction("chat","send")} class="comm-chat-compose" data-mero-form="keep-editable" data-comm-compose="${room.id}">
       ${hidden("room",room.id)}${hidden("nonce",randomUUID())}<label class="comm-sr" for="chat-message">Message ${label}</label>
       <textarea class="mero-textarea" id="chat-message" name="message" maxlength="1600" rows="2" placeholder="Message ${label}…" required${result.error?' aria-invalid="true" aria-describedby="chat-error"':""}>${esc(result.draft)}</textarea>
       <button type="submit" class="mero-button mero-button-primary mero-button-sm">Send ${icon("send")}</button><div id="chat-error">${feedback(result.error)}</div></form></section>`;
