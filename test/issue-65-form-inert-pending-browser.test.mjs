@@ -23,6 +23,7 @@ test("issue #65: data-mero-form marks editable fields inert while pending withou
       "/mero.css": ["text/css", "ui/mero.css"],
       "/mero.js": ["text/javascript", "ui/mero.js"],
       "/mero-forms.js": ["text/javascript", "ui/mero-forms.js"],
+      "/mero-workspace.js": ["text/javascript", "ui/mero-workspace.js"],
       "/htmx.js": ["text/javascript", "public/vendor/htmx.min.js"],
     };
 
@@ -33,6 +34,11 @@ test("issue #65: data-mero-form marks editable fields inert while pending withou
           <option value="std" selected>Standard</option>
           <option value="pro">Pro</option>
         </select>
+        <span id="qty-stepper" data-mero-ws-number>
+          <button id="qty-dec" type="button" data-step="-1">-</button>
+          <input id="qty" type="number" name="qty" value="2" min="0" max="10" aria-label="Quantity">
+          <button id="qty-inc" type="button" data-step="1">+</button>
+        </span>
         <input id="agree" type="checkbox" name="agree" value="yes">
         <label id="agree-label" for="agree">Agree to terms</label>
         <fieldset id="host-inert" inert>
@@ -49,6 +55,7 @@ test("issue #65: data-mero-form marks editable fields inert while pending withou
       <script src="/htmx.js"></script>
       <script defer src="/mero.js"></script>
       <script defer src="/mero-forms.js"></script>
+      <script defer src="/mero-workspace.js"></script>
     </head><body>
       <dialog id="dlg" open class="mero-dialog">${formMarkup()}</dialog>
     </body></html>`;
@@ -108,6 +115,13 @@ test("issue #65: data-mero-form marks editable fields inert while pending withou
     });
     assert.match(receivedBodies[0], /name=Beta/, "inert fields are still submitted in FormData");
     assert.match(receivedBodies[0], /tier=std/);
+    assert.match(receivedBodies[0], /qty=2/, "inert stepper input is still submitted in FormData");
+
+    // Stepper increment button must be inert while pending so quantity cannot drift before a 422 swap.
+    assert.equal(await page.locator("#qty-stepper").evaluate(el => el.inert), true);
+    const incBox = await page.locator("#qty-inc").boundingBox();
+    await page.mouse.click(incBox.x + incBox.width / 2, incBox.y + incBox.height / 2);
+    assert.equal(await page.locator("#qty").inputValue(), "2", "stepper button cannot mutate value while pending");
 
     // Real mouse click on an associated <label for="agree"> must NOT toggle the locked checkbox while pending.
     const labelBox = await page.locator("#agree-label").boundingBox();
@@ -144,9 +158,11 @@ test("issue #65: data-mero-form marks editable fields inert while pending withou
       activeId: "name",
     }, "Mero restores only its own inert nodes, preserves host-owned inert subtrees, and returns displaced focus to #name");
 
-    // Clicking the label works again after the request settles.
+    // Clicking the label and stepper works again after the request settles.
     await page.locator("#agree-label").click();
     assert.equal(await page.locator("#agree").isChecked(), true, "label click works again once settled");
+    await page.locator("#qty-inc").click();
+    assert.equal(await page.locator("#qty").inputValue(), "3", "stepper works again once settled");
 
     // Verify user can type again immediately after settle.
     await page.locator("#name").fill("Gamma");
