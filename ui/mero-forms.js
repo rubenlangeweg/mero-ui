@@ -157,8 +157,7 @@
     if (form?.matches(confirmSelector) && (!checkConfirmation(form) || requesting.has(form))) event.preventDefault();
   });
 
-  const lockedWidget = "[data-mero-combo], [data-mero-multiselect], [data-mero-listbox], [data-mero-ws-number], [data-mero-ws-emoji]";
-  const lockedExtra = `${lockedWidget}, [data-mero-ws-editor] [data-format], [contenteditable]:not([contenteditable='false'])`;
+  const lockedWidgets = "[data-mero-combo], [data-mero-multiselect], [data-mero-listbox], [data-mero-ws-number], [data-mero-ws-emoji], [data-mero-ws-editor] [data-format], [contenteditable]:not([contenteditable='false'])";
 
   document.addEventListener("htmx:before:request", (event) => {
     const form = requestForm(event);
@@ -172,10 +171,14 @@
     if (form.matches("[data-mero-dirty]")) submittedSnapshots.set(form, snapshotForm(form));
     const buttons = [...form.elements].filter(control => !control.disabled && (control.type === "submit" || control.type === "image"));
     const keepEditable = (form.getAttribute("data-mero-form") || "").split(/\s+/).includes("keep-editable");
+    const widgetNodes = keepEditable ? [] : [...form.querySelectorAll(lockedWidgets)].filter(node => {
+      const outer = node.parentElement?.closest?.(lockedWidgets);
+      return !node.closest?.("[inert]") && (!outer || outer === form || !form.contains(outer));
+    });
     const inertNodes = keepEditable ? [] : [
-      ...[...form.elements].filter(control => !control.closest?.(`[inert], ${lockedWidget}`) &&
+      ...[...form.elements].filter(control => !control.closest?.("[inert]") && !widgetNodes.some(node => node.contains(control)) &&
         control.matches("input, select, textarea, [type=reset]") && !control.matches("[type=submit], [type=button], [type=image], [type=hidden]")),
-      ...[...form.querySelectorAll(lockedExtra)].filter(node => node !== form && !node.closest?.("[inert]") && !node.parentElement?.closest?.(lockedExtra)),
+      ...widgetNodes,
     ];
     const activeEl = document.activeElement;
     const displacedFocus = activeEl && inertNodes.some(node => node === activeEl || node.contains(activeEl)) ? activeEl : null;
