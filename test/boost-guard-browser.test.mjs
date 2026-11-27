@@ -19,7 +19,7 @@ const shell = title => `<!doctype html><html lang="en"><head><meta charset="utf-
       <button type="button" class="mero-button" id="open-drawer" data-mero-open="drawer">Menu</button>
       <form method="post" action="/boost/save" id="save"><button id="save-button">Save</button></form>
     </nav>
-    <dialog class="mero-dialog mero-drawer" id="drawer" aria-label="Menu"><div class="mero-dialog-body"><a href="/boost/b" id="drawer-b">Page B</a></div></dialog>
+    <dialog class="mero-dialog mero-drawer" id="drawer" aria-label="Menu"><div class="mero-dialog-body"><a href="/boost/b" id="drawer-b">Page B</a><form method="post" action="/boost/publish" id="publish-form"><button id="publish-button">Publish</button></form></div></dialog>
     <main id="main"><h1>${title}</h1></main>
   </body></html>`;
 
@@ -41,12 +41,21 @@ test("boosted navigation: newest GET wins, foreign responses load fully, drawers
 
     const holds = {};
     const hold = name => new Promise(resolve => { holds[name] = resolve; });
-    let slowGate = null, saveGate = null;
+    let slowGate = null, saveGate = null, publishGate = null, publishArrived = null;
     await page.route("**/boost/**", async route => {
       const path = new URL(route.request().url()).pathname;
       const html = body => route.fulfill({ status: 200, contentType: "text/html", body }).catch(() => {});
       if (path === "/boost/slow") { await slowGate; return html(shell("Slow page")); }
       if (path === "/boost/save") { await saveGate; return html(shell("Saved")); }
+      if (path === "/boost/publish") {
+        publishArrived?.();
+        if (publishGate) await publishGate;
+        return route.fulfill({
+          status: 409,
+          contentType: "application/json",
+          body: '{"error":"Destination is disabled"}',
+        }).catch(() => {});
+      }
       if (path === "/boost/login") return html('<!doctype html><title>Sign in</title><form><h1>Sign in</h1></form>');
       if (path === "/boost/down") return route.abort();
       return html(shell(path === "/boost/b" ? "Page B" : "Page A"));
@@ -104,7 +113,60 @@ test("boosted navigation: newest GET wins, foreign responses load fully, drawers
     await page.waitForTimeout(300);
     assert.deepEqual(saveFailed, [], "the POST completed");
 
+    // Issue #67: a boosted non-GET answer without the region keeps the page, never issues GET on the action URL, and emits mero:boost-unmatched.
+    await start();
+    seen.length = 0;
+    await page.evaluate(() => {
+      window.unmatched = [];
+      document.addEventListener("mero:boost-unmatched", e => window.unmatched.push({
+        status: e.detail.status,
+        method: e.detail.method,
+        text: e.detail.text,
+        sourceId: e.detail.source?.id ?? null,
+        hasResponse: Boolean(e.detail.response),
+      }));
+    });
+    await page.locator("#open-drawer").click();
+    await page.locator("#publish-button").click();
+    await page.waitForFunction(() => window.unmatched.length === 1);
+    await page.waitForTimeout(100);
+    assert.deepEqual(seen.filter(([path]) => path === "/boost/publish"), [["/boost/publish", "POST", "fetch"]], "must never follow a non-GET error with GET /boost/publish");
+    assert.equal(await heading.textContent(), "Page A", "page content stays intact");
+    assert.equal(await page.locator("#drawer").evaluate(dialog => dialog.open), true, "open dialog stays open on unmatched non-GET");
+    assert.deepEqual(await page.evaluate(() => window.unmatched[0]), {
+      status: 409,
+      method: "POST",
+      text: '{"error":"Destination is disabled"}',
+      sourceId: "publish-form",
+      hasResponse: true,
+    });
+
+    // Detached-source case: removing the pending form while #main stays mounted still cancels swap and emits mero:boost-unmatched on document.
+    publishGate = hold("publish");
+    const pubSeen = new Promise(resolve => { publishArrived = resolve; });
+    await page.locator("#publish-button").click();
+    await pubSeen;
+    await page.evaluate(() => document.getElementById("publish-form").remove());
+    holds.publish();
+    publishGate = null;
+    publishArrived = null;
+    await page.waitForFunction(() => window.unmatched.length === 2);
+    await page.waitForTimeout(100);
+    assert.equal(await heading.textContent(), "Page A", "detached form 409 JSON never overwrites #main");
+    assert.deepEqual(seen.filter(([path]) => path === "/boost/publish"), [
+      ["/boost/publish", "POST", "fetch"],
+      ["/boost/publish", "POST", "fetch"],
+    ], "detached form never triggers GET /boost/publish");
+    assert.deepEqual(await page.evaluate(() => window.unmatched[1]), {
+      status: 409,
+      method: "POST",
+      text: '{"error":"Destination is disabled"}',
+      sourceId: "publish-form",
+      hasResponse: true,
+    });
+
     // A response without the region (a login page) becomes a full page load.
+    await page.evaluate(() => window.MeroUI.close("drawer"));
     await page.locator("#to-login").click();
     await page.waitForURL("**/boost/login");
     await page.waitForFunction(() => document.title === "Sign in" && !document.querySelector("#main"));

@@ -1228,12 +1228,15 @@
   const supersededBoosts = new WeakSet();
   const boostFocus = new WeakMap();
   const unswappedBoosts = new WeakSet();
-  const boostRegion = ctx => ctx.request?.headers?.["HX-Boosted"] && ctx.sourceElement?.closest?.("[data-mero-boost]")?.getAttribute("data-mero-boost");
+  const boostSelectors = new WeakMap();
+  const boostRegion = ctx => boostSelectors.get(ctx) ?? (ctx.request?.headers?.["HX-Boosted"] && ctx.sourceElement?.closest?.("[data-mero-boost]")?.getAttribute("data-mero-boost"));
   const isGet = ctx => ctx.request.method.toUpperCase() === "GET";
 
   document.addEventListener("htmx:before:request", event => {
     const { ctx } = event.detail;
-    if (event.defaultPrevented || !boostRegion(ctx)) return;
+    const selector = !event.defaultPrevented && boostRegion(ctx);
+    if (!selector) return;
+    boostSelectors.set(ctx, selector);
     boostFocus.set(ctx, document.activeElement);
     if (!isGet(ctx)) return;
     // Only navigations are aborted, never a boosted form that changes data.
@@ -1258,10 +1261,26 @@
     let found;
     try { found = page.content.querySelector(selector); } catch {}
     if (!found) {
-      // A login page, an error page from a proxy or any other document: let the browser show it.
       event.preventDefault();
       unswappedBoosts.add(ctx);
-      location.assign(ctx.response?.raw?.url || ctx.request.action);
+      if (isGet(ctx)) {
+        // A login page, an error page from a proxy or any other document: let the browser show it.
+        location.assign(ctx.response?.raw?.url || ctx.request.action);
+      } else {
+        // Never replay a non-GET action URL as GET; keep the page intact and hand the response to the host.
+        const source = ctx.sourceElement ?? null;
+        (source?.isConnected ? source : document).dispatchEvent(new CustomEvent("mero:boost-unmatched", {
+          bubbles: true,
+          detail: {
+            source,
+            status: ctx.response?.status ?? 0,
+            method: ctx.request.method.toUpperCase(),
+            url: ctx.response?.raw?.url || ctx.request.action,
+            text: ctx.text ?? "",
+            response: ctx.response ?? null,
+          },
+        }));
+      }
       return;
     }
     const open = [...document.querySelectorAll("dialog[open]:not([data-mero-static], [role='alertdialog'])")];
