@@ -13,23 +13,46 @@
     grid.querySelector('[data-grid-bar]').hidden = selected.length === 0;
     grid.querySelector('[data-grid-count]').textContent = `${selected.length} selected`;
   }
+  function parseRevision(value) {
+    if (typeof value !== 'string' || !value.trim()) return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  }
+  function readRevisionHeader(headers, grid) {
+    const headerName = grid.dataset.meroGridRevisionHeader?.trim() || 'Inventory-Revision';
+    try {
+      return parseRevision(headers?.get(headerName) ?? null);
+    } catch {
+      return null;
+    }
+  }
+  function currentGridRevision(grid) {
+    return parseRevision(grid.dataset.meroGridRevision) ?? parseRevision(grid.dataset.inventoryRevision);
+  }
+  function tryFocus(candidates) {
+    for (const candidate of candidates) {
+      if (!candidate || candidate.matches?.(':disabled')) continue;
+      candidate.focus();
+      if (document.activeElement === candidate) return true;
+    }
+    return false;
+  }
   function focusGrid(grid) {
     const key = grid.dataset.meroGridFocus;
     if (!key) return;
-    const explicit = [...grid.querySelectorAll('[data-grid-focus-key]')].find(control => control.dataset.gridFocusKey === key);
-    if (explicit) {
-      delete grid.dataset.meroGridFocus;
-      explicit.focus();
+    delete grid.dataset.meroGridFocus;
+    const fallbacks = [...grid.querySelectorAll('[data-mero-focus-fallback]'), ...grid.querySelectorAll('[data-grid-add]')];
+    const explicit = [...grid.querySelectorAll('[data-mero-grid-focus-key]')].filter(control => control.dataset.meroGridFocusKey === key);
+    if (explicit.length) {
+      tryFocus([...explicit, ...fallbacks]);
       return;
     }
-    const selectors = { field: '.mero-collection-editor input:not([type=hidden])', cancel: '[data-grid-cancel]', invalid:'[aria-invalid="true"]', add:'[data-grid-add]', search:'input[name=q]', filter:'[data-grid-filter]', 'sort-name':'[data-grid-sort=name]', 'sort-status':'[data-grid-sort=status]' };
+    const selectors = { field: '.mero-collection-editor input:not([type=hidden]):not(:disabled)', cancel: '[data-grid-cancel]:not(:disabled)', invalid:'[aria-invalid="true"]:not(:disabled)', add:'[data-grid-add]:not(:disabled)', search:'input[name=q]:not(:disabled)', filter:'[data-grid-filter]:not(:disabled)', 'sort-name':'[data-grid-sort=name]:not(:disabled)', 'sort-status':'[data-grid-sort=status]:not(:disabled)' };
     // edit-ID and delete-ID return to the row's Actions menu button.
     const row = /^(?:edit|delete)-(.+)$/s.exec(key);
     const selector = Object.hasOwn(selectors, key) ? selectors[key] : '';
-    if (!selector && !row) return;
-    const control = selector ? grid.querySelector(selector) : [...grid.querySelectorAll('[data-grid-actions]')].find(item => item.dataset.gridActions === row[1]);
-    delete grid.dataset.meroGridFocus;
-    (control || grid.querySelector('[data-grid-add]'))?.focus();
+    const controls = selector ? [...grid.querySelectorAll(selector)] : (row ? [...grid.querySelectorAll('[data-grid-actions]')].filter(item => item.dataset.gridActions === row[1]) : []);
+    tryFocus([...controls, ...fallbacks]);
   }
   function syncGrids(root, focus = false) {
     const grids = root.matches?.(gridSelector) ? [root] : root.querySelectorAll?.(gridSelector) || [];
@@ -72,10 +95,29 @@
       return;
     }
     if (!target.matches?.(gridSelector)) return;
-    const revision = ctx.response?.headers.get(target.dataset.gridRevisionHeader || 'Inventory-Revision') ?? null;
-    const currentRevision = target.dataset.gridRevision ?? target.dataset.inventoryRevision;
-    if ((revision !== null && Number(revision) < Number(currentRevision)) || (status >= 400 && status !== 409 && status !== 422)) {
+    if (status >= 400 && status !== 409 && status !== 422) {
       event.preventDefault();
+      return;
+    }
+    const revision = readRevisionHeader(ctx.response?.headers, target);
+    const currentRevision = currentGridRevision(target);
+    if (revision !== null && currentRevision !== null && revision < currentRevision) {
+      event.preventDefault();
+    }
+  });
+  document.addEventListener('htmx:after:swap', event => {
+    const { ctx } = event.detail;
+    if (ctx.swap === 'none') return;
+    const target = typeof ctx.target === 'string' ? document.querySelector(ctx.target) : ctx.target;
+    if (!target?.isConnected || !target.matches?.(gridSelector)) return;
+    const revision = readRevisionHeader(ctx.response?.headers, target);
+    if (revision === null) return;
+    const currentRevision = currentGridRevision(target);
+    if (currentRevision !== null && revision <= currentRevision) return;
+    if (target.hasAttribute('data-mero-grid-revision') || target.hasAttribute('data-mero-grid-revision-header')) {
+      target.dataset.meroGridRevision = String(revision);
+    } else if (target.hasAttribute('data-inventory-revision')) {
+      target.dataset.inventoryRevision = String(revision);
     }
   });
   document.addEventListener('htmx:finally:request', event => {
