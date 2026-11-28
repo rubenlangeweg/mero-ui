@@ -52,8 +52,18 @@ test('grid selection excludes disabled controls and row focus accepts opaque IDs
           grid.dispatchEvent(new CustomEvent('htmx:after:settle', {bubbles:true}));
         }, {id, action});
         assert.equal(await page.locator('[data-grid-actions]').evaluate(el => el === document.activeElement), true);
+        assert.equal(await page.locator('form').evaluate(grid => grid.hasAttribute('data-mero-grid-focus')), false);
       }
     }
+    await page.locator('form').evaluate(grid => {
+      const actions = grid.querySelector('[data-grid-actions]');
+      actions.dataset.gridActions = '42';
+      actions.disabled = true;
+      grid.dataset.meroGridFocus = 'edit-42';
+      grid.dispatchEvent(new CustomEvent('htmx:after:settle', {bubbles:true}));
+    });
+    assert.equal(await page.getByRole('button', {name:'Add', exact:true}).evaluate(el => el === document.activeElement), true);
+    assert.equal(await page.locator('form').evaluate(grid => grid.hasAttribute('data-mero-grid-focus')), false);
   });
 
 test('grid focus and stale-response protection support application-defined contracts',
@@ -62,32 +72,114 @@ test('grid focus and stale-response protection support application-defined contr
     const browser = await playwright[engine].launch({executablePath:engine === 'chromium' ? browserConfig.chromeExecutable : undefined});
     t.after(() => browser.close());
     const page = await browser.newPage();
-    await page.setContent(`<section data-mero-grid data-grid-revision="7" data-grid-revision-header="Assets-Revision" data-inventory-revision="100">
-      <input name="q"><input name="asset-search" data-grid-focus-key="search">
-      <button data-grid-focus-key="sort-price">Price</button>
-    </section><section data-mero-grid><button data-grid-focus-key="sort-price">Other price</button></section>`);
+    await page.setContent(`<section data-mero-grid data-mero-grid-revision="7" data-mero-grid-revision-header=" Assets-Revision " data-inventory-revision="100">
+      <input name="q"><input name="asset-search" data-mero-grid-focus-key="search">
+      <button type="button" data-mero-grid-focus-key="sort-price">Price</button>
+      <fieldset disabled><button type="button" data-mero-grid-focus-key="disabled-key">Locked</button></fieldset>
+      <button type="button" data-mero-focus-fallback>Fallback</button>
+      <button type="button" data-grid-add>Add</button>
+    </section>
+    <section data-mero-grid data-mero-grid-revision="" data-inventory-revision="7">
+      <button type="button" data-mero-grid-focus-key="sort-price">Other price</button>
+      <button type="button" data-grid-add>Other add</button>
+    </section>
+    <section data-mero-grid data-mero-grid-revision="0" data-inventory-revision="100"></section>
+    <section data-mero-grid data-mero-grid-revision="7" data-mero-grid-revision-header="Bad Header"></section>`);
     await page.addScriptTag({path:'ui/mero-collections.js'});
+    const first = page.locator('section').nth(0);
+    const legacy = page.locator('section').nth(1);
+    const zero = page.locator('section').nth(2);
+    const invalidHeader = page.locator('section').nth(3);
+
     for (const key of ['search', 'sort-price']) {
-      await page.locator('section').first().evaluate((grid, key) => {
+      await first.evaluate((grid, key) => {
         grid.dataset.meroGridFocus = key;
         grid.dispatchEvent(new CustomEvent('htmx:after:settle', {bubbles:true}));
       }, key);
-      assert.equal(await page.locator('section').first().locator(`[data-grid-focus-key="${key}"]`).evaluate(el => el === document.activeElement), true);
+      assert.equal(await first.locator(`[data-mero-grid-focus-key="${key}"]`).evaluate(el => el === document.activeElement), true);
+      assert.equal(await first.evaluate(grid => grid.hasAttribute('data-mero-grid-focus')), false);
     }
+    // Disabled explicit key skips legacy selector and falls back to data-mero-focus-fallback.
+    await first.evaluate(grid => {
+      grid.querySelector('[data-mero-grid-focus-key="search"]').disabled = true;
+      grid.dataset.meroGridFocus = 'search';
+      grid.dispatchEvent(new CustomEvent('htmx:after:settle', {bubbles:true}));
+    });
+    assert.equal(await first.locator('[data-mero-focus-fallback]').evaluate(el => el === document.activeElement), true);
+    assert.equal(await first.evaluate(grid => grid.hasAttribute('data-mero-grid-focus')), false);
+    // Disabled control inside disabled fieldset and missing application keys clear attribute and use fallback chain.
+    for (const key of ['disabled-key', 'deleted-row-42']) {
+      await first.locator('[data-mero-grid-focus-key="sort-price"]').focus();
+      await first.evaluate((grid, key) => {
+        grid.dataset.meroGridFocus = key;
+        grid.dispatchEvent(new CustomEvent('htmx:after:settle', {bubbles:true}));
+      }, key);
+      assert.equal(await first.locator('[data-mero-focus-fallback]').evaluate(el => el === document.activeElement), true);
+      assert.equal(await first.evaluate(grid => grid.hasAttribute('data-mero-grid-focus')), false);
+    }
+    // Without data-mero-focus-fallback, missing application key falls back to data-grid-add.
+    await legacy.evaluate(grid => {
+      grid.dataset.meroGridFocus = 'deleted-row-99';
+      grid.dispatchEvent(new CustomEvent('htmx:after:settle', {bubbles:true}));
+    });
+    assert.equal(await legacy.locator('[data-grid-add]').evaluate(el => el === document.activeElement), true);
+    assert.equal(await legacy.evaluate(grid => grid.hasAttribute('data-mero-grid-focus')), false);
+
+    const dispatchSwap = (locator, headers, status) => locator.evaluate((grid, {headers, status}) => {
+      return grid.dispatchEvent(new CustomEvent('htmx:before:swap', {
+        bubbles:true, cancelable:true,
+        detail:{ctx:{target:grid, response:{status, headers:new Headers(headers)}}},
+      }));
+    }, {headers, status});
+
     for (const [headers, status, allowed] of [
       [{'Assets-Revision':'6'}, 200, false],
       [{'Assets-Revision':'7'}, 200, true],
       [{'Assets-Revision':'8'}, 200, true],
+      [{'Assets-Revision':''}, 200, true],
+      [{'Assets-Revision':'   '}, 200, true],
+      [{'Assets-Revision':'unknown'}, 200, true],
       [{'Inventory-Revision':'1'}, 200, true],
       [{}, 200, true], [{}, 409, true], [{}, 422, true], [{}, 500, false],
     ]) {
-      assert.equal(await page.locator('section').first().evaluate((grid, {headers, status}) => {
-        return grid.dispatchEvent(new CustomEvent('htmx:before:swap', {
-          bubbles:true, cancelable:true,
-          detail:{ctx:{target:grid, response:{status, headers:new Headers(headers)}}},
-        }));
-      }, {headers, status}), allowed, JSON.stringify({headers, status}));
+      assert.equal(await dispatchSwap(first, headers, status), allowed, JSON.stringify({headers, status}));
     }
+    // In-place swap advances data-mero-grid-revision from a higher response header, unless swap is none.
+    await first.evaluate(grid => {
+      grid.dispatchEvent(new CustomEvent('htmx:after:swap', {
+        bubbles:true,
+        detail:{ctx:{target:grid, swap:'none', response:{status:200, headers:new Headers({'Assets-Revision':'12'})}}},
+      }));
+    });
+    assert.equal(await first.getAttribute('data-mero-grid-revision'), '7');
+    await first.evaluate(grid => {
+      grid.dispatchEvent(new CustomEvent('htmx:after:swap', {
+        bubbles:true,
+        detail:{ctx:{target:grid, swap:'innerHTML', response:{status:200, headers:new Headers({'Assets-Revision':'9'})}}},
+      }));
+    });
+    assert.equal(await first.getAttribute('data-mero-grid-revision'), '9');
+    assert.equal(await dispatchSwap(first, {'Assets-Revision':'8'}, 200), false);
+    assert.equal(await dispatchSwap(first, {'Assets-Revision':'9'}, 200), true);
+    // Blank data-mero-grid-revision falls back to legacy data-inventory-revision and Inventory-Revision.
+    assert.equal(await dispatchSwap(legacy, {'Inventory-Revision':'6'}, 200), false);
+    assert.equal(await dispatchSwap(legacy, {'Inventory-Revision':'7'}, 200), true);
+    // Pure legacy grid advances data-inventory-revision on in-place swap.
+    await legacy.evaluate(grid => {
+      grid.removeAttribute('data-mero-grid-revision');
+      grid.dispatchEvent(new CustomEvent('htmx:after:swap', {
+        bubbles:true,
+        detail:{ctx:{target:grid, swap:'innerHTML', response:{status:200, headers:new Headers({'Inventory-Revision':'8'})}}},
+      }));
+    });
+    assert.equal(await legacy.getAttribute('data-inventory-revision'), '8');
+    assert.equal(await dispatchSwap(legacy, {'Inventory-Revision':'7'}, 200), false);
+    // Numeric zero takes precedence over legacy data-inventory-revision.
+    assert.equal(await dispatchSwap(zero, {'Inventory-Revision':'1'}, 200), true);
+    assert.equal(await dispatchSwap(zero, {'Inventory-Revision':'-1'}, 200), false);
+    // Malformed revision header name does not throw or bypass error-swap blocking.
+    assert.equal(await dispatchSwap(invalidHeader, {}, 200), true);
+    assert.equal(await dispatchSwap(invalidHeader, {}, 500), false);
   });
 
 test('collection interactions preserve drafts, keyboard focus and access to popover actions',
